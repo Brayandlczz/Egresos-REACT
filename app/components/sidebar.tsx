@@ -4,7 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { useEffect, useState } from "react"
-import { LayoutDashboard, User, Calendar, BookOpen, Bell, LogOut, Menu, X, Settings, FileText, FilePen, Megaphone, AlertTriangle } from "lucide-react"
+import { LayoutDashboard, User, Calendar, BookOpen, Bell, LogOut, Menu, X, Settings, FileText, FilePen, Megaphone, AlertTriangle, Users, Cake, BeanIcon, Umbrella, Sunset } from "lucide-react"
 
 type Profile = {
   id: string
@@ -166,7 +166,7 @@ export function Sidebar() {
 
               <li>
                 <Link
-                  href="/gestor-solicitudes"
+                  href="/solicitudes"
                   className={`flex items-center gap-3 p-2 rounded-md transition-all ${
                     isActive("/solicitudes")
                       ? "bg-blue-50 text-blue-700 shadow-[3px_3px_0px_0px_#BFDBFE] transform translate-y-[-1px]"
@@ -221,7 +221,7 @@ export function Sidebar() {
               : "hover:bg-gray-100 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)] hover:translate-y-[-1px]"
           }`}
         >
-          <Settings size={20} />
+          <Bell size={20} />
           <span>Gestión de Avisos</span>
         </Link>
       </li>
@@ -239,7 +239,39 @@ export function Sidebar() {
           <span>Gestión de Documentos</span>
         </Link>
       </li>
-
+              <Link
+          href="#"
+          className={`flex items-center gap-3 p-2 rounded-md transition-all ${
+            isActive("#")
+              ? "bg-blue-50 text-blue-700 shadow-[3px_3px_0px_0px_#BFDBFE] transform translate-y-[-1px]"
+              : "hover:bg-gray-100 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)] hover:translate-y-[-1px]"
+          }`}
+        >
+          <Users size={20} />
+          <span>Gestión de usuarios</span>
+        </Link>
+                      <Link
+          href="#"
+          className={`flex items-center gap-3 p-2 rounded-md transition-all ${
+            isActive("#")
+              ? "bg-blue-50 text-blue-700 shadow-[3px_3px_0px_0px_#BFDBFE] transform translate-y-[-1px]"
+              : "hover:bg-gray-100 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)] hover:translate-y-[-1px]"
+          }`}
+        >
+          <Cake size={20} />
+          <span>Tarjetas de Cumpleaños</span>
+        </Link>
+                      <Link
+          href="#"
+          className={`flex items-center gap-3 p-2 rounded-md transition-all ${
+            isActive("#")
+              ? "bg-blue-50 text-blue-700 shadow-[3px_3px_0px_0px_#BFDBFE] transform translate-y-[-1px]"
+              : "hover:bg-gray-100 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)] hover:translate-y-[-1px]"
+          }`}
+        >
+          <Sunset size={20} />
+          <span>Administrar vacaciones</span>
+        </Link>
     </ul>
   </div>
 )}
