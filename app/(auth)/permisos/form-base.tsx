@@ -43,7 +43,6 @@ export function SolicitudFormBase({
           title: "Solicitud enviada",
           description: result.message,
         })
-        // Reset form
         e.currentTarget.reset()
       } else {
         toast({

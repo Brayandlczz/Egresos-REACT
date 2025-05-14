@@ -17,6 +17,7 @@ type Profile = {
 }
 
 export function Sidebar() {
+  const [adminOpen, setAdminOpen] = useState(false)
   const pathname = usePathname()
   const [profile, setProfile] = useState<Profile | null>(null)
   const [isOpen, setIsOpen] = useState(false)
@@ -207,17 +208,28 @@ export function Sidebar() {
               </li>
             </ul>
           </nav>
-          {/* Sección visible solo para Admin */}
-  {profile?.roles?.nombre === "admin" && (
+{/* Sección visible solo para Admin */}
+{profile?.roles?.nombre === "admin" && (
   <div className="p-4 border-t">
-    <h3 className="text-xs font-medium text-gray-500 mb-2">Administración</h3>
-    <ul className="space-y-2">
+    <button
+      onClick={() => setAdminOpen((prev) => !prev)}
+      className="flex items-center justify-between w-full text-xs font-medium text-gray-500 mb-2 hover:text-gray-700"
+    >
+      Administración
+      <span>{adminOpen ? "▲" : "▼"}</span>
+    </button>
+
+    <ul
+      className={`space-y-2 overflow-hidden transition-all duration-300 ease-in-out ${
+        adminOpen ? "max-h-[500px]" : "max-h-0"
+      }`}
+    >
       <li>
         <Link
           href="/admin/avisos"
           className={`flex items-center gap-3 p-2 rounded-md transition-all ${
             isActive("/admin/avisos")
-              ? "bg-blue-50 text-blue-700 shadow-[3px_3px_0px_0px_#BFDBFE] transform translate-y-[-1px]"
+              ? "bg-blue-50 text-blue-700 shadow-[3px_3px_0px_0px_#BFDBFE] translate-y-[-1px]"
               : "hover:bg-gray-100 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)] hover:translate-y-[-1px]"
           }`}
         >
@@ -225,13 +237,12 @@ export function Sidebar() {
           <span>Gestión de Avisos</span>
         </Link>
       </li>
-
       <li>
         <Link
           href="/admin/documentos"
           className={`flex items-center gap-3 p-2 rounded-md transition-all ${
             isActive("/admin/documentos")
-              ? "bg-blue-50 text-blue-700 shadow-[3px_3px_0px_0px_#BFDBFE] transform translate-y-[-1px]"
+              ? "bg-blue-50 text-blue-700 shadow-[3px_3px_0px_0px_#BFDBFE] translate-y-[-1px]"
               : "hover:bg-gray-100 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)] hover:translate-y-[-1px]"
           }`}
         >
@@ -239,41 +250,48 @@ export function Sidebar() {
           <span>Gestión de Documentos</span>
         </Link>
       </li>
-              <Link
+            <li>
+        <Link
           href="#"
           className={`flex items-center gap-3 p-2 rounded-md transition-all ${
             isActive("#")
-              ? "bg-blue-50 text-blue-700 shadow-[3px_3px_0px_0px_#BFDBFE] transform translate-y-[-1px]"
+              ? "bg-blue-50 text-blue-700 shadow-[3px_3px_0px_0px_#BFDBFE] translate-y-[-1px]"
               : "hover:bg-gray-100 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)] hover:translate-y-[-1px]"
           }`}
         >
           <Users size={20} />
-          <span>Gestión de usuarios</span>
+          <span>Gestión de Usuarios</span>
         </Link>
-                      <Link
+      </li>
+            <li>
+        <Link
           href="#"
           className={`flex items-center gap-3 p-2 rounded-md transition-all ${
             isActive("#")
-              ? "bg-blue-50 text-blue-700 shadow-[3px_3px_0px_0px_#BFDBFE] transform translate-y-[-1px]"
+              ? "bg-blue-50 text-blue-700 shadow-[3px_3px_0px_0px_#BFDBFE] translate-y-[-1px]"
               : "hover:bg-gray-100 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)] hover:translate-y-[-1px]"
           }`}
         >
           <Cake size={20} />
           <span>Tarjetas de Cumpleaños</span>
         </Link>
-                      <Link
+      </li>
+            <li>
+        <Link
           href="#"
           className={`flex items-center gap-3 p-2 rounded-md transition-all ${
             isActive("#")
-              ? "bg-blue-50 text-blue-700 shadow-[3px_3px_0px_0px_#BFDBFE] transform translate-y-[-1px]"
+              ? "bg-blue-50 text-blue-700 shadow-[3px_3px_0px_0px_#BFDBFE] translate-y-[-1px]"
               : "hover:bg-gray-100 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)] hover:translate-y-[-1px]"
           }`}
         >
           <Sunset size={20} />
-          <span>Administrar vacaciones</span>
+          <span>Gestión de Vacaciones</span>
         </Link>
+      </li>
     </ul>
   </div>
+  
 )}
           {/* Cerrar sesión */}
           <div className="p-4 border-t">

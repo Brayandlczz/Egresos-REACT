@@ -8,17 +8,17 @@ export default function GestorSolicitudes() {
     {
       titulo: "Solicitud por Día",
       descripcion: "Pide un día libre por asuntos personales o administrativos.",
-      ruta: "/solicitudes/solicitud-dia", 
+      ruta: "/permisos", 
     },
     {
       titulo: "Solicitud por Retardo",
       descripcion: "Justifica un retardo en tu horario laboral de entrada.",
-      ruta: "/solicitudes/solicitud-retardos-form",
+      ruta: "/retardos",
     },
     {
       titulo: "Solicitud por Cumpleaños",
       descripcion: "Solicita el día libre por tu cumpleaños.",
-        ruta: "/birthday"
+      ruta: "/birthday"
     },
     {
       titulo: "Solicitud por Incapacidad",
@@ -29,28 +29,34 @@ export default function GestorSolicitudes() {
 
   return (
     <div className="container mx-auto py-6">
-      <h1 className="text-2xl font-bold mb-3 text-center">Gestor de Solicitudes</h1>
-      <p className="text-center text-gray-600 mb-6">
+      <h1 className="text-3xl font-bold mb-4 text-center text-gray-800">
+        Gestor de Solicitudes
+      </h1>
+      <p className="text-center text-gray-800 mb-8 whitespace-nowrap">
         Selecciona un tipo de solicitud para hacerla llegar a los encargados correspondientes.
       </p>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {solicitudes.map((solicitud, index) => (
           <div
             key={index}
-            className="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow duration-300 border border-gray-200 flex flex-col justify-between"
+            className="bg-white rounded-2xl shadow-md border border-gray-200 flex flex-col justify-between hover:shadow-lg transition-shadow duration-300 overflow-hidden"
           >
-            <div>
-              <h2 className="text-lg text-center font-semibold text-blue-600 mb-2">
+            <div className="bg-blue-100 px-4 py-3">
+              <h2 className="text-md font-semibold text-blue-800 text-center">
                 {solicitud.titulo}
               </h2>
-              <p className="text-sm text-justify text-gray-600">{solicitud.descripcion}</p>
             </div>
-            <div className="mt-4 text-right">
+            <div className="p-5 flex-grow">
+              <p className="text-gray-800 text-sm leading-relaxed text-center">
+                {solicitud.descripcion}
+              </p>
+            </div>
+            <div className="px-10 pb-5 text-center">
               <Link href={solicitud.ruta}>
-                <span className="cursor-pointer text-sm text-blue-600 hover:underline hover:text-blue-800">
+                <button className="w-full bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
                   Levantar solicitud
-                </span>
+                </button>
               </Link>
             </div>
           </div>
