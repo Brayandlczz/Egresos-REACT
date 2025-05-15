@@ -104,7 +104,7 @@ export default function SolicitudPermisosForm() {
         }}
       >
           {/* Sección de datos del solicitante */}
-          <div className="bg-gray-100 p-4 rounded-md border space-y-4 mb-6">
+          <div className="bg-gray-100 p-4 rounded-md border space-y-4 mb-6 cursor-not-allowed">
             <h3 className="text-lg font-semibold">Datos del solicitante</h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

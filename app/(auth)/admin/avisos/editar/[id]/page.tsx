@@ -32,7 +32,7 @@ useEffect(() => {
         .from("avisos")
         .select(`
           *,
-          creador:profiles(nombre, apellido, email)
+          creador:profiles(nombre, email)
         `)
         .eq("id", id)
         .single()

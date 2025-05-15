@@ -84,7 +84,7 @@ export default function DiagnosticoAuth() {
       } else {
         addLog("✅ Perfil encontrado correctamente!")
         setProfileData(profileData)
-        addLog(`Nombre: ${profileData.nombre || "No especificado"} ${profileData.apellido || ""}`)
+        addLog(`Nombre: ${profileData.nombre || "No especificado"}`)
         addLog(`Email: ${profileData.email || "No especificado"}`)
         addLog(`Departamento: ${profileData.departamento || "No especificado"}`)
       }
@@ -114,7 +114,6 @@ export default function DiagnosticoAuth() {
       const newProfile = {
         id: userId,
         nombre: "Usuario",
-        apellido: "Ejemplo",
         email: "usuario@ejemplo.com",
         departamento: "Tecnología",
         puesto: "Desarrollador",

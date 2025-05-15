@@ -102,7 +102,7 @@ export function AvisosTable({ avisos }: AvisosTableProps) {
               <td className="px-6 py-5 whitespace-nowrap">
                 <div className="text-sm text-gray-900">
                   {aviso.creador?.nombre
-                    ? `${aviso.creador.nombre} ${aviso.creador.apellido || ""}`
+                    ? `${aviso.creador.nombre}`
                     : aviso.creador?.email || "Usuario desconocido"}
                 </div>
               </td>

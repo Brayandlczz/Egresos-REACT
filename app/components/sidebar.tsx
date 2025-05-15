@@ -9,7 +9,6 @@ import { LayoutDashboard, User, Calendar, BookOpen, Bell, LogOut, Menu, X, Setti
 type Profile = {
   id: string
   nombre?: string
-  apellido?: string
   email?: string
   role_id?: string
   avatar_url?: string
@@ -101,7 +100,7 @@ export function Sidebar() {
               </Link>
               <div className="flex flex-col">
                 <span className="font-medium">
-                  {profile.nombre ? `${profile.nombre} ${profile.apellido || ""}` : profile.email || "Usuario"}
+                  {profile.nombre ? `${profile.nombre}` : profile.email || "Usuario"}
                 </span>
                 <span className="text-xs text-gray-500">Rol: {profile.roles?.nombre || "nop"}</span>
                 </div>

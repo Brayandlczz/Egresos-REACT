@@ -8,7 +8,6 @@ import { Loader2 } from "lucide-react"
 export type EmpleadoData = {
   id: string
   nombre?: string
-  apellido?: string
   email?: string
   puesto?: string
   departamento?: string
@@ -28,7 +27,7 @@ export default function DirectorioPage() {
         console.log("Cargando empleados...")
         const { data, error } = await supabase
           .from("profiles")
-          .select("id, nombre, apellido, email, puesto, departamento, telefono, foto_url")
+          .select("id, nombre, email, puesto, departamento, telefono, foto_url")
 
         if (error) throw error
 
@@ -74,7 +73,7 @@ export default function DirectorioPage() {
                 {empleado.foto_url ? (
                   <img
                     src={empleado.foto_url || "/placeholder.svg"}
-                    alt={`${empleado.nombre || ""} ${empleado.apellido || ""}`}
+                    alt={`${empleado.nombre || ""}`}
                     className="w-20 h-20 rounded-full object-cover border-2 border-gray-200 shadow"
                     onError={(e) => {
                       e.currentTarget.onerror = null
@@ -84,7 +83,7 @@ export default function DirectorioPage() {
                 ) : (
                   <div className="w-20 h-20 rounded-full bg-blue-100 flex items-center justify-center border-2 border-gray-200 shadow">
                     <span className="text-blue-600 text-xl font-bold">
-                      {`${empleado.nombre?.[0] || ""}${empleado.apellido?.[0] || ""}`}
+                    {`${empleado.nombre?.[0] || ""}`}
                     </span>
                   </div>
                 )}
@@ -92,7 +91,7 @@ export default function DirectorioPage() {
 
               <div className="text-center mb-3">
                 <h3 className="font-bold text-lg">
-                  {empleado.nombre} {empleado.apellido}
+                  {empleado.nombre}
                 </h3>
                 <p className="text-blue-600 text-sm">{empleado.puesto}</p>
                 <p className="text-gray-500 text-sm">{empleado.departamento}</p>

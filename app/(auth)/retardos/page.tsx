@@ -102,7 +102,7 @@ export default function SolicitudIncapacidadesForm() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen">
+    <div className="flex items-center justify-center min-h-screen cursor-not-allowed">
       <SolicitudFormBase
         title="Solicitud por Retardo"
         description="Complete el formulario para registrar un justificante por retardo."

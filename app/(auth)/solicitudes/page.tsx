@@ -43,7 +43,7 @@ export default function GestorSolicitudes() {
             className="bg-white rounded-2xl shadow-md border border-gray-200 flex flex-col justify-between hover:shadow-lg transition-shadow duration-300 overflow-hidden"
           >
             <div className="bg-blue-100 px-4 py-3">
-              <h2 className="text-md font-semibold text-blue-800 text-center">
+              <h2 className="text-md font-semibold text-gray-800 text-center">
                 {solicitud.titulo}
               </h2>
             </div>

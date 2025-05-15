@@ -11,7 +11,6 @@ type Profile = {
   id: string
   email?: string
   nombre?: string
-  apellido?: string
   role?: string
   nacionalidad?: string
   lugar_nacimiento?: string
@@ -43,7 +42,6 @@ type Profile = {
 const sampleProfile: Profile = {
   id: "usuario-ejemplo",
   nombre: "Juan",
-  apellido: "Pérez",
   email: "juan.perez@empresa.com",
   role: "Empleado",
   departamento: "Tecnología",
@@ -410,7 +408,7 @@ export default function PerfilPage() {
             <div className="space-y-6">
               <div>
                 <h2 className="text-2xl font-bold text-gray-800">
-                  {profile?.nombre} {profile?.apellido}
+                  {profile?.nombre}
                 </h2>
                 <p className="text-blue-500">{profile?.puesto}</p>
                 <p className="text-gray-500">{profile?.departamento}</p>
@@ -644,7 +642,7 @@ export default function PerfilPage() {
               <div className="pt-4">
                 {activeTab === "personal" && (
                   <>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
                         <input
@@ -655,16 +653,7 @@ export default function PerfilPage() {
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
-
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Apellido</label>
-                        <input
-                          type="text"
-                          name="apellido"
-                          value={formData?.apellido || ""}
-                          onChange={handleChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
                       </div>
                     </div>
 
@@ -970,8 +959,8 @@ export default function PerfilPage() {
         </div>
       </div>
 
-      {/* Información de depuración (opcional) */}
-      {debugInfo.length > 0 && (
+      {/* Información de depuración (comentado por deshuso) */}
+      {/*debugInfo.length > 0 && (
         <div className="mt-8 bg-gray-50 border border-gray-200 rounded-lg p-4">
           <h3 className="font-medium mb-2 flex items-center">
             <span>Información de depuración</span>
@@ -989,7 +978,7 @@ export default function PerfilPage() {
             </ul>
           </div>
         </div>
-      )}
+      )*/}
     </div>
   )
 }

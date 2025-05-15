@@ -54,7 +54,7 @@ export default async function GestionDocumentosPage() {
     .from("documentos")
     .select(`
     *,
-    creador:profiles(nombre, apellido, email)
+    creador:profiles(nombre, email)
   `)
     .order("created_at", { ascending: false })
 
@@ -73,7 +73,7 @@ export default async function GestionDocumentosPage() {
   // Obtener las asignaciones de documentos a empleados
   const { data: documentosEmpleados, error: docEmpError } = await supabase.from("documentos_empleados").select(`
     documento_id,
-    empleado:profiles(id, nombre, apellido, email)
+    empleado:profiles(id, nombre, email)
   `)
 
   if (docEmpError) {
@@ -96,7 +96,7 @@ export default async function GestionDocumentosPage() {
   }))
 
   // Obtener lista de todos los empleados para el filtro
-  const { data: todosEmpleados } = await supabase.from("profiles").select("id, nombre, apellido, email").order("nombre")
+  const { data: todosEmpleados } = await supabase.from("profiles").select("id, nombre, email").order("nombre")
 
   console.log("Documentos con datos de creador:", documentosConEmpleados)
 

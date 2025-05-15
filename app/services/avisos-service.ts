@@ -15,7 +15,6 @@ export type Aviso = {
   updated_at?: string
   creador?: {
     nombre?: string
-    apellido?: string
     email?: string
   }
 }
@@ -36,7 +35,7 @@ export const AvisosService = {
         .from("avisos")
         .select(`
           *,
-          creador:profiles(nombre, apellido, email)
+          creador:profiles(nombre, email)
         `)
         .order("fecha_publicacion", { ascending: false })
 
@@ -59,7 +58,7 @@ export const AvisosService = {
       .from("avisos")
       .select(`
         *,
-        creador:profiles(nombre, apellido, email)
+        creador:profiles(nombre, email)
       `)
       .eq("id", id)
       .single()

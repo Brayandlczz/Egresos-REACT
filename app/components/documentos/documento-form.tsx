@@ -17,7 +17,6 @@ type DocumentoFormProps = {
 type Empleado = {
   id: string
   nombre?: string
-  apellido?: string
   email?: string
 }
 
@@ -48,7 +47,7 @@ export function DocumentoForm({ documento, isEditing = false }: DocumentoFormPro
       try {
         const { data, error } = await supabase
           .from("profiles")
-          .select("id, nombre, apellido, email")
+          .select("id, nombre, email")
           .order("nombre")
         
         if (error) throw error
@@ -251,7 +250,7 @@ export function DocumentoForm({ documento, isEditing = false }: DocumentoFormPro
                 >
                   {empleados.map(empleado => (
                     <option key={empleado.id} value={empleado.id}>
-                      {empleado.nombre} {empleado.apellido} ({empleado.email})
+                      {empleado.nombre} ({empleado.email})
                     </option>
                   ))}
                 </select>

@@ -15,13 +15,11 @@ export type Documento = {
   updated_at?: string
   creador?: {
     nombre?: string
-    apellido?: string
     email?: string
   }
   empleados?: {
     id: string
     nombre?: string
-    apellido?: string
     email?: string
   }[]
 }
@@ -43,7 +41,7 @@ export const DocumentosService = {
         .from("documentos")
         .select(`
           *,
-          creador:profiles(nombre, apellido, email)
+          creador:profiles(nombre, email)
         `)
         .order("created_at", { ascending: false })
 
@@ -67,7 +65,7 @@ export const DocumentosService = {
         .from("documentos")
         .select(`
           *,
-          creador:profiles(nombre, apellido, email)
+          creador:profiles(nombre, email)
         `)
         .eq("tipo", "general")
         .order("created_at", { ascending: false })
@@ -92,8 +90,8 @@ export const DocumentosService = {
         .from("documentos")
         .select(`
           *,
-          creador:profiles(nombre, apellido, email),
-          empleados:documentos_empleados(empleado:profiles(id, nombre, apellido, email))
+          creador:profiles(nombre, email),
+          empleados:documentos_empleados(empleado:profiles(id, nombre, email))
         `)
         .eq("tipo", "personal")
         .order("created_at", { ascending: false })
@@ -108,7 +106,6 @@ export const DocumentosService = {
         const empleados = doc.empleados?.map(e => ({
           id: e.empleado.id,
           nombre: e.empleado.nombre,
-          apellido: e.empleado.apellido,
           email: e.empleado.email
         })) || []
 
@@ -134,7 +131,7 @@ export const DocumentosService = {
         .from("documentos")
         .select(`
           *,
-          creador:profiles(nombre, apellido, email)
+          creador:profiles(nombre, email)
         `)
         .eq("tipo", "general")
         .order("created_at", { ascending: false });
@@ -161,7 +158,7 @@ export const DocumentosService = {
         .from("documentos")
         .select(`
           *,
-          creador:profiles(nombre, apellido, email)
+          creador:profiles(nombre, email)
         `)
         .eq("tipo", "personal")
         .in("id", documentoIds)
@@ -188,7 +185,7 @@ export const DocumentosService = {
         .from("documentos")
         .select(`
           *,
-          creador:profiles(nombre, apellido, email)
+          creador:profiles(nombre, email)
         `)
         .eq("id", id)
         .single()
@@ -203,7 +200,7 @@ export const DocumentosService = {
         const { data: empleadosData, error: empleadosError } = await supabase
         .from("documentos_empleados")
         .select(`
-          empleado:profiles(id, nombre, apellido, email)
+          empleado:profiles(id, nombre, email)
         `)
         .eq("documento_id", id);      
 
@@ -213,7 +210,6 @@ export const DocumentosService = {
           data.empleados = empleadosData.map(e => ({
             id: e.empleado.id,   
             nombre: e.empleado.nombre,
-            apellido: e.empleado.apellido,
             email: e.empleado.email,
           }))
         }        
@@ -445,7 +441,7 @@ export const DocumentosService = {
         .from("documentos")
         .select(`
           *,
-          creador:profiles(nombre, apellido, email)
+          creador:profiles(nombre, email)
         `)
         .or(`titulo.ilike.%${termino}%,descripcion.ilike.%${termino}%`)
         .order("created_at", { ascending: false })

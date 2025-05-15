@@ -27,7 +27,6 @@ type DocumentosTableProps = {
   todosEmpleados?: {
     id: string
     nombre?: string
-    apellido?: string
     email?: string
   }[]
 }
@@ -235,7 +234,7 @@ export function DocumentosTable({ documentos, todosEmpleados = [] }: DocumentosT
                   <option value="todos">Todos los empleados</option>
                   {todosEmpleados.map((emp) => (
                     <option key={emp.id} value={emp.id}>
-                      {emp.nombre} {emp.apellido}
+                      {emp.nombre}
                     </option>
                   ))}
                 </select>
@@ -304,7 +303,7 @@ export function DocumentosTable({ documentos, todosEmpleados = [] }: DocumentosT
                               <ul className="mt-1 pl-2 text-gray-600 space-y-1">
                                 {documento.empleados.map((emp) => (
                                   <li key={emp.id}>
-                                    {emp.nombre} {emp.apellido}
+                                    {emp.nombre}
                                   </li>
                                 ))}
                               </ul>
@@ -325,7 +324,7 @@ export function DocumentosTable({ documentos, todosEmpleados = [] }: DocumentosT
                 <td className="px-6 py-5 whitespace-nowrap">
                   <div className="text-sm text-gray-900">
                     {documento.creador?.nombre
-                      ? `${documento.creador.nombre} ${documento.creador.apellido || ""}`
+                      ? `${documento.creador.nombre}`
                       : documento.creador?.email || "Usuario desconocido"}
                   </div>
                 </td>

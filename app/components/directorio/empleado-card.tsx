@@ -1,12 +1,12 @@
 import { Mail, Phone } from "lucide-react"
-import type { EmpleadoData } from "@/app/(auth)/directorio/page"
+import type { EmpleadoData } from "@/app/(auth)/directorios/page"
 
 type EmpleadoCardProps = {
   empleado: EmpleadoData
 }
 
 export function EmpleadoCard({ empleado }: EmpleadoCardProps) {
-  const nombreCompleto = `${empleado.nombre || ""} ${empleado.apellido || ""}`.trim() || "Sin nombre"
+  const nombreCompleto = `${empleado.nombre || ""}`.trim() || "Sin nombre"
   const iniciales = obtenerIniciales(nombreCompleto)
 
   return (

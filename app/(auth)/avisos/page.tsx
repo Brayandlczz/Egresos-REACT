@@ -14,7 +14,7 @@ export default async function AvisosPage() {
     .from("avisos")
     .select(`
       *,
-      creador:profiles(nombre, apellido)
+      creador:profiles(nombre)
     `)
     .order("fecha_publicacion", { ascending: false })
 
@@ -42,7 +42,7 @@ export default async function AvisosPage() {
                   </span>
                   {aviso.creador && (
                     <span className="ml-2">
-                      por {aviso.creador.nombre || ""} {aviso.creador.apellido || ""}
+                      por {aviso.creador.nombre || ""}
                     </span>
                   )}
                 </div>

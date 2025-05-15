@@ -194,7 +194,7 @@ export default function DocumentosPage() {
               <div className="bg-gray-50 px-6 py-3">
                 <div className="text-xs text-gray-500">
                   Publicado por: {documento.creador?.nombre
-                    ? `${documento.creador.nombre} ${documento.creador.apellido || ""}`
+                    ? `${documento.creador.nombre}`
                     : documento.creador?.email || "Usuario desconocido"}
                 </div>
               </div>

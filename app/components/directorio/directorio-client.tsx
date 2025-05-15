@@ -27,8 +27,6 @@ export function DirectorioClient({ empleadosIniciales }: DirectorioClientProps) 
       (empleado) =>
         empleado.nombre?.toLowerCase().includes(termLower) ||
         "" ||
-        empleado.apellido?.toLowerCase().includes(termLower) ||
-        "" ||
         empleado.departamento?.toLowerCase().includes(termLower) ||
         "" ||
         empleado.puesto?.toLowerCase().includes(termLower) ||

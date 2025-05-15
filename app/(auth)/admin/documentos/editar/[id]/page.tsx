@@ -33,7 +33,7 @@ export default function EditarDocumentoPage() {
           .from("documentos")
           .select(`
             *,
-            creador:profiles(nombre, apellido, email)
+            creador:profiles(nombre, email)
           `)
           .eq("id", id)
           .single()
@@ -51,7 +51,7 @@ export default function EditarDocumentoPage() {
           const { data: empleadosData, error: empleadosError } = await supabase
             .from("documentos_empleados")
             .select(`
-              empleado:profiles(id, nombre, apellido, email)
+              empleado:profiles(id, nombre, email)
             `)
             .eq("documento_id", id)
 
@@ -59,7 +59,6 @@ export default function EditarDocumentoPage() {
             data.empleados = empleadosData.map(e => ({
               id: e.empleado.id,
               nombre: e.empleado.nombre,
-              apellido: e.empleado.apellido,
               email: e.empleado.email
             }))
           }
