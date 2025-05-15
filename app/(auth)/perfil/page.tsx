@@ -66,6 +66,7 @@ const sampleProfile: Profile = {
 }
 
 export default function PerfilPage() {
+  const [profiles, setProfiles] = useState<Profile[]>([]);
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(false)
@@ -221,6 +222,32 @@ export default function PerfilPage() {
         setSuccess("Perfil actualizado correctamente (modo simulación)")
         setEditing(false)
         return
+      }
+
+      const fetchProfiles = async () => {
+        try {
+          const { data, error } = await supabase.from("profiles").select("id, nombre")
+
+          if (error) {
+            addDebugInfo(`Error al cargar perfiles para jefe directo: ${error.message}`)
+            return
+          }
+
+          if (data) {
+            setProfiles(data)
+            addDebugInfo(`Se cargaron ${data.length} perfiles para jefe directo`)
+          }
+        } catch (error: any) {
+          addDebugInfo(`Error inesperado al cargar perfiles: ${error.message}`)
+        }
+      }
+
+      useEffect(() => {
+        fetchProfiles()
+      }, [])
+
+      const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value })
       }
 
       // Obtener la sesión actual
@@ -897,14 +924,23 @@ export default function PerfilPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Jefe directo</label>
-                      <input
-                        type="text"
+                      <label htmlFor="jefe_directo" className="block text-sm font-medium text-gray-700 mb-1">
+                        Jefe directo
+                      </label>
+                      <select
+                        id="jefe_directo"
                         name="jefe_directo"
                         value={formData?.jefe_directo || ""}
                         onChange={handleChange}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
+                      >
+                        <option value="">Seleccione un jefe</option>
+                        {profiles.map((profile: Profile) => (
+                          <option key={profile.id} value={profile.id}>
+                            {profile.nombre}
+                          </option>
+                        ))}
+                      </select>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -925,7 +961,7 @@ export default function PerfilPage() {
                           name="estado"
                           value={formData?.estado || ""}
                           onChange={handleChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                           <option value="">Seleccionar</option>
                           <option value="Activo">Activo</option>

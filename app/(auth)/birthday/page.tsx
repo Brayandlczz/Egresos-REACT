@@ -4,6 +4,8 @@ import React, { useEffect, useState } from "react"
 import { SolicitudFormBase } from "./form-base"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { ArrowLeft } from "lucide-react"
+import { useRouter } from "next/navigation"
 import { Textarea } from "@/components/ui/textarea"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 
@@ -15,6 +17,7 @@ export default function SolicitudCumpleanosForm() {
   }>(null)
 
   const [loading, setLoading] = useState(true)
+  const router = useRouter();
   const [error, setError] = useState<string | null>(null)
   const fechaActual = new Date().toISOString().split("T")[0]
 
@@ -96,18 +99,19 @@ export default function SolicitudCumpleanosForm() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen">
-      <SolicitudFormBase
-        title="Solicitud de Cumpleaños"
-        description="Complete el formulario para registrar una falta por día de cumpleaños."
-        onSubmit={async () => {
-          return {
-            success: true,
-            message: "Solicitud enviada",
-          }
-        }}
-      >
-        {/* Sección de datos del solicitante */}
+    <div className="max-w-3xl mx-auto">
+      <div className="mb-6 flex items-center">
+        <button
+          onClick={() => router.back()}
+          className="mr-4 p-2 rounded-full hover:bg-gray-100"
+          aria-label="Volver"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </button>
+        <h1 className="text-xl font-semibold">Volver</h1>
+      </div>
+
+      <SolicitudFormBase title="Solicitud de permiso por día de cumpleaños" onSubmit={handleSubmit}>
           <div className="bg-gray-100 p-4 rounded-md border space-y-4 mb-6 cursor-not-allowed">
             <h3 className="text-lg font-semibold">Datos del solicitante</h3>
 

@@ -5,6 +5,8 @@ import { SolicitudFormBase } from "./form-base"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { useRouter } from "next/navigation"
+import { ArrowLeft } from "lucide-react"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 
 export default function SolicitudPermisosForm() {
@@ -15,6 +17,7 @@ export default function SolicitudPermisosForm() {
   }>(null)
 
   const [loading, setLoading] = useState(true)
+  const router = useRouter();
   const [error, setError] = useState<string | null>(null)
   const fechaActual = new Date().toISOString().split("T")[0]
 
@@ -65,7 +68,7 @@ export default function SolicitudPermisosForm() {
 
     try {
       const data = {
-        empleado_id: perfil.uuid,  
+        empleado_id: perfil.id,  
         fecha_permiso: formData.fecha_permiso,
         hora_inicio: formData.hora_inicio,
         hora_fin: formData.hora_fin,
@@ -91,74 +94,74 @@ export default function SolicitudPermisosForm() {
     return <p className="text-center mt-10 text-red-500">{error}</p>
   }
 
-  return (
-    <div className="flex items-center justify-center min-h-screen">
-      <SolicitudFormBase
-        title="Solicitud de permiso"
-        description="Complete el formulario para registrar un permiso."
-        onSubmit={async () => {
-          return {
-            success: true,
-            message: "Solicitud enviada",
-          }
-        }}
-      >
-          {/* Sección de datos del solicitante */}
-          <div className="bg-gray-100 p-4 rounded-md border space-y-4 mb-6 cursor-not-allowed">
-            <h3 className="text-lg font-semibold">Datos del solicitante</h3>
+return (
+    <div className="max-w-3xl mx-auto">
+      <div className="mb-6 flex items-center">
+        <button
+          onClick={() => router.back()}
+          className="mr-4 p-2 rounded-full hover:bg-gray-100"
+          aria-label="Volver"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </button>
+        <h1 className="text-xl font-semibold">Volver</h1>
+      </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <Label htmlFor="fecha_solicitud">Fecha de solicitud</Label>
-                <Input id="fecha_solicitud" name="fecha_solicitud" type="date" readOnly value={fechaActual} />
-              </div>
-
-              <div className="space-y-1">
-                <Label>Nombre completo</Label>
-                <Input readOnly value={perfil?.nombre || ""} />
-              </div>
-
-              <div className="space-y-1">
-                <Label>Departamento</Label>
-                <Input readOnly value={perfil?.departamento || ""} />
-              </div>
-
-              <div className="space-y-1">
-                <Label>Puesto</Label>
-                <Input readOnly value={perfil?.puesto || ""} />
-              </div>
-            </div>
-          </div>
-
-          {/* Resto del formulario */}
-          <div className="space-y-2">
-            <Label htmlFor="fecha_permiso">Fecha del permiso</Label>
-            <Input id="fecha_permiso" name="fecha_permiso" type="date" defaultValue="2025-05-10" required />
-          </div>
+      <SolicitudFormBase title="Solicitud de permiso" onSubmit={handleSubmit}>
+        {/* Datos del solicitante */}
+        <div className="bg-gray-100 p-4 rounded-md border space-y-4 mb-6 cursor-not-allowed">
+          <h3 className="text-lg font-semibold">Datos del solicitante</h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="hora_inicio">Hora de inicio</Label>
-              <Input id="hora_inicio" name="hora_inicio" type="time" defaultValue="09:00" required />
+            <div className="space-y-1">
+              <Label htmlFor="fecha_solicitud">Fecha de solicitud</Label>
+              <Input id="fecha_solicitud" name="fecha_solicitud" type="date" readOnly value={fechaActual} />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="hora_fin">Hora de fin</Label>
-              <Input id="hora_fin" name="hora_fin" type="time" defaultValue="12:00" required />
+            <div className="space-y-1">
+              <Label>Nombre completo</Label>
+              <Input readOnly value={perfil?.nombre || ""} />
+            </div>
+
+            <div className="space-y-1">
+              <Label>Departamento</Label>
+              <Input readOnly value={perfil?.departamento || ""} />
+            </div>
+
+            <div className="space-y-1">
+              <Label>Puesto</Label>
+              <Input readOnly value={perfil?.puesto || ""} />
             </div>
           </div>
+        </div>
 
+        {/* Formulario */}
+        <div className="space-y-2">
+          <Label htmlFor="fecha_permiso">Fecha del permiso</Label>
+          <Input id="fecha_permiso" name="fecha_permiso" type="date" defaultValue={fechaActual} required />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="motivo">Motivo del permiso</Label>
-            <Textarea
-              id="motivo"
-              name="motivo"
-              placeholder="Describe el motivo de tu solicitud de permiso"
-              defaultValue="Asunto personal"
-              required
-            />
+            <Label htmlFor="hora_inicio">Hora de inicio</Label>
+            <Input id="hora_inicio" name="hora_inicio" type="time" required />
           </div>
-        </SolicitudFormBase>
-      </div>
+          <div className="space-y-2">
+            <Label htmlFor="hora_fin">Hora de fin</Label>
+            <Input id="hora_fin" name="hora_fin" type="time" required />
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="motivo">Motivo del permiso</Label>
+          <Textarea
+            id="motivo"
+            name="motivo"
+            placeholder="Describe el motivo"
+            required
+          />
+        </div>
+      </SolicitudFormBase>
+    </div>
   )
 }

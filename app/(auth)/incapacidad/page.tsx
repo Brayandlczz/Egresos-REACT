@@ -5,6 +5,8 @@ import { SolicitudFormBase } from "./form-base"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { useRouter } from "next/navigation"
+import { ArrowLeft } from "lucide-react"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 
 export default function SolicitudIncapacidadesForm() {
@@ -15,6 +17,7 @@ export default function SolicitudIncapacidadesForm() {
   }>(null)
 
   const [loading, setLoading] = useState(true)
+  const router = useRouter();
   const [error, setError] = useState<string | null>(null)
   const fechaActual = new Date().toISOString().split("T")[0]
 
@@ -63,6 +66,38 @@ export default function SolicitudIncapacidadesForm() {
     fetchPerfil()
   }, [])
 
+  const handleSubmit = async (formData: any) => {
+    if (!perfil) {
+      return {
+        success: false,
+        message: "No se pudo obtener el perfil del usuario",
+      }
+    }
+
+    try {
+      const solicitud = {
+        fecha_cumpleanos: formData.fecha_cumpleanos,
+        fecha_dia_libre: formData.fecha_dia_libre,
+        motivo: formData.motivo,
+        nombre: perfil.nombre,
+        departamento: perfil.departamento,
+        puesto: perfil.puesto,
+      }
+
+      console.log("Solicitud enviada:", solicitud)
+
+      return {
+        success: true,
+        message: "Solicitud enviada correctamente",
+      }
+    } catch (error: any) {
+      return {
+        success: false,
+        message: error.message || "Ocurrió un error al enviar la solicitud",
+      }
+    }
+  }
+
   if (loading) {
     return <p className="text-center mt-10 text-gray-600">Cargando datos del perfil...</p>
   }
@@ -72,18 +107,19 @@ export default function SolicitudIncapacidadesForm() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen">
-      <SolicitudFormBase
-        title="Solicitud de Incapacidad"
-        description="Complete el formulario para registrar una incapacidad médica."
-        onSubmit={async () => {
-          return {
-            success: true,
-            message: "Solicitud enviada",
-          }
-        }}
-      >
-        {/* Sección de datos del solicitante con cursor 'not-allowed' */}
+    <div className="max-w-3xl mx-auto">
+      <div className="mb-6 flex items-center">
+        <button
+          onClick={() => router.back()}
+          className="mr-4 p-2 rounded-full hover:bg-gray-100"
+          aria-label="Volver"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </button>
+        <h1 className="text-xl font-semibold">Volver</h1>
+      </div>
+
+      <SolicitudFormBase title="Solicitud de permiso por incapacidad" onSubmit={handleSubmit}>
         <div className="bg-gray-100 p-4 rounded-md border space-y-4 mb-6 cursor-not-allowed">
           <h3 className="text-lg font-semibold">Datos del solicitante</h3>
 
