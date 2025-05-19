@@ -112,6 +112,7 @@ export default function SolicitudCumpleanosForm() {
       </div>
 
       <SolicitudFormBase title="Solicitud de permiso por día de cumpleaños" onSubmit={handleSubmit}>
+          <h2 className="text-center">Complete el formulario para solicitar su día por cumpleaños.</h2>
           <div className="bg-gray-100 p-4 rounded-md border space-y-4 mb-6 cursor-not-allowed">
             <h3 className="text-lg font-semibold">Datos del solicitante</h3>
 

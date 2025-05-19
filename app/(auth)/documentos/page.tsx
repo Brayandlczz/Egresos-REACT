@@ -191,7 +191,7 @@ export default function DocumentosPage() {
                 )}
               </div>
               
-              <div className="bg-gray-50 px-6 py-3">
+              <div className="bg-gray-50 px-6 py-4">
                 <div className="text-xs text-gray-500">
                   Publicado por: {documento.creador?.nombre
                     ? `${documento.creador.nombre}`

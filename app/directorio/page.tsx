@@ -1,4 +1,3 @@
-// Asegurémonos de que el componente de directorio esté correctamente configurado
 "use client"
 
 import { useEffect, useState } from "react"

@@ -107,8 +107,9 @@ return (
         <h1 className="text-xl font-semibold">Volver</h1>
       </div>
 
-      <SolicitudFormBase title="Solicitud de permiso" onSubmit={handleSubmit}>
+      <SolicitudFormBase title="Nueva Solicitud de permiso" onSubmit={handleSubmit}>
         {/* Datos del solicitante */}
+        <h2 className="text-center">Complete el formulario para solicitar un permiso de ausencia.</h2>
         <div className="bg-gray-100 p-4 rounded-md border space-y-4 mb-6 cursor-not-allowed">
           <h3 className="text-lg font-semibold">Datos del solicitante</h3>
 
@@ -157,7 +158,7 @@ return (
           <Textarea
             id="motivo"
             name="motivo"
-            placeholder="Describe el motivo"
+            placeholder="Explique detalladamente el motivo de su solicitud de permiso..."
             required
           />
         </div>

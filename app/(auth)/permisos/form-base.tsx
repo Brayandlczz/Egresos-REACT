@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, } from "@/components/ui/card"
 import { toast } from "@/components/ui/use-toast"
 
 export type SolicitudBaseProps = {
@@ -66,13 +66,17 @@ export function SolicitudFormBase({
   return (
     <Card className="w-full max-w-3xl mx-auto">
       <CardHeader>
-      <CardTitle className="text-center">{title}</CardTitle>
-      <CardDescription className="text-center">{description}</CardDescription>
+        <CardTitle className="text-center">{title}</CardTitle>
+        <CardDescription className="text-center">{description}</CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">{children}</CardContent>
         <CardFooter className="flex justify-end">
-          <Button type="submit" disabled={isSubmitting}>
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
             {isSubmitting ? "Enviando..." : submitButtonText}
           </Button>
         </CardFooter>
@@ -80,4 +84,3 @@ export function SolicitudFormBase({
     </Card>
   )
 }
-
