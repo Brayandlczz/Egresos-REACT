@@ -4,12 +4,11 @@ import type React from "react"
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, } from "@/components/ui/card"
+import { Card, CardContent, CardFooter, CardHeader, CardTitle, } from "@/components/ui/card"
 import { toast } from "@/components/ui/use-toast"
 
 export type SolicitudBaseProps = {
   title: string
-  description: string
   children: React.ReactNode
   onSubmit: (formData: any) => Promise<{ success: boolean; message: string }>
   submitButtonText?: string
@@ -17,7 +16,6 @@ export type SolicitudBaseProps = {
 
 export function SolicitudFormBase({
   title,
-  description,
   children,
   onSubmit,
   submitButtonText = "Enviar solicitud",
@@ -43,7 +41,12 @@ export function SolicitudFormBase({
           title: "Solicitud enviada",
           description: result.message,
         })
-        e.currentTarget.reset()
+        console.log("Formulario a resetear:", e.currentTarget)
+        if (e.currentTarget) {
+          e.currentTarget.reset()
+        } else {
+          console.warn("No se encontró el formulario para resetear")
+        }
       } else {
         toast({
           title: "Error",
@@ -67,7 +70,6 @@ export function SolicitudFormBase({
     <Card className="w-full max-w-3xl mx-auto">
       <CardHeader>
         <CardTitle className="text-center">{title}</CardTitle>
-        <CardDescription className="text-center">{description}</CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">{children}</CardContent>

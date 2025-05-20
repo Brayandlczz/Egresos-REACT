@@ -11,15 +11,15 @@ import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 
 export default function SolicitudIncapacidadesForm() {
   const [perfil, setPerfil] = useState<null | {
+    id: string
     nombre: string
     departamento: string
     puesto: string
   }>(null)
 
   const [loading, setLoading] = useState(true)
-  const router = useRouter();
-  const [title, description] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
   const fechaActual = new Date().toISOString().split("T")[0]
 
   useEffect(() => {
@@ -42,20 +42,16 @@ export default function SolicitudIncapacidadesForm() {
         return
       }
 
-      const { data, error } = await supabase
+       const { data, error } = await supabase
         .from("profiles")
-        .select("nombre, departamento, puesto")
+        .select("id, nombre, departamento, puesto")
         .eq("id", user.id)
         .single()
 
-      console.log("Datos obtenidos de la consulta:", data)
-      console.log("Error de la consulta:", error)
-
       if (error) {
-        console.error("Error al obtener perfil:", error.message || error.details)
+        console.error("Error al obtener perfil:", error)
         setError("No se pudo cargar el perfil del usuario.")
       } else if (!data) {
-        console.error("No se encontró el perfil para el usuario:", user.id)
         setError("No se encontró el perfil del usuario.")
       } else {
         setPerfil(data)
@@ -67,39 +63,41 @@ export default function SolicitudIncapacidadesForm() {
     fetchPerfil()
   }, [])
 
-  if (loading) {
-    return <p className="text-center mt-10 text-gray-600">Cargando datos del perfil...</p>
+  const handleSubmit = async (formData: any)=> {
+    const supabase = createClientComponentClient()
+
+  if (!perfil) {
+    return { success : false, message: "No se pudo obtener el perfil del usuario"}
   }
 
-  if (error) {
-    return <p className="text-center mt-10 text-red-500">{error}</p>
-  }
+  try {
+    const { fecha_retardo, hora_llegada, hora_establecida, motivo }  = formData
 
-  const handleSubmit = async (formData: any) => {
-    const user = { id: "123" } // Usa el ID del usuario que obtuviste de Supabase o de tu sistema
-    const jefeDirecto = "456" // Usualmente sería un valor relacionado al jefe directo del empleado
-
-    if (!user?.id || !jefeDirecto) {
-      return { success: false, message: "No se pudo identificar al usuario o al jefe directo" }
+    const payload = {
+      empleado_id: perfil.id,
+      fecha_solicitud: fechaActual,
+      fecha_retardo,
+      hora_llegada,
+      hora_establecida,
+      motivo,
+      estado: "pendiente"
     }
+  
+          console.log("Datos a insertar:", payload)
 
-    try {
-      const data = {
-        empleado_id: user.id,
-        jefe_directo_id: jefeDirecto,
-        fecha_retardo: formData.fecha_retardo,
-        hora_llegada: formData.hora_llegada,
-        hora_establecida: formData.hora_establecida,
-        motivo: formData.motivo,
+      const { error } = await supabase.from("solicitud_retardo").insert([payload])
+
+      if (error) {
+        console.error("Error al insertar en solicitud_retardo:", error?.message || error)
+        return { success: false, message: "Error al guardar la solicitud." }
       }
 
-      console.log("Datos enviados:", data)
-      return { success: true, message: "Solicitud de retardo enviada correctamente" }
+      return { success: true, message: "Solicitud guardada correctamente." }
     } catch (error: any) {
-      console.error("Error al crear solicitud de retardo:", error)
+      console.error("Error inesperado:", error)
       return {
         success: false,
-        message: error.message || "Error al crear la solicitud de retardo",
+        message: error.message || "Error inesperado al crear la solicitud",
       }
     }
   }
@@ -168,8 +166,7 @@ export default function SolicitudIncapacidadesForm() {
             <Textarea
               id="motivo"
               name="motivo"
-              placeholder="Describe el motivo de tu retardo"
-              defaultValue="Tráfico intenso en el trayecto"
+              placeholder="Describe el motivo de tu retardo..."
             />
           </div>
         </SolicitudFormBase>

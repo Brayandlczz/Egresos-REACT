@@ -38,33 +38,6 @@ type Profile = {
   updated_at?: string
 }
 
-// Datos de ejemplo para mostrar en caso de error
-const sampleProfile: Profile = {
-  id: "usuario-ejemplo",
-  nombre: "Juan",
-  email: "juan.perez@empresa.com",
-  role: "Empleado",
-  departamento: "Tecnología",
-  puesto: "Desarrollador",
-  fecha_ingreso: "2023-01-15",
-  estado: "Activo",
-  nacionalidad: "Mexicana",
-  lugar_nacimiento: "Ciudad de México",
-  fecha_nacimiento: "1990-05-20",
-  genero: "Masculino",
-  estado_civil: "Soltero/a",
-  curp: "PERJ900520HDFRZN09",
-  rfc: "PERJ900520ABC",
-  imss: "12345678901",
-  calle: "Av. Reforma",
-  numero_exterior: "123",
-  colonia: "Centro",
-  municipio: "Cuauhtémoc",
-  entidad_federativa: "Ciudad de México",
-  codigo_postal: "06000",
-  telefono: "5555123456",
-}
-
 export default function PerfilPage() {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [profile, setProfile] = useState<Profile | null>(null)
@@ -93,7 +66,6 @@ export default function PerfilPage() {
 
       // Crear un perfil con datos de ejemplo
       const newProfile = {
-        ...sampleProfile,
         id: userId,
       }
 
@@ -145,8 +117,6 @@ export default function PerfilPage() {
 
       if (!session) {
         addDebugInfo("No se pudo obtener la sesión, usando datos de ejemplo")
-        setProfile(sampleProfile)
-        setFormData(sampleProfile)
         setUsingSampleData(true)
         return
       }
@@ -169,8 +139,6 @@ export default function PerfilPage() {
           return
         } catch (createError) {
           addDebugInfo("No se pudo crear perfil, usando datos de ejemplo")
-          setProfile(sampleProfile)
-          setFormData(sampleProfile)
           setUsingSampleData(true)
           return
         }
@@ -183,9 +151,6 @@ export default function PerfilPage() {
       console.error("Error al cargar perfil:", error)
       addDebugInfo(`Error general: ${error.message}`)
 
-      // En caso de cualquier error, mostrar datos de ejemplo
-      setProfile(sampleProfile)
-      setFormData(sampleProfile)
       setUsingSampleData(true)
       setError("Se están mostrando datos de ejemplo debido a un error")
     } finally {
@@ -994,28 +959,6 @@ export default function PerfilPage() {
           )}
         </div>
       </div>
-
-      {/* Información de depuración (comentado por deshuso) */}
-      {/*debugInfo.length > 0 && (
-        <div className="mt-8 bg-gray-50 border border-gray-200 rounded-lg p-4">
-          <h3 className="font-medium mb-2 flex items-center">
-            <span>Información de depuración</span>
-            <button onClick={() => setDebugInfo([])} className="ml-2 text-xs text-gray-500 hover:text-gray-700">
-              (Limpiar)
-            </button>
-          </h3>
-          <div className="max-h-40 overflow-y-auto">
-            <ul className="text-xs text-gray-700 space-y-1">
-              {debugInfo.map((info, index) => (
-                <li key={index} className="border-b border-gray-100 pb-1">
-                  • {info}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      )*/}
     </div>
   )
 }
-

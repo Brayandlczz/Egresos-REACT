@@ -7,8 +7,8 @@ import { CalendarDays, Clock, Cake, HeartPulse, TreePalm } from "lucide-react";
 export default function GestorSolicitudes() {
   const solicitudes = [
     {
-      titulo: "Solicitud por Día",
-      descripcion: "Solicita un día libre por asuntos personales o administrativos.",
+      titulo: "Solicitud de Permiso",
+      descripcion: "Solicita un lapso de tiempo por asuntos personales o administrativos.",
       ruta: "/permisos",
       icono: <CalendarDays className="h-6 w-6 text-blue-600" />,
     },

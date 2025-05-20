@@ -152,9 +152,9 @@ export function Sidebar() {
               </li>
               <li>
                 <Link
-                  href="/calendario"
+                  href="/#"
                   className={`flex items-center gap-3 p-2 rounded-md transition-all ${
-                    isActive("/calendario")
+                    isActive("/#")
                       ? "bg-blue-50 text-blue-700 shadow-[3px_3px_0px_0px_#BFDBFE] transform translate-y-[-1px]"
                       : "hover:bg-gray-100 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)] hover:translate-y-[-1px]"
                   }`}

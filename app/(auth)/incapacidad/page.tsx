@@ -11,6 +11,7 @@ import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 
 export default function SolicitudIncapacidadesForm() {
   const [perfil, setPerfil] = useState<null | {
+    id:string
     nombre: string
     departamento: string
     puesto: string
@@ -23,6 +24,7 @@ export default function SolicitudIncapacidadesForm() {
 
   useEffect(() => {
     const supabase = createClientComponentClient()
+
     const fetchPerfil = async () => {
       setLoading(true)
       setError(null)
@@ -31,8 +33,6 @@ export default function SolicitudIncapacidadesForm() {
         data: { user },
         error: authError,
       } = await supabase.auth.getUser()
-
-      console.log("Usuario autenticado:", user)
 
       if (authError || !user) {
         console.error("Error al obtener usuario:", authError)
@@ -43,18 +43,14 @@ export default function SolicitudIncapacidadesForm() {
 
       const { data, error } = await supabase
         .from("profiles")
-        .select("nombre, departamento, puesto")
+        .select("id, nombre, departamento, puesto")
         .eq("id", user.id)
         .single()
 
-      console.log("Datos obtenidos de la consulta:", data)
-      console.log("Error de la consulta:", error)
-
       if (error) {
-        console.error("Error al obtener perfil:", error.message || error.details)
+        console.error("Error al obtener perfil:", error)
         setError("No se pudo cargar el perfil del usuario.")
       } else if (!data) {
-        console.error("No se encontró el perfil para el usuario:", user.id)
         setError("No se encontró el perfil del usuario.")
       } else {
         setPerfil(data)
@@ -67,44 +63,41 @@ export default function SolicitudIncapacidadesForm() {
   }, [])
 
   const handleSubmit = async (formData: any) => {
-    if (!perfil) {
-      return {
-        success: false,
-        message: "No se pudo obtener el perfil del usuario",
-      }
-    }
+    const supabase = createClientComponentClient()
 
+    if(!perfil){
+      return { success: false, message: "No se pudo obtener el perfil del usuario."}
+    }
+    
     try {
-      const solicitud = {
-        fecha_cumpleanos: formData.fecha_cumpleanos,
-        fecha_dia_libre: formData.fecha_dia_libre,
-        motivo: formData.motivo,
-        nombre: perfil.nombre,
-        departamento: perfil.departamento,
-        puesto: perfil.puesto,
+      const { fecha_inicio, fecha_fin, dias_incapacidad, diagnostico, folio_incapacidad, archivo_url, estado} = formData
+
+      const payload = {
+        empleado_id: perfil.id,
+        fecha_solicitud: fechaActual, 
+        fecha_inicio,
+        fecha_fin, 
+        dias_incapacidad, 
+        diagnostico, 
+        folio_incapacidad, 
+        archivo_url,
+        estado: "pendiente", 
       }
 
-      console.log("Solicitud enviada:", solicitud)
+    const { error } = await supabase.from("solicitud_incapacidad").insert([payload])
 
-      return {
-        success: true,
-        message: "Solicitud enviada correctamente",
-      }
-    } catch (error: any) {
-      return {
-        success: false,
-        message: error.message || "Ocurrió un error al enviar la solicitud",
-      }
+    if (error) {
+      console.error("Error al insertar en solicitud_incapacidad:", error?.message || error)
+      return { success: false, message: "Error al guardar la solicitud." }
     }
-  }
 
-  if (loading) {
-    return <p className="text-center mt-10 text-gray-600">Cargando datos del perfil...</p>
-  }
+    return { success: true, message: "Solicitud enviada correctamente." }
 
-  if (error) {
-    return <p className="text-center mt-10 text-red-500">{error}</p>
+  } catch (error) {
+    console.error("Error en handleSubmit:", error)
+    return { success: false, message: "Ocurrió un error al procesar la solicitud." }
   }
+}
 
   return (
     <div className="max-w-3xl mx-auto">
@@ -147,7 +140,6 @@ export default function SolicitudIncapacidadesForm() {
           </div>
         </div>
 
-        {/* Resto del formulario */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="fecha_inicio">Fecha de inicio</Label>
@@ -162,7 +154,7 @@ export default function SolicitudIncapacidadesForm() {
 
         <div className="space-y-2">
           <Label htmlFor="dias_incapacidad">Días de incapacidad</Label>
-          <Input id="dias_incapacidad" name="dias_incapacidad" type="number" required min="1" readOnly value="5" />
+          <Input id="dias_incapacidad" name="dias_incapacidad" type="number" required min="1" placeholder="Ejemplo: 1"/>
         </div>
 
         <div className="space-y-2">
@@ -172,7 +164,7 @@ export default function SolicitudIncapacidadesForm() {
 
         <div className="space-y-2">
           <Label htmlFor="diagnostico">Diagnóstico</Label>
-          <Textarea id="diagnostico" name="diagnostico" placeholder="Diagnóstico médico" />
+          <Textarea id="diagnostico" name="diagnostico" placeholder="Describa el diagnóstico médico..." />
         </div>
       </SolicitudFormBase>
     </div>

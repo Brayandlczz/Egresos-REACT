@@ -9,7 +9,7 @@ import { useRouter } from "next/navigation"
 import { Textarea } from "@/components/ui/textarea"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 
-export default function SolicitudCumpleanosForm() {
+export default function SolicitudVacacionesForm() {
   const [perfil, setPerfil] = useState<null | {
     id: string
     nombre: string
@@ -70,21 +70,22 @@ const handleSubmit = async (formData: any) => {
   }
 
   try {
-    const { fecha_cumpleaños, fecha_dia_libre, motivo } = formData
+    const { fecha_inicio, fecha_fin, dias_solicitados, motivo } = formData
 
     const payload = {
       empleado_id: perfil.id,
       fecha_solicitud: fechaActual,
-      fecha_cumpleaños,
-      fecha_dia_libre,
+      fecha_inicio,
+      fecha_fin, 
+      dias_solicitados,
       motivo,
       estado: "pendiente",
     }
 
-    const { error } = await supabase.from("solicitud_cumpleaños").insert([payload])
+    const { error } = await supabase.from("solicitud_vacaciones").insert([payload])
 
     if (error) {
-      console.error("Error al insertar en solicitud_cumpleaños:", error?.message || error)
+      console.error("Error al insertar en solicitud_vacaciones:", error?.message || error)
       return { success: false, message: "Error al guardar la solicitud." }
     }
 
@@ -109,53 +110,54 @@ const handleSubmit = async (formData: any) => {
         <h1 className="text-xl font-semibold">Volver</h1>
       </div>
 
-      <SolicitudFormBase title="Solicitud de permiso por día de cumpleaños" onSubmit={handleSubmit}>
-          <h2 className="text-center">Complete el formulario para solicitar su día por cumpleaños.</h2>
-          <div className="bg-gray-100 p-4 rounded-md border space-y-4 mb-6 cursor-not-allowed">
-            <h3 className="text-lg font-semibold">Datos del solicitante</h3>
+      <SolicitudFormBase title="Solicitud de permiso por vacaciones" onSubmit={handleSubmit}>
+          <h2 className="text-center">Complete el formulario para solicitar un periodo vacacional de sus días disponibles.</h2>
+        <div className="bg-gray-100 p-4 rounded-md border space-y-4 mb-6 cursor-not-allowed">
+          <h3 className="text-lg font-semibold">Datos del solicitante</h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <Label htmlFor="fecha_solicitud">Fecha de solicitud</Label>
-                <Input id="fecha_solicitud" name="fecha_solicitud" type="date" readOnly value={fechaActual} />
-              </div>
-
-              <div className="space-y-1">
-                <Label>Nombre completo</Label>
-                <Input readOnly value={perfil?.nombre || ""} />
-              </div>
-
-              <div className="space-y-1">
-                <Label>Departamento</Label>
-                <Input readOnly value={perfil?.departamento || ""} />
-              </div>
-
-              <div className="space-y-1">
-                <Label>Puesto</Label>
-                <Input readOnly value={perfil?.puesto || ""} />
-              </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <Label htmlFor="fecha_solicitud">Fecha de solicitud</Label>
+              <Input id="fecha_solicitud" name="fecha_solicitud" type="date" readOnly value={fechaActual} />
             </div>
-          </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="fecha_cumpleaños">Fecha de cumpleaños</Label>
-            <Input id="fecha_cumpleaños" name="fecha_cumpleaños" type="date" required />
-          </div>
+            <div className="space-y-1">
+              <Label>Nombre completo</Label>
+              <Input readOnly value={perfil?.nombre || ""} />
+            </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="fecha_dia_libre">Fecha para tomar el día libre</Label>
-            <Input id="fecha_dia_libre" name="fecha_dia_libre" type="date" required />
+            <div className="space-y-1">
+              <Label>Departamento</Label>
+              <Input readOnly value={perfil?.departamento || ""} />
+            </div>
+
+            <div className="space-y-1">
+              <Label>Puesto</Label>
+              <Input readOnly value={perfil?.puesto || ""} />
+            </div>
           </div>
         </div>
 
-        <div className="space-y-2 mt-4">
-          <Label htmlFor="motivo">Comentarios adicionales (opcional)</Label>
-          <Textarea
-            id="motivo"
-            name="motivo"
-            placeholder="Comentarios adicionales sobre tu solicitud... ¡UNICI te desea un felíz cumpleaños!"
-          />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="fecha_inicio">Fecha de inicio</Label>
+            <Input id="fecha_inicio" name="fecha_inicio" type="date" required />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="fecha_fin">Fecha de fin</Label>
+            <Input id="fecha_fin" name="fecha_fin" type="date" required />
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="dias_solicitados">Días vacacionales solicitados</Label>
+          <Input id="dias_solicitados" name="dias_solicitados" type="number" required min="1" placeholder="Ejemplo: 1"/>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="motivo">Motivo</Label>
+          <Textarea id="motivo" name="motivo" placeholder="Describa el motivo de su solicitud..." />
         </div>
       </SolicitudFormBase>
     </div>

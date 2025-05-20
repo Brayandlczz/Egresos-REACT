@@ -11,19 +11,20 @@ import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 
 export default function SolicitudPermisosForm() {
   const [perfil, setPerfil] = useState<null | {
+    id: string
     nombre: string
     departamento: string
     puesto: string
   }>(null)
 
   const [loading, setLoading] = useState(true)
-  const router = useRouter();
   const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
   const fechaActual = new Date().toISOString().split("T")[0]
-
 
   useEffect(() => {
     const supabase = createClientComponentClient()
+
     const fetchPerfil = async () => {
       setLoading(true)
       setError(null)
@@ -42,8 +43,8 @@ export default function SolicitudPermisosForm() {
 
       const { data, error } = await supabase
         .from("profiles")
-        .select("nombre, departamento, puesto")
-        .eq("id", user.id)  
+        .select("id, nombre, departamento, puesto")
+        .eq("id", user.id)
         .single()
 
       if (error) {
@@ -62,39 +63,45 @@ export default function SolicitudPermisosForm() {
   }, [])
 
   const handleSubmit = async (formData: any) => {
+    const supabase = createClientComponentClient()
+
     if (!perfil) {
       return { success: false, message: "No se pudo obtener el perfil del usuario" }
     }
 
     try {
-      const data = {
-        empleado_id: perfil.id,  
-        fecha_permiso: formData.fecha_permiso,
-        hora_inicio: formData.hora_inicio,
-        hora_fin: formData.hora_fin,
-        motivo: formData.motivo,
+      const { fecha_permiso, hora_inicio, hora_fin, motivo } = formData
+
+      const payload = {
+        empleado_id: perfil.id,
+        fecha_solicitud: fechaActual,
+        fecha_permiso,
+        hora_inicio,
+        hora_fin,
+        motivo,
+        estado: "pendiente"
       }
 
-      console.log("Datos enviados:", data)
-      return { success: true, message: "Solicitud enviada correctamente (modo prueba)" }
+      console.log("Datos a insertar:", payload)
+
+      const { error } = await supabase.from("solicitud_permiso").insert([payload])
+
+      if (error) {
+        console.error("Error al insertar en solicitud_permiso:", error?.message || error)
+        return { success: false, message: "Error al guardar la solicitud." }
+      }
+
+      return { success: true, message: "Solicitud guardada correctamente." }
     } catch (error: any) {
-      console.error("Error al crear solicitud de permiso:", error)
+      console.error("Error inesperado:", error)
       return {
         success: false,
-        message: error.message || "Error al crear la solicitud de permiso",
+        message: error.message || "Error inesperado al crear la solicitud",
       }
     }
   }
 
-  if (loading) {
-    return <p className="text-center mt-10 text-gray-600">Cargando datos del perfil...</p>
-  }
-
-  if (error) {
-    return <p className="text-center mt-10 text-red-500">{error}</p>
-  }
-
-return (
+  return (
     <div className="max-w-3xl mx-auto">
       <div className="mb-6 flex items-center">
         <button
@@ -108,11 +115,10 @@ return (
       </div>
 
       <SolicitudFormBase title="Nueva Solicitud de permiso" onSubmit={handleSubmit}>
-        {/* Datos del solicitante */}
         <h2 className="text-center">Complete el formulario para solicitar un permiso de ausencia.</h2>
+
         <div className="bg-gray-100 p-4 rounded-md border space-y-4 mb-6 cursor-not-allowed">
           <h3 className="text-lg font-semibold">Datos del solicitante</h3>
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1">
               <Label htmlFor="fecha_solicitud">Fecha de solicitud</Label>
@@ -136,7 +142,6 @@ return (
           </div>
         </div>
 
-        {/* Formulario */}
         <div className="space-y-2">
           <Label htmlFor="fecha_permiso">Fecha del permiso</Label>
           <Input id="fecha_permiso" name="fecha_permiso" type="date" defaultValue={fechaActual} required />
@@ -158,7 +163,7 @@ return (
           <Textarea
             id="motivo"
             name="motivo"
-            placeholder="Explique detalladamente el motivo de su solicitud de permiso..."
+            placeholder="Explique detalladamente el motivo de su solicitud..."
             required
           />
         </div>

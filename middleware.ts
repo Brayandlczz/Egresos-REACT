@@ -24,8 +24,8 @@ export async function middleware(req: NextRequest) {
   // Verificar si es un archivo estático
   const isStaticFile = req.nextUrl.pathname.includes(".")
 
-  // Agregar logs para depuración
-  console.log(`[Middleware] Ruta: ${req.nextUrl.pathname}, Autenticado: ${!!session}`)
+  // Agregar logs para depuración {comentado para mantener la terminal + limpia, *only testing*}
+  //console.log(`[Middleware] Ruta: ${req.nextUrl.pathname}, Autenticado: ${!!session}`)
 
   // Si el usuario no está autenticado y está intentando acceder a una ruta protegida
   if (!session && !isPublicRoute && !isStaticFile) {

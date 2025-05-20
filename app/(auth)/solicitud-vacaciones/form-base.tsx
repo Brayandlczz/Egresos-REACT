@@ -86,4 +86,3 @@ export function SolicitudFormBase({
     </Card>
   )
 }
-
