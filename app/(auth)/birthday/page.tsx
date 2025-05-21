@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label"
 import { ArrowLeft } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { Textarea } from "@/components/ui/textarea"
+import { Mosaic } from "react-loading-indicators"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 
 export default function SolicitudCumpleanosForm() {
@@ -19,6 +20,7 @@ export default function SolicitudCumpleanosForm() {
 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const router = useRouter();
   const fechaActual = new Date().toISOString().split("T")[0]
 
@@ -62,39 +64,60 @@ export default function SolicitudCumpleanosForm() {
     fetchPerfil()
   }, [])
 
-const handleSubmit = async (formData: any) => {
-  const supabase = createClientComponentClient()
+  const handleSubmit = async (formData: any) => {
+    const supabase = createClientComponentClient()
 
-  if (!perfil) {
-    return { success: false, message: "No se pudo obtener el perfil del usuario" }
-  }
-
-  try {
-    const { fecha_cumpleaños, fecha_dia_libre, motivo } = formData
-
-    const payload = {
-      empleado_id: perfil.id,
-      fecha_solicitud: fechaActual,
-      fecha_cumpleaños,
-      fecha_dia_libre,
-      motivo,
-      estado: "pendiente",
+    if (!perfil) {
+      return { success: false, message: "No se pudo obtener el perfil del usuario" }
     }
 
-    const { error } = await supabase.from("solicitud_cumpleaños").insert([payload])
+    setIsSubmitting(true)
 
-    if (error) {
-      console.error("Error al insertar en solicitud_cumpleaños:", error?.message || error)
-      return { success: false, message: "Error al guardar la solicitud." }
+    try {
+      const { fecha_cumpleaños, fecha_dia_libre, motivo } = formData
+
+      const payload = {
+        empleado_id: perfil.id,
+        fecha_solicitud: fechaActual,
+        fecha_cumpleaños,
+        fecha_dia_libre,
+        motivo,
+        estado: "pendiente",
+      }
+
+      console.log("Datos a insertar:", payload)
+
+      const { error } = await supabase.from("solicitud_cumpleaños").insert([payload])
+
+      if (error) {
+        console.error("Error al insertar en solicitud_cumpleaños:", error?.message || error)
+        setIsSubmitting(false)
+        return { success: false, message: "Error al guardar la solicitud." }
+      }
+
+      setTimeout(() => {
+        router.push("/solicitudes")
+      }, 1500) 
+
+      return { success: true, message: "Solicitud guardada correctamente." }
+    } catch (error: any) {
+      console.error("Error inesperado:", error)
+      setIsSubmitting(false)
+      return {
+        success: false,
+        message: error.message || "Error inesperado al crear la solicitud",
+      }
     }
-
-    return { success: true, message: "Solicitud enviada correctamente." }
-
-  } catch (error) {
-    console.error("Error en handleSubmit:", error)
-    return { success: false, message: "Ocurrió un error al procesar la solicitud." }
   }
-}
+
+  if (isSubmitting) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen">
+        <Mosaic color="#2464ec" size="medium" />
+        <p className="mt-4 text-gray-600 text-center">Redirigiendo, por favor espere...</p>
+      </div>  
+    )
+  }
 
   return (
     <div className="max-w-3xl mx-auto">

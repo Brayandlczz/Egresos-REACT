@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { useRouter } from "next/navigation"
 import { ArrowLeft } from "lucide-react"
+import { Mosaic } from "react-loading-indicators"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 
 export default function SolicitudPermisosForm() {
@@ -19,6 +20,7 @@ export default function SolicitudPermisosForm() {
 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const router = useRouter()
   const fechaActual = new Date().toISOString().split("T")[0]
 
@@ -69,6 +71,8 @@ export default function SolicitudPermisosForm() {
       return { success: false, message: "No se pudo obtener el perfil del usuario" }
     }
 
+    setIsSubmitting(true)
+
     try {
       const { fecha_permiso, hora_inicio, hora_fin, motivo } = formData
 
@@ -88,17 +92,32 @@ export default function SolicitudPermisosForm() {
 
       if (error) {
         console.error("Error al insertar en solicitud_permiso:", error?.message || error)
+        setIsSubmitting(false)
         return { success: false, message: "Error al guardar la solicitud." }
       }
+
+      setTimeout(() => {
+        router.push("/solicitudes")
+      }, 1500) 
 
       return { success: true, message: "Solicitud guardada correctamente." }
     } catch (error: any) {
       console.error("Error inesperado:", error)
+      setIsSubmitting(false)
       return {
         success: false,
         message: error.message || "Error inesperado al crear la solicitud",
       }
     }
+  }
+
+  if (isSubmitting) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen">
+        <Mosaic color="#2464ec" size="medium" />
+        <p className="mt-4 text-gray-600 text-center">Redirigiendo, por favor espere...</p>
+      </div>  
+    )
   }
 
   return (

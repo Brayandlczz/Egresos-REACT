@@ -53,13 +53,12 @@ export default function GestorSolicitudes() {
             key={index}
             className="bg-white border border-gray-200 rounded-lg shadow-sm p-5 flex flex-col justify-between"
           >
-            <div className="flex items-start justify-between mb-3">
-              <h2 className="text-lg font-semibold text-gray-800">
-                {solicitud.titulo}
-              </h2>
-              <span>{solicitud.icono}</span>
-            </div>
-
+      <div className="relative flex items-center w-full mb-3">
+        <h2 className="absolute left-1/2 -translate-x-1/2 whitespace-nowrap text-lg font-semibold text-gray-800">
+          {solicitud.titulo}
+        </h2>
+        <span className="ml-auto">{solicitud.icono}</span>
+      </div>
             <p className="text-gray-500 text-sm mb-6 text-center">
               {solicitud.descripcion}
             </p>

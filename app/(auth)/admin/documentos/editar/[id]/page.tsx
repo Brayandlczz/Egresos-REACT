@@ -8,6 +8,14 @@ import { Loader2 } from 'lucide-react'
 import { DocumentoForm } from "@/app/components/documentos/documento-form"
 import type { Documento } from "@/app/services/documentos-service"
 
+type EmpleadoData = {
+  empleado: {
+    id: string
+    nombre: string
+    email: string
+  }
+}
+
 export default function EditarDocumentoPage() {
   const params = useParams()
   const router = useRouter()
@@ -16,10 +24,8 @@ export default function EditarDocumentoPage() {
   const [error, setError] = useState<string | null>(null)
   const supabase = createClientComponentClient()
 
-  // Obtener el ID del documento de los parámetros de la URL
   const id = params.id as string
 
-  // Cargar los datos del documento cuando se monte el componente
   useEffect(() => {
     async function cargarDocumento() {
       if (!id) return
@@ -28,7 +34,6 @@ export default function EditarDocumentoPage() {
         setLoading(true)
         setError(null)
 
-        // Consultar el documento por su ID
         const { data, error } = await supabase
           .from("documentos")
           .select(`
@@ -38,15 +43,10 @@ export default function EditarDocumentoPage() {
           .eq("id", id)
           .single()
 
-        if (error) {
-          throw error
-        }
+        if (error) throw error
+        if (!data) throw new Error("No se encontró el documento")
 
-        if (!data) {
-          throw new Error("No se encontró el documento")
-        }
-
-        // Si es un documento personal, obtener los empleados asignados
+        // Si es personal, obtener empleados
         if (data.tipo === 'personal') {
           const { data: empleadosData, error: empleadosError } = await supabase
             .from("documentos_empleados")
@@ -55,13 +55,13 @@ export default function EditarDocumentoPage() {
             `)
             .eq("documento_id", id)
 
-          if (!empleadosError && empleadosData) {
-            data.empleados = empleadosData.map(e => ({
-              id: e.empleado.id,
-              nombre: e.empleado.nombre,
-              email: e.empleado.email
-            }))
-          }
+        if (!empleadosError && empleadosData) {
+          data.empleados = (empleadosData as any[]).map(e => ({
+            id: e.empleado.id,
+            nombre: e.empleado.nombre,
+            email: e.empleado.email
+          }))
+        }
         }
 
         setDocumento(data)
@@ -76,7 +76,6 @@ export default function EditarDocumentoPage() {
     cargarDocumento()
   }, [id, supabase])
 
-  // Mostrar estado de carga
   if (loading) {
     return (
       <div className="container mx-auto py-6 flex flex-col items-center justify-center min-h-[50vh]">
@@ -86,7 +85,6 @@ export default function EditarDocumentoPage() {
     )
   }
 
-  // Mostrar mensaje de error si ocurrió algún problema
   if (error) {
     return (
       <div className="container mx-auto py-6">
@@ -101,7 +99,6 @@ export default function EditarDocumentoPage() {
     )
   }
 
-  // Renderizar el formulario de edición con los datos del documento
   return (
     <div className="container mx-auto py-6">
       <h1 className="text-2xl font-bold mb-6">Editar Documento</h1>

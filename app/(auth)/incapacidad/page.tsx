@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { useRouter } from "next/navigation"
 import { ArrowLeft } from "lucide-react"
+import { Mosaic} from "react-loading-indicators"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 
 export default function SolicitudIncapacidadesForm() {
@@ -19,6 +20,7 @@ export default function SolicitudIncapacidadesForm() {
 
   const [loading, setLoading] = useState(true)
   const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const fechaActual = new Date().toISOString().split("T")[0]
 
@@ -68,6 +70,8 @@ export default function SolicitudIncapacidadesForm() {
     if(!perfil){
       return { success: false, message: "No se pudo obtener el perfil del usuario."}
     }
+
+    setIsSubmitting(true)
     
     try {
       const { fecha_inicio, fecha_fin, dias_incapacidad, diagnostico, folio_incapacidad, archivo_url, estado} = formData
@@ -84,20 +88,39 @@ export default function SolicitudIncapacidadesForm() {
         estado: "pendiente", 
       }
 
-    const { error } = await supabase.from("solicitud_incapacidad").insert([payload])
+      console.log("Datos a insertar:", payload)
 
-    if (error) {
-      console.error("Error al insertar en solicitud_incapacidad:", error?.message || error)
-      return { success: false, message: "Error al guardar la solicitud." }
+      const { error } = await supabase.from("solicitud_incapacidad").insert([payload])
+
+      if (error) {
+        console.error("Error al insertar en solicitud_incapacidad:", error?.message || error)
+        setIsSubmitting(false)
+        return { success: false, message: "Error al guardar la solicitud." }
+      }
+
+      setTimeout(() => {
+        router.push("/solicitudes")
+      }, 1500) 
+
+      return { success: true, message: "Solicitud guardada correctamente." }
+    } catch (error: any) {
+      console.error("Error inesperado:", error)
+      setIsSubmitting(false)
+      return {
+        success: false,
+        message: error.message || "Error inesperado al crear la solicitud",
+      }
     }
-
-    return { success: true, message: "Solicitud enviada correctamente." }
-
-  } catch (error) {
-    console.error("Error en handleSubmit:", error)
-    return { success: false, message: "Ocurrió un error al procesar la solicitud." }
   }
-}
+
+  if (isSubmitting) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen">
+        <Mosaic color="#2464ec" size="medium" />
+        <p className="mt-4 text-gray-600 text-center">Redirigiendo, por favor espere...</p>
+      </div>  
+    )
+  }
 
   return (
     <div className="max-w-3xl mx-auto">
