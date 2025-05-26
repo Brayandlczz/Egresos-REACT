@@ -2,6 +2,7 @@ import { Search, Users } from "lucide-react"
 
 type DirectorioHeaderProps = {
   empleadosCount: number
+    onSearch: (term: string) => void
 }
 
 export function DirectorioHeader({ empleadosCount }: DirectorioHeaderProps) {

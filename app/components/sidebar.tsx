@@ -4,14 +4,14 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { useEffect, useState } from "react"
-import { LayoutDashboard, User, Calendar, BookOpen, Bell, LogOut, Menu, X, Settings, FileText, FilePen, Megaphone, AlertTriangle, Users, Cake, BeanIcon, Umbrella, Sunset } from "lucide-react"
+import { LayoutDashboard, User, Calendar, BookOpen, Bell, LogOut, Menu, X,  FileText, FilePen, Megaphone, Users, Cake, Sunset } from "lucide-react"
 
 type Profile = {
   id: string
   nombre?: string
   email?: string
   role_id?: string
-  avatar_url?: string
+  foto_url?: string
   roles?: { nombre: string } 
 }
 
@@ -251,9 +251,9 @@ export function Sidebar() {
       </li>
             <li>
         <Link
-          href="#"
+          href="/admin/users"
           className={`flex items-center gap-3 p-2 rounded-md transition-all ${
-            isActive("#")
+            isActive("/admin/users")
               ? "bg-blue-50 text-blue-700 shadow-[3px_3px_0px_0px_#BFDBFE] translate-y-[-1px]"
               : "hover:bg-gray-100 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)] hover:translate-y-[-1px]"
           }`}

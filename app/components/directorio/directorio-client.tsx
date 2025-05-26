@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { DirectorioHeader } from "./directorio-header"
 import { DirectorioGrid } from "./directorio-grid"
 import { EmpleadoCard } from "./empleado-card"
-import type { EmpleadoData } from "@/app/(auth)/directorio/page"
+import type { EmpleadoData } from "@/app/(auth)/directorios/page"
 
 type DirectorioClientProps = {
   empleadosIniciales: EmpleadoData[]
