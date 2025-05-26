@@ -22,30 +22,51 @@ export function Sidebar() {
   const [isOpen, setIsOpen] = useState(false)
   const supabase = createClientComponentClient()
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
+useEffect(() => {
+  const fetchProfile = async () => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
 
-      if (user) {
-        const { data, error } = await supabase.from("profiles").select("*, roles(nombre)").eq("id", user.id).single();
+    if (user) {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*, roles(nombre)")
+        .eq("id", user.id)
+        .single()
 
-
-        if (error) {
-        console.error("Error al obtener el perfil:", error);
-        }
-
-        if (data) {
-          setProfile(data);
-        } else {
-          setProfile({ id: user.id })
-        }
+      if (error) {
+        console.error("Error al obtener el perfil:", error)
+        return
       }
-    };
 
-    fetchProfile();
-  }, [supabase]);
+      if (data) {
+        let signedUrl = null
+
+        if (data.foto_url) {
+          const { data: signedData, error: signedError } = await supabase.storage
+            .from("archivos-intra")
+            .createSignedUrl(data.foto_url, 43200)
+
+          if (signedError) {
+            console.warn("Error al generar URL firmada:", signedError)
+          } else {
+            signedUrl = signedData?.signedUrl
+          }
+        }
+
+        setProfile({
+          ...data,
+          foto_url: signedUrl ?? null
+        })
+      } else {
+        setProfile({ id: user.id })
+      }
+    }
+  }
+
+  fetchProfile()
+}, [supabase])
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
@@ -89,14 +110,19 @@ export function Sidebar() {
           <div className="p-4 border-b justify-center">
           <img src="logounici.webp" alt="Logo UNICI" className="h-16 mx-auto" />
           </div>
-
           {/* Perfil de usuario */}
           {profile && (
             <div className="flex items-center gap-3 p-4 border-b">
               <Link href="/perfil">
-                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold cursor-pointer">
+            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold cursor-pointer overflow-hidden">
+              {profile.foto_url ? (
+                <img src={profile.foto_url} alt="Foto de perfil" className="w-full h-full object-cover" />
+              ) : (
+                <span>
                   {profile.nombre ? profile.nombre[0] : profile.email?.[0] || "U"}
-                </div>
+                </span>
+              )}
+            </div>
               </Link>
               <div className="flex flex-col">
                 <span className="font-medium">
@@ -290,7 +316,6 @@ export function Sidebar() {
       </li>
     </ul>
   </div>
-  
 )}
           {/* Cerrar sesión */}
           <div className="p-4 border-t">

@@ -1,4 +1,3 @@
-// Asegurémonos de que el componente de directorio esté correctamente configurado
 "use client"
 
 import { useEffect, useState } from "react"
@@ -12,7 +11,7 @@ export type EmpleadoData = {
   puesto?: string
   departamento?: string
   telefono?: string
-  foto_url?: string
+  foto_url?: string | null
 }
 
 export default function DirectorioPage() {
@@ -24,15 +23,35 @@ export default function DirectorioPage() {
   useEffect(() => {
     async function cargarEmpleados() {
       try {
-        console.log("Cargando empleados...")
         const { data, error } = await supabase
           .from("profiles")
           .select("id, nombre, email, puesto, departamento, telefono, foto_url")
 
         if (error) throw error
 
-        console.log("Empleados cargados:", data?.length || 0)
-        setEmpleados(data || [])
+        if (data) {
+          const empleadosConFotos = await Promise.all(
+            data.map(async (empleado) => {
+              if (empleado.foto_url) {
+                const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+                  .from("archivos-intra")
+                  .createSignedUrl(empleado.foto_url, 43200)
+
+                if (signedUrlError) {
+                  console.warn("Error al firmar URL de:", empleado.foto_url, signedUrlError)
+                  return { ...empleado, foto_url: null }
+                }
+
+                return { ...empleado, foto_url: signedUrlData.signedUrl }
+              }
+              return empleado
+            })
+          )
+
+          setEmpleados(empleadosConFotos)
+        } else {
+          setEmpleados([])
+        }
       } catch (err: any) {
         console.error("Error al cargar empleados:", err)
         setError(err.message)
@@ -44,7 +63,6 @@ export default function DirectorioPage() {
     cargarEmpleados()
   }, [supabase])
 
-  // Mostrar estado de carga
   if (loading) {
     return (
       <div className="container mx-auto py-6 flex flex-col items-center justify-center min-h-[50vh]">
@@ -58,9 +76,10 @@ export default function DirectorioPage() {
     <div className="container mx-auto py-6">
       <h1 className="text-2xl font-bold mb-6">Directorio de Personal</h1>
 
-      {/* Contenido principal */}
       {error ? (
-        <div className="bg-red-50 border border-red-200 p-4 rounded-md">Error al cargar el directorio: {error}</div>
+        <div className="bg-red-50 border border-red-200 p-4 rounded-md">
+          Error al cargar el directorio: {error}
+        </div>
       ) : empleados.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {empleados.map((empleado) => (
@@ -68,12 +87,11 @@ export default function DirectorioPage() {
               key={empleado.id}
               className="bg-white p-4 rounded-md shadow-md hover:shadow-lg transition-shadow duration-300 border border-gray-100"
             >
-              {/* Imagen de perfil redonda */}
               <div className="flex justify-center mb-3">
                 {empleado.foto_url ? (
                   <img
-                    src={empleado.foto_url || "/placeholder.svg"}
-                    alt={`${empleado.nombre || ""}`}
+                    src={empleado.foto_url}
+                    alt={empleado.nombre || ""}
                     className="w-20 h-20 rounded-full object-cover border-2 border-gray-200 shadow"
                     onError={(e) => {
                       e.currentTarget.onerror = null
@@ -83,16 +101,14 @@ export default function DirectorioPage() {
                 ) : (
                   <div className="w-20 h-20 rounded-full bg-blue-100 flex items-center justify-center border-2 border-gray-200 shadow">
                     <span className="text-blue-600 text-xl font-bold">
-                    {`${empleado.nombre?.[0] || ""}`}
+                      {`${empleado.nombre?.[0] || ""}`}
                     </span>
                   </div>
                 )}
               </div>
 
               <div className="text-center mb-3">
-                <h3 className="font-bold text-lg">
-                  {empleado.nombre}
-                </h3>
+                <h3 className="font-bold text-lg">{empleado.nombre}</h3>
                 <p className="text-blue-600 text-sm">{empleado.puesto}</p>
                 <p className="text-gray-500 text-sm">{empleado.departamento}</p>
               </div>
@@ -100,13 +116,7 @@ export default function DirectorioPage() {
               <div className="space-y-2">
                 {empleado.email && (
                   <div className="flex items-center justify-center text-sm">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-4 w-4 text-blue-500 mr-2"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
+                    <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -120,13 +130,7 @@ export default function DirectorioPage() {
                 )}
                 {empleado.telefono && (
                   <div className="flex items-center justify-center text-sm">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-4 w-4 text-blue-500 mr-2"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
+                    <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -150,4 +154,3 @@ export default function DirectorioPage() {
     </div>
   )
 }
-
