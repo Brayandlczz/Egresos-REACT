@@ -1,0 +1,267 @@
+'use client';
+
+import React, { useEffect, useState } from "react";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { useRouter } from 'next/navigation';
+import { Edit2, Trash2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/components/ui/select';
+
+interface Plantel {
+  id: string;
+  nombre_plantel: string;
+}
+
+interface OfertaEducativa {
+  id: string;
+  nombre_oferta: string;
+}
+
+interface Asignatura {
+  id: string;
+  nombre_asignatura: string;
+  plantel: Plantel | null;
+  oferta_educativa: OfertaEducativa | null;
+  seleccionado: boolean;
+}
+
+const AsignaturaList: React.FC = () => {
+  const supabase = createClientComponentClient();
+  const router = useRouter();
+
+  const [asignaturas, setAsignaturas] = useState<Asignatura[]>([]);
+  const [planteles, setPlanteles] = useState<Plantel[]>([]);
+  const [filtroPlantel, setFiltroPlantel] = useState<string>("Todos");
+  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    fetchPlanteles();
+    fetchAsignaturas();
+  }, []);
+
+  const fetchPlanteles = async () => {
+    const { data, error } = await supabase
+      .from("plantel")
+      .select("id, nombre_plantel");
+
+    if (error) {
+      console.error("Error al obtener planteles:", error.message);
+    } else if (data) {
+      setPlanteles(data);
+    }
+  };
+
+  const fetchAsignaturas = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("asignatura")
+      .select(`
+        id,
+        nombre_asignatura,
+        plantel (id, nombre_plantel),
+        oferta_educativa (id, nombre_oferta)
+      `);
+
+    if (error) {
+      console.error("Error al obtener asignaturas:", error);
+    } else if (data) {
+      const asignaturasConSeleccion = data.map((a: any) => ({
+        id: a.id,
+        nombre_asignatura: a.nombre_asignatura,
+        plantel: a.plantel || null,
+        oferta_educativa: a.oferta_educativa || null,
+        seleccionado: false,
+      }));
+      setAsignaturas(asignaturasConSeleccion);
+    }
+    setLoading(false);
+  };
+
+  const handleSeleccionar = (id: string) => {
+    setAsignaturas((prev) =>
+      prev.map((a) =>
+        a.id === id ? { ...a, seleccionado: !a.seleccionado } : a
+      )
+    );
+  };
+
+  const handleAgregar = () => {
+    router.push('/modulos/registro');
+  };
+
+  const handleEditar = (id: string) => {
+    router.push(`/modulos/editar/${id}`);
+  };
+
+  const handleEliminar = async (id: string) => {
+    const confirmado = window.confirm(
+      '¡Espera! La acción es irreversible y podrá afectar otras funcionalidades. ¿Deseas continuar?'
+    );
+    if (!confirmado) return;
+
+    const { error } = await supabase.from('asignatura').delete().eq('id', id);
+
+    if (error) {
+      console.error('Error eliminando el módulo:', error.message);
+      alert('Error al eliminar el módulo.');
+      return;
+    }
+
+    setAsignaturas(prev => prev.filter(a => a.id !== id));
+  };
+
+  const handleEliminarSeleccionados = async () => {
+    const seleccionados = asignaturas.filter(a => a.seleccionado).map(a => a.id);
+
+    if (seleccionados.length === 0) {
+      alert('No hay módulos seleccionados para eliminar.');
+      return;
+    }
+
+    const confirmado = window.confirm(
+      '¡Espera! La acción es irreversible y podrá afectar otras funcionalidades. ¿Deseas continuar?'
+    );
+    if (!confirmado) return;
+
+    const { error } = await supabase.from('asignatura').delete().in('id', seleccionados);
+
+    if (error) {
+      console.error('Error eliminando los módulos seleccionados:', error.message);
+      alert('Error al eliminar los módulos seleccionados.');
+      return;
+    }
+
+    setAsignaturas(prev => prev.filter(a => !a.seleccionado));
+  };
+
+  const resultados = asignaturas.filter((a) => {
+    const coincideNombre = a.nombre_asignatura.toLowerCase().includes(search.toLowerCase());
+    const coincidePlantel =
+      filtroPlantel === "Todos" || a.plantel?.id === filtroPlantel;
+    return coincideNombre && coincidePlantel;
+  });
+
+  return (
+    <div className="p-8 bg-gray-50 max-h-screen">
+      <h1 className="text-3xl font-bold text-center text-blue-800 mb-4">
+        Listado de Módulos
+      </h1>
+
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
+        <Input
+          placeholder="Buscar por nombre del módulo..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="flex-1 max-w"
+        />
+        <Select onValueChange={setFiltroPlantel} value={filtroPlantel}>
+          <SelectTrigger className="w-48">
+            <SelectValue placeholder="Filtrar por plantel" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Todos">Todos los planteles</SelectItem>
+            {planteles.map((p) => (
+              <SelectItem key={p.id} value={p.id}>
+                {p.nombre_plantel}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="flex flex-nowrap gap-2 mb-6 overflow-x-auto">
+        <Button
+          className="bg-green-600 text-white flex items-center gap-2 whitespace-nowrap"
+          onClick={handleAgregar}
+        >
+          Agregar módulo
+        </Button>
+
+        <Button
+          className="bg-red-600 text-white flex items-center gap-2 whitespace-nowrap"
+          onClick={handleEliminarSeleccionados}
+        >
+          Eliminar seleccionados
+        </Button>
+      </div>
+
+      <div className="overflow-x-auto rounded shadow bg-white">
+        <table className="min-w-full">
+          <thead className="bg-gray-900 text-white">
+            <tr>
+              <th className="p-3 text-left"></th>
+              <th className="p-3 text-center text-nowrap">Plantel asociado</th>
+              <th className="p-3 text-center text-nowrap">Oferta educativa asociada</th>
+              <th className="p-3 text-center text-nowrap">Nombre del módulo</th>
+              <th className="p-3 text-center">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr>
+                <td colSpan={5} className="p-4 text-center text-gray-500">
+                  Cargando...
+                </td>
+              </tr>
+            ) : resultados.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="p-4 text-center text-gray-500">
+                  No hay módulos registrados...
+                </td>
+              </tr>
+            ) : (
+              resultados.map((a) => (
+                <tr key={a.id} className="border-t">
+                  <td className="p-3 text-center">
+                    <input
+                      type="checkbox"
+                      checked={a.seleccionado}
+                      onChange={() => handleSeleccionar(a.id)}
+                    />
+                  </td>
+                  <td className="p-3 text-center text-nowrap">
+                    {a.plantel?.nombre_plantel || "Sin plantel"}
+                  </td>
+                  <td className="p-3 text-center text-nowrap">
+                    {a.oferta_educativa?.nombre_oferta || "Sin oferta educativa"}
+                  </td>
+                  <td className="p-3 text-center text-nowrap">{a.nombre_asignatura}</td>
+                  <td className="p-3 text-center flex justify-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="bg-yellow-400 hover:bg-yellow-400 text-white p-2 rounded"
+                      onClick={() => handleEditar(a.id)}
+                      title="Editar"
+                    >
+                      <Edit2 size={20} />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="bg-red-600 hover:bg-red-700 p-2 rounded text-white"
+                      onClick={() => handleEliminar(a.id)}
+                      title="Eliminar"
+                    >
+                      <Trash2 size={20} />
+                    </Button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
+export default AsignaturaList;

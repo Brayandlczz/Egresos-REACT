@@ -1,149 +1,157 @@
 "use client"
 
-import type React from "react"
-
-import { useState, useEffect } from "react"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import Image from "next/image"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [loginStatus, setLoginStatus] = useState<"idle" | "success" | "error">("idle")
+  const [showSupportModal, setShowSupportModal] = useState(false)
+
   const router = useRouter()
   const supabase = createClientComponentClient()
 
-  // Verificar si el usuario ya está autenticado
-  useEffect(() => {
-    const checkSession = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-      if (session) {
-        router.push("/dashboard")
-      }
-    }
-
-    checkSession()
-  }, [router, supabase])
-
-  // Modificar la función handleLogin para añadir más feedback
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setError(null)
+    setLoginStatus("idle")
 
     try {
-      console.log("Intentando iniciar sesión con:", email)
+      const { error } = await supabase.auth.signInWithPassword({ email, password })
+      if (error) throw error
 
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
-
-      if (error) {
-        console.error("Error de autenticación:", error)
-        throw error
-      }
-
-      console.log("Login exitoso:", data.user)
-
-      // Mostrar mensaje de éxito antes de redirigir
-      setError("Login exitoso! Redirigiendo...")
-
-      // Pequeña pausa para mostrar el mensaje de éxito
+      setLoginStatus("success")
       setTimeout(() => {
         router.push("/dashboard")
         router.refresh()
-      }, 1500)
+      }, 800)
     } catch (error: any) {
-      console.error("Error completo:", error)
-      setError(error.message || "Error al iniciar sesión")
+      let msg = error.message || "Error al iniciar sesión"
+      if (msg === "Invalid login credentials") {
+        msg = "Correo o contraseña incorrectos"
+      }
+      setError(msg)
+      setLoginStatus("error")
     } finally {
       setIsLoading(false)
     }
   }
 
+  const buttonClass =
+    loginStatus === "success"
+      ? "bg-green-600 hover:bg-green-700"
+      : loginStatus === "error"
+      ? "bg-red-600 hover:bg-red-700"
+      : "bg-blue-600 hover:bg-blue-700"
+
+  const buttonText =
+    isLoading
+      ? "Iniciando sesión..."
+      : loginStatus === "success"
+      ? "Login exitoso...¡Bienvenido!"
+      : loginStatus === "error"
+      ? "Login fallido...¡Intenta nuevamente!"
+      : "Iniciar sesión"
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
-      <div className="bg-white rounded-lg shadow-lg overflow-hidden max-w-4xl w-full flex flex-col md:flex-row">
-        {/* Lado izquierdo - Imagen/Logo */}
-        <div className="bg-blue-600 text-white p-8 md:w-1/2 flex flex-col justify-center items-center">
-          <div className="mb-8">
-            <div className="flex items-center justify-center">
-            <img src="/logo-blanco.png" alt="Logo UNICI" className="w-full h-full object-cover" />
-            </div>
-          </div>
-          <h1 className="text-2xl font-bold mb-4 text-center">PORTAL UNICI</h1>
-          <p className="text-blue-100 text-center">
-            Plataforma Integral para la Gestión de Recursos Humanos y Comunicación interna
-          </p>
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
+      <div className="w-full max-w-sm bg-white shadow-lg rounded-2xl p-10 min-h-[500px]">
+        <div className="flex justify-center mb-3">
+          <Image src="/uniciflama.webp" alt="Logo" width={30} height={30} />
         </div>
 
-        {/* Lado derecho - Formulario */}
-        <div className="p-8 md:w-1/2">
-          <div className="mb-8">
-            <h2 className="text-2xl text-center font-bold text-gray-800 mb-2">UNICI - INTRANET</h2>
-            <p className="text-gray-600">Ingresa tus credenciales para acceder al sistema</p>
+        <h3 className="text-center text-2xl font-bold mb-3">Bienvenido(a)</h3>
+
+        {error && (
+          <div className="alert alert-danger text-sm mb-4 bg-red-100 text-red-700 border border-red-300 rounded-md px-3 py-2 text-center">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleLogin}>
+          <div className="mb-3">
+            <label htmlFor="email" className="block text-sm text-center font-medium mb-2">
+              Correo electrónico
+            </label>
+            <input
+              type="email"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="form-control w-full rounded-full border border-gray-300 px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
           </div>
 
-          {error && (
-            <div
-              className={`mb-4 p-3 rounded ${error.includes("exitoso") ? "bg-green-100 border border-green-400 text-green-700" : "bg-red-100 border border-red-400 text-red-700"}`}
-            >
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleLogin} className="space-y-6">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                Usuario
-              </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Usuario"
-                required
-              />
-            </div>
-
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                Contraseña
-              </label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Contraseña"
-                required
-              />
-            </div>
-
-            <div>
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isLoading ? "Iniciando sesión..." : "Iniciar sesión"}
-              </button>
-            </div>
-          </form>
-
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">¿Olvidaste tu contraseña? Contacta al Administrador</p>
+          <div className="mb-3">
+            <label htmlFor="password" className="block text-sm text-center font-medium mb-2">
+              Contraseña
+            </label>
+            <input
+              type="password"
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="form-control w-full rounded-full border border-gray-300 px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
           </div>
-        </div>
+
+          <div className="mb-3 flex items-center">
+            <input type="checkbox" id="remember" className="mr-2 accent-blue-600" />
+            <label htmlFor="remember" className="text-sm text-gray-700">
+              Recordar sesión
+            </label>
+          </div>
+
+          <button
+            type="submit"
+            disabled={isLoading}
+            className={`btn w-full rounded-full font-medium py-2 shadow-sm text-white transition disabled:opacity-50 ${buttonClass}`}
+          >
+            {buttonText}
+          </button>
+        </form>
+
+        <hr className="my-4 border-gray-300" />
+
+        <p className="text-center text-sm text-gray-600">
+          ¿No tienes una cuenta?{" "}
+          <span
+            className="text-blue-600 font-medium cursor-pointer"
+            onClick={() => setShowSupportModal(true)}
+          >
+            Contacta al administrador
+          </span>
+        </p>
       </div>
+
+      {showSupportModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white rounded-lg p-6 max-w-xs text-center shadow-lg">
+            <h4 className="text-lg font-semibold mb-3">Soporte Técnico</h4>
+            <p className="mb-4">Puedes contactar al administrador del sistema a través del correo:</p>
+            <a
+              href="mailto:sistemas@unici.edu.mx"
+              className="text-blue-600 font-medium hover:underline mb-6 block"
+            >
+              sistemas@unici.edu.mx
+            </a>
+            <button
+              onClick={() => setShowSupportModal(false)}
+              className="mt-0 px-4 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition"
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
-

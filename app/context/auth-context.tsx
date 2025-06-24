@@ -1,48 +1,84 @@
-"use client"
+'use client'
 
-import type React from "react"
-
-import { createContext, useContext, useEffect, useState } from "react"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
-import type { User } from "@supabase/supabase-js"
+import { createContext, useContext, useEffect, useState } from 'react'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import type { User } from '@supabase/supabase-js'
 
 type AuthContextType = {
   user: User | null
+  rol: string | null
   isLoading: boolean
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
+  rol: null,
   isLoading: true,
 })
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const supabase = createClientComponentClient()
+  const [user, setUser] = useState<User | null>(null)
+  const [rol, setRol] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const fetchUser = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-      setUser(session?.user || null)
-      setIsLoading(false)
+    const fetchSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      const currentUser = session?.user ?? null
+      setUser(currentUser)
 
-      const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-        setUser(session?.user || null)
-      })
+      if (currentUser) {
+        const { data, error } = await supabase
+          .from('usuarios')
+          .select('rol:rol_id (rol)')
+          .eq('id', currentUser.id)
+          .single()
 
-      return () => {
-        authListener.subscription.unsubscribe()
+        if (error) {
+          console.error('Error al obtener rol:', error.message)
+          setRol(null)
+        } else {
+          setRol(data?.rol?.rol ?? null)
+        }
       }
+
+      setIsLoading(false)
     }
 
-    fetchUser()
-  }, [supabase.auth])
+    fetchSession()
 
-  return <AuthContext.Provider value={{ user, isLoading }}>{children}</AuthContext.Provider>
+    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null)
+      if (session?.user) {
+        supabase
+          .from('usuarios')
+          .select('rol:rol_id (rol)')
+          .eq('id', session.user.id)
+          .single()
+          .then(({ data, error }) => {
+            if (error) {
+              console.error('Error al obtener rol:', error.message)
+              setRol(null)
+            } else {
+              setRol(data?.rol?.rol ?? null)
+            }
+          })
+      } else {
+        setRol(null)
+      }
+    })
+
+    return () => {
+      listener?.subscription.unsubscribe()
+    }
+  }, [supabase])
+
+  return (
+    <AuthContext.Provider value={{ user, rol, isLoading }}>
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
 export const useAuth = () => useContext(AuthContext)
-

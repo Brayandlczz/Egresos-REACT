@@ -1,111 +1,192 @@
-"use client"
+"use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 import { Pencil, Trash2 } from "lucide-react";
 
-const users = [
-  {
-    name: "Gabriela Ozuna",
-    email: "sistemas@unici.edu.mx",
-    role: "Administrador RH",
-    department: "Sistemas",
-    status: "Activo",
-  },
-  {
-    name: "Fabiola Perez",
-    email: "admon.egresos@unici.edu.mx",
-    role: "Administrador RH",
-    department: "Contabilidad y RH",
-    status: "Activo",
-  },
-  {
-    name: "Martha González",
-    email: "martha.gonzalez@unici.edu.mx",
-    role: "Director",
-    department: "Dirección Administrativa",
-    status: "Activo",
-  },
-];
+interface Usuario {
+  id: string;
+  nombre: string;
+  email: string;
+  rol: {
+    rol: string;
+  } | null;
+  seleccionado: boolean;
+}
 
 const UserManagementView: React.FC = () => {
-  const [roleFilter, setRoleFilter] = useState("Todos los roles");
+  const supabase = createClientComponentClient();
+  const router = useRouter();
+  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [search, setSearch] = useState("");
+  const [roleFilter, setRoleFilter] = useState("Todos los roles");
 
-  const filteredUsers = users.filter(user =>
-    (roleFilter === "Todos los roles" || user.role === roleFilter) &&
-    (user.name.toLowerCase().includes(search.toLowerCase()) ||
-      user.email.toLowerCase().includes(search.toLowerCase()))
-  );
+  useEffect(() => {
+    const fetchUsuarios = async () => {
+      const { data, error } = await supabase
+        .from("usuarios")
+        .select(`
+          id,
+          nombre,
+          email,
+          rol:rol_id (rol)
+        `);
+
+      if (error) {
+        console.error("Error al obtener usuarios:", error.message);
+        return;
+      }
+
+      const usuariosTransformados = (data || []).map((usuario: any) => ({
+        ...usuario,
+        rol: Array.isArray(usuario.rol) ? usuario.rol[0] || null : usuario.rol,
+        seleccionado: false, 
+      }));
+
+      setUsuarios(usuariosTransformados);
+    };
+
+    fetchUsuarios();
+  }, [supabase]);
+
+  const handleSeleccionar = (id: string) => {
+    setUsuarios((prev) =>
+      prev.map((u) =>
+        u.id === id ? { ...u, seleccionado: !u.seleccionado } : u
+      )
+    );
+  };
+
+  const handleEliminarSeleccionados = () => {
+    // Aquí deberías añadir lógica para eliminar del backend
+    setUsuarios((prev) => prev.filter((u) => !u.seleccionado));
+  };
+
+  const handleEditar = (id: string) => {
+    router.push(`/admin/users/edit/${id}`);
+  };
+
+  const handleEliminar = (id: string) => {
+    // Aquí deberías añadir lógica para eliminar del backend
+    setUsuarios((prev) => prev.filter((u) => u.id !== id));
+  };
+
+  const filteredUsers = usuarios.filter((user) => {
+    const roleName = user.rol?.rol || "Sin rol";
+    return (
+      (roleFilter === "Todos los roles" || roleName === roleFilter) &&
+      (user.nombre.toLowerCase().includes(search.toLowerCase()) ||
+        user.email.toLowerCase().includes(search.toLowerCase()))
+    );
+  });
 
   return (
-    <div className="p-8">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-semibold">Gestión de Usuarios</h2>
-        <Button className="bg-blue-600 text-white">+ Agregar Usuario</Button>
+    <div className="p-8 bg-gray-50 max-h-screen">
+      <h1 className="text-3xl font-bold text-center text-blue-800 mb-6">
+        Gestión de usuarios
+      </h1>
+
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
+        <Input
+          placeholder="Buscar usuarios..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="flex-1 max-w"
+        />
+        <Select onValueChange={setRoleFilter} value={roleFilter}>
+          <SelectTrigger className="w-48">
+            <SelectValue placeholder="Todos los roles" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Todos los roles">Todos los roles</SelectItem>
+            <SelectItem value="Administrador">Administrador</SelectItem>
+            <SelectItem value="Usuario">Usuario</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
-      <div className="bg-white p-4 rounded shadow">
-        <div className="flex justify-between items-center mb-4">
-          <Input
-            placeholder="Buscar usuarios..."
-            className="max-w-sm"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          <Select onValueChange={setRoleFilter}>
-            <SelectTrigger className="w-48">
-              <SelectValue placeholder="Todos los roles" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Todos los roles">Todos los roles</SelectItem>
-              <SelectItem value="Administrador RH">Administrador RH</SelectItem>
-              <SelectItem value="Director">Director</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+      <div className="flex flex-nowrap gap-2 mb-6 overflow-x-auto">
+        <Button
+          className="bg-green-600 text-white flex items-center gap-2 whitespace-nowrap"
+          onClick={() => router.push("/admin/users/registro")}
+        >
+          + Agregar Usuario
+        </Button>
+        <Button
+          className="bg-red-600 text-white flex items-center gap-2 whitespace-nowrap"
+          onClick={handleEliminarSeleccionados}
+        >
+          Eliminar seleccionados
+        </Button>
+      </div>
 
-        <table className="w-full table-auto border-t">
-          <thead>
-            <tr className="text-left">
-              <th className="py-2">Nombre</th>
-              <th>Correo</th>
-              <th>Rol</th>
-              <th>Departamento</th>
-              <th>Estado</th>
-              <th>Acciones</th>
+      <div className="overflow-x-auto rounded shadow bg-white">
+        <table className="min-w-full table-auto">
+          <thead className="bg-gray-900 text-white">
+            <tr>
+              <th className="p-3 text-left w-12"></th>
+              <th className="p-3 text-center whitespace-nowrap">Nombre</th>
+              <th className="p-3 text-center whitespace-nowrap">Correo</th>
+              <th className="p-3 text-center whitespace-nowrap">Rol</th>
+              <th className="p-3 text-center whitespace-nowrap">Acciones</th>
             </tr>
           </thead>
           <tbody>
-            {filteredUsers.map((user, index) => (
-              <tr key={index} className="border-t">
-                <td className="py-2 flex items-center gap-2">
-                  {user.name}
-                </td>
-                <td>{user.email}</td>
-                <td>
-                  <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm">
-                    {user.role}
-                  </span>
-                </td>
-                <td>{user.department}</td>
-                <td>
-                  <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-sm">
-                    {user.status}
-                  </span>
-                </td>
-                <td className="flex gap-2">
-                  <Button variant="outline" size="icon">
-                    <Pencil className="w-4 h-4" />
-                  </Button>
-                  <Button variant="outline" size="icon" className="text-red-600">
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
+            {filteredUsers.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="p-4 text-center text-gray-500">
+                  No hay usuarios registrados...
                 </td>
               </tr>
-            ))}
+            ) : (
+              filteredUsers.map((user) => (
+                <tr key={user.id} className="border-t">
+                  <td className="p-3 text-left">
+                    <input
+                      type="checkbox"
+                      checked={user.seleccionado}
+                      onChange={() => handleSeleccionar(user.id)}
+                    />
+                  </td>
+                  <td className="p-3 text-center whitespace-nowrap">{user.nombre}</td>
+                  <td className="p-3 text-center whitespace-nowrap">{user.email}</td>
+                  <td className="p-3 text-center whitespace-nowrap">
+                    <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm inline-block">
+                      {user.rol?.rol ?? "Sin rol"}
+                    </span>
+                  </td>
+                  <td className="p-3 text-center flex justify-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => handleEditar(user.id)}
+                      title="Editar"
+                    >
+                      <Pencil size={20} />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="text-red-600"
+                      onClick={() => handleEliminar(user.id)}
+                      title="Eliminar"
+                    >
+                      <Trash2 size={20} />
+                    </Button>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

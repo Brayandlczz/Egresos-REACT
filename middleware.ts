@@ -12,7 +12,7 @@ export async function middleware(req: NextRequest) {
   } = await supabase.auth.getSession()
 
   // Rutas públicas que no requieren autenticación
-  const publicRoutes = ["/", "/login", "/api", "/_next", "/favicon.ico", "/diagnostico", "/diagnostico-sesion"]
+  const publicRoutes = ["/", "/login", "/api", "/_next", "/favicon.ico"]
 
   // Asegurémonos de que el middleware permita el acceso a la ruta de directorio
 
