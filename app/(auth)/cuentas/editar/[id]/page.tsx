@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import { Atom } from "react-loading-indicators";
+import { ThreeDot } from "react-loading-indicators";
 
 const EditarCuenta: React.FC = () => {
   const supabase = createClientComponentClient();
@@ -86,7 +86,7 @@ const EditarCuenta: React.FC = () => {
     <div className="relative p-8 bg-white max-h-screen">
       {loading && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-white bg-opacity-40">
-          <Atom color="#2464ec" size="large" text="" textColor="" />
+          <ThreeDot color="#2464ec" size="large" text="" textColor="" />
         </div>
       )}
 

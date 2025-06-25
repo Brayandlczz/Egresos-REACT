@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import { Atom } from "react-loading-indicators";
+import { ThreeDot } from "react-loading-indicators";
 
 const RegistroPlantel: React.FC = () => {
   const supabase = createClientComponentClient();
@@ -45,7 +45,7 @@ const RegistroPlantel: React.FC = () => {
     <div className="relative p-8 bg-white-100 max-h-screen">
       {loading && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-white bg-opacity-40">
-          <Atom color="#2464ec" size="large" text="" textColor="" />
+          <ThreeDot color="#2464ec" size="large" text="" textColor="" />
         </div>
       )}
 

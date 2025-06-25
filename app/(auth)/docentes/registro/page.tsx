@@ -219,7 +219,7 @@ const RegistroDocente: React.FC = () => {
           </div>
 
           <div>
-            <label htmlFor="oferta" className="block mb-2 font-medium">Oferta Educativa:</label>
+            <label htmlFor="oferta" className="block mb-2 font-medium">Oferta educativa:</label>
             <select
               id="oferta"
               name="oferta"
@@ -313,7 +313,7 @@ const RegistroDocente: React.FC = () => {
                 <thead className="bg-gray-200">
                   <tr>
                     <th className="p-2 border text-nowrap">Plantel</th>
-                    <th className="p-2 border text-nowrap">Oferta Educativa</th>
+                    <th className="p-2 border text-nowrap">Oferta educativa</th>
                     <th className="p-2 border text-nowrap">Asignatura designada</th>
                     <th className="p-2 border text-nowrap">Periodo de pago</th>
                     <th className="p-2 border text-nowrap">Importe Total de pago (MXN)</th>

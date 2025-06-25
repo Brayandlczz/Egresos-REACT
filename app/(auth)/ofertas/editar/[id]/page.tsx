@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import { Atom } from "react-loading-indicators";
+import { ThreeDot } from "react-loading-indicators";
 
 const EditarOfertaEducativa: React.FC = () => {
   const supabase = createClientComponentClient();
@@ -14,7 +14,7 @@ const EditarOfertaEducativa: React.FC = () => {
 
   const [nombreOferta, setNombreOferta] = useState("");
   const [plantelId, setPlantelId] = useState("");
-  const [planteles, setPlanteles] = useState<{ id: string; nombre: string }[]>([]);
+  const [planteles, setPlanteles] = useState<{ id: string; nombre_plantel: string }[]>([]);
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
 
@@ -23,7 +23,6 @@ const EditarOfertaEducativa: React.FC = () => {
 
     const fetchOferta = async () => {
       setLoading(true);
-
       const { data, error } = await supabase
         .from("oferta_educativa")
         .select("nombre_oferta, plantel_id")
@@ -48,7 +47,7 @@ const EditarOfertaEducativa: React.FC = () => {
         .select("id, nombre_plantel");
 
       if (!error && data) {
-        setPlanteles(data.map(p => ({ id: p.id, nombre: p.nombre_plantel })));
+        setPlanteles(data);
       }
     };
 
@@ -94,7 +93,7 @@ const EditarOfertaEducativa: React.FC = () => {
     <div className="relative p-8 bg-white max-h-screen">
       {loading && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-white bg-opacity-40">
-          <Atom color="#2464ec" size="large" text="" textColor="" />
+          <ThreeDot color="#2464ec" size="large" />
         </div>
       )}
 
@@ -124,7 +123,7 @@ const EditarOfertaEducativa: React.FC = () => {
             <option value="">Selecciona un plantel</option>
             {planteles.map((p) => (
               <option key={p.id} value={p.id}>
-                {p.nombre}
+                {p.nombre_plantel}
               </option>
             ))}
           </select>

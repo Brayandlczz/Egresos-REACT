@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import { Atom } from "react-loading-indicators";
+import { ThreeDot } from "react-loading-indicators";
 
 const EditarConceptoPago: React.FC = () => {
   const supabase = createClientComponentClient();
@@ -14,8 +14,20 @@ const EditarConceptoPago: React.FC = () => {
 
   const [descripcion, setDescripcion] = useState("");
   const [status, setStatus] = useState("Activo");
+  const [plantelId, setPlantelId] = useState("");
+  const [planteles, setPlanteles] = useState<{ id: string; nombre_plantel: string }[]>([]);
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+
+  useEffect(() => {
+    const fetchPlanteles = async () => {
+      const { data, error } = await supabase.from("plantel").select("id, nombre_plantel");
+      if (error) console.error("Error cargando planteles:", error);
+      else setPlanteles(data);
+    };
+
+    fetchPlanteles();
+  }, [supabase]);
 
   useEffect(() => {
     if (!conceptoId) return;
@@ -24,7 +36,7 @@ const EditarConceptoPago: React.FC = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from("concepto_pago")
-        .select("descripcion, status")
+        .select("descripcion, status, plantel_id")
         .eq("id", conceptoId)
         .single();
 
@@ -39,14 +51,15 @@ const EditarConceptoPago: React.FC = () => {
 
       setDescripcion(data.descripcion);
       setStatus(data.status);
+      setPlantelId(data.plantel_id || "");
     };
 
     fetchConcepto();
   }, [conceptoId, supabase, router]);
 
   const handleGuardar = async () => {
-    if (!descripcion.trim()) {
-      alert("La descripción no puede estar vacía.");
+    if (!descripcion.trim() || !plantelId) {
+      alert("Todos los campos son obligatorios.");
       return;
     }
 
@@ -57,6 +70,7 @@ const EditarConceptoPago: React.FC = () => {
       .update({
         descripcion,
         status,
+        plantel_id: plantelId,
         updated_at: new Date().toISOString(),
       })
       .eq("id", conceptoId);
@@ -83,7 +97,7 @@ const EditarConceptoPago: React.FC = () => {
     <div className="relative p-8 bg-white max-h-screen">
       {loading && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-white bg-opacity-40">
-          <Atom color="#2464ec" size="large" />
+          <ThreeDot color="#2464ec" size="large" />
         </div>
       )}
 
@@ -103,6 +117,21 @@ const EditarConceptoPago: React.FC = () => {
         </div>
 
         <div className="p-4">
+          <label className="block mb-2 font-medium">Plantel:</label>
+          <select
+            value={plantelId}
+            onChange={(e) => setPlantelId(e.target.value)}
+            className="w-full p-2 border rounded mb-4"
+            disabled={loading}
+          >
+            <option value="">Seleccione un plantel</option>
+            {planteles.map((plantel: any) => (
+              <option key={plantel.id} value={plantel.id}>
+                {plantel.nombre_plantel}
+              </option>
+            ))}
+          </select>
+
           <label className="block mb-2 font-medium">Descripción:</label>
           <input
             type="text"

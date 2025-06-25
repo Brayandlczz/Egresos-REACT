@@ -40,7 +40,7 @@ export default function DashboardPage() {
       />
 
       <h1 className="text-2xl font-bold text-blue-800 mb-2 text-center">
-        ¡Bienvenido(a){nombre ? ` ${nombre}` : ""}!
+        ¡Bienvenid@, {nombre ? ` ${nombre}` : ""}!
       </h1>
 
       <p className="text-center text-gray-700 mb-6">
@@ -78,7 +78,7 @@ export default function DashboardPage() {
           className="p-6 rounded-lg shadow transition text-center hover:text-sky-500 hover:bg-sky-100"
         >
           <h2 className="font-semibold text-lg mb-2 text-blue-800">
-            Reportes por filtro
+            Reportes de pago
           </h2>
           <p className="text-gray-600">Filtra y descarga reportes personalizados</p>
         </a>

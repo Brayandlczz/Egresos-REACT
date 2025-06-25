@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import { Atom } from "react-loading-indicators";
+import { ThreeDot } from "react-loading-indicators";
 
 const meses = [
   "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
@@ -45,20 +45,13 @@ const calcularTipoPeriodo = (inicioISO: string, finISO: string): string => {
   const diffMeses = calcularDiffMesesPreciso(inicio, fin);
 
   switch (diffMeses) {
-    case 1: 
-      return "Mensual";
-    case 2:
-      return "Bimestral";
-    case 3: 
-      return "Trimestral";
-    case 4:
-      return "Cuatrimestral";
-    case 6:
-      return "Semestral";
-    case 12:
-      return "Anual";
-    default:
-      return `${diffMeses} meses`;
+    case 1: return "Mensual";
+    case 2: return "Bimestral";
+    case 3: return "Trimestral";
+    case 4: return "Cuatrimestral";
+    case 6: return "Semestral";
+    case 12: return "Anual";
+    default: return `${diffMeses} meses`;
   }
 };
 
@@ -73,9 +66,19 @@ const EditarPeriodoPago: React.FC = () => {
   const [finPeriodo, setFinPeriodo] = useState("");
   const [tipoPeriodo, setTipoPeriodo] = useState("");
   const [concatenado, setConcatenado] = useState("");
+  const [plantelId, setPlantelId] = useState("");
+  const [planteles, setPlanteles] = useState<{ id: string; nombre_plantel: string }[]>([]);
 
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+
+  useEffect(() => {
+    const fetchPlanteles = async () => {
+      const { data, error } = await supabase.from("plantel").select("id, nombre_plantel");
+      if (!error && data) setPlanteles(data);
+    };
+    fetchPlanteles();
+  }, [supabase]);
 
   useEffect(() => {
     if (!periodoId) return;
@@ -84,7 +87,7 @@ const EditarPeriodoPago: React.FC = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from("periodo_pago")
-        .select("inicio_periodo, fin_periodo")
+        .select("inicio_periodo, fin_periodo, plantel_id")
         .eq("id", periodoId)
         .single();
 
@@ -99,12 +102,12 @@ const EditarPeriodoPago: React.FC = () => {
 
       setInicioPeriodo(data.inicio_periodo);
       setFinPeriodo(data.fin_periodo);
+      setPlantelId(data.plantel_id || "");
     };
 
     fetchPeriodo();
   }, [periodoId, supabase, router]);
 
-  // Calcula tipoPeriodo y concatenado automáticamente
   useEffect(() => {
     if (inicioPeriodo && finPeriodo) {
       setConcatenado(formatearConcatenado(inicioPeriodo, finPeriodo));
@@ -116,8 +119,8 @@ const EditarPeriodoPago: React.FC = () => {
   }, [inicioPeriodo, finPeriodo]);
 
   const handleGuardar = async () => {
-    if (!inicioPeriodo || !finPeriodo) {
-      alert("Debes seleccionar ambas fechas.");
+    if (!inicioPeriodo || !finPeriodo || !plantelId) {
+      alert("Todos los campos son obligatorios.");
       return;
     }
 
@@ -130,6 +133,7 @@ const EditarPeriodoPago: React.FC = () => {
         fin_periodo: finPeriodo,
         tipo_periodo: tipoPeriodo,
         concatenado,
+        plantel_id: plantelId,
       })
       .eq("id", periodoId);
 
@@ -155,7 +159,7 @@ const EditarPeriodoPago: React.FC = () => {
     <div className="relative p-8 bg-white max-h-screen">
       {loading && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-white bg-opacity-40">
-          <Atom color="#2464ec" size="large" text="" textColor="" />
+          <ThreeDot color="#2464ec" size="large" />
         </div>
       )}
 
@@ -175,6 +179,21 @@ const EditarPeriodoPago: React.FC = () => {
         </div>
 
         <div className="p-4">
+          <label className="block mb-2 font-medium">Plantel:</label>
+          <select
+            value={plantelId}
+            onChange={(e) => setPlantelId(e.target.value)}
+            className="w-full p-2 border rounded mb-4"
+            disabled={loading}
+          >
+            <option value="">Seleccione un plantel</option>
+            {planteles.map((plantel) => (
+              <option key={plantel.id} value={plantel.id}>
+                {plantel.nombre_plantel}
+              </option>
+            ))}
+          </select>
+
           <label className="block mb-2 font-medium">Inicio del periodo:</label>
           <input
             type="date"

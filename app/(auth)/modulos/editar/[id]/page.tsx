@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { Atom } from 'react-loading-indicators';
+import { ThreeDot } from 'react-loading-indicators';
 
 const EditarAsignatura: React.FC = () => {
   const supabase = createClientComponentClient();
@@ -15,6 +15,8 @@ const EditarAsignatura: React.FC = () => {
   const [nombreAsignatura, setNombreAsignatura] = useState('');
   const [plantelId, setPlantelId] = useState('');
   const [ofertaId, setOfertaId] = useState('');
+  const [fechaInicio, setFechaInicio] = useState('');
+  const [fechaFin, setFechaFin] = useState('');
   const [planteles, setPlanteles] = useState<{ id: string; nombre: string }[]>([]);
   const [ofertas, setOfertas] = useState<{ id: string; nombre: string }[]>([]);
   const [loading, setLoading] = useState(false);
@@ -28,7 +30,7 @@ const EditarAsignatura: React.FC = () => {
 
       const { data: asignatura, error } = await supabase
         .from('asignatura')
-        .select('nombre_asignatura, plantel_id, oferta_educativa_id')
+        .select('nombre_asignatura, plantel_id, oferta_educativa_id, fecha_inicio, fecha_fin')
         .eq('id', asignaturaId)
         .single();
 
@@ -42,6 +44,8 @@ const EditarAsignatura: React.FC = () => {
       setNombreAsignatura(asignatura.nombre_asignatura);
       setPlantelId(asignatura.plantel_id);
       setOfertaId(asignatura.oferta_educativa_id);
+      setFechaInicio(asignatura.fecha_inicio?.split('T')[0]);
+      setFechaFin(asignatura.fecha_fin?.split('T')[0]);
 
       const { data: plantelesData } = await supabase
         .from('plantel')
@@ -78,7 +82,7 @@ const EditarAsignatura: React.FC = () => {
   }, [plantelId]);
 
   const handleGuardar = async () => {
-    if (!nombreAsignatura.trim() || !plantelId || !ofertaId) {
+    if (!nombreAsignatura.trim() || !plantelId || !ofertaId || !fechaInicio || !fechaFin) {
       alert('Debe completar todos los campos.');
       return;
     }
@@ -91,6 +95,8 @@ const EditarAsignatura: React.FC = () => {
         nombre_asignatura: nombreAsignatura,
         plantel_id: plantelId,
         oferta_educativa_id: ofertaId,
+        fecha_inicio: fechaInicio,
+        fecha_fin: fechaFin
       })
       .eq('id', asignaturaId);
 
@@ -114,7 +120,7 @@ const EditarAsignatura: React.FC = () => {
     <div className="relative p-8 bg-white max-h-screen">
       {loading && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-white bg-opacity-40">
-          <Atom color="#2464ec" size="large" text="" textColor="" />
+          <ThreeDot color="#2464ec" size="large" text="" textColor="" />
         </div>
       )}
 
@@ -169,6 +175,24 @@ const EditarAsignatura: React.FC = () => {
             type="text"
             value={nombreAsignatura}
             onChange={e => setNombreAsignatura(e.target.value)}
+            className="w-full p-2 border rounded mb-4"
+            disabled={loading}
+          />
+
+          <label className="block mb-2 font-medium">Fecha de inicio:</label>
+          <input
+            type="date"
+            value={fechaInicio}
+            onChange={e => setFechaInicio(e.target.value)}
+            className="w-full p-2 border rounded mb-4"
+            disabled={loading}
+          />
+
+          <label className="block mb-2 font-medium">Fecha de fin:</label>
+          <input
+            type="date"
+            value={fechaFin}
+            onChange={e => setFechaFin(e.target.value)}
             className="w-full p-2 border rounded mb-4"
             disabled={loading}
           />

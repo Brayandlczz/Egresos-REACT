@@ -27,6 +27,8 @@ interface OfertaEducativa {
 interface Asignatura {
   id: string;
   nombre_asignatura: string;
+  fecha_inicio: string | null;
+  fecha_fin: string | null;
   plantel: Plantel | null;
   oferta_educativa: OfertaEducativa | null;
   seleccionado: boolean;
@@ -66,6 +68,8 @@ const AsignaturaList: React.FC = () => {
       .select(`
         id,
         nombre_asignatura,
+        fecha_inicio,
+        fecha_fin,
         plantel (id, nombre_plantel),
         oferta_educativa (id, nombre_oferta)
       `);
@@ -76,6 +80,8 @@ const AsignaturaList: React.FC = () => {
       const asignaturasConSeleccion = data.map((a: any) => ({
         id: a.id,
         nombre_asignatura: a.nombre_asignatura,
+        fecha_inicio: a.fecha_inicio,
+        fecha_fin: a.fecha_fin,
         plantel: a.plantel || null,
         oferta_educativa: a.oferta_educativa || null,
         seleccionado: false,
@@ -201,19 +207,21 @@ const AsignaturaList: React.FC = () => {
               <th className="p-3 text-center text-nowrap">Plantel asociado</th>
               <th className="p-3 text-center text-nowrap">Oferta educativa asociada</th>
               <th className="p-3 text-center text-nowrap">Nombre del módulo</th>
+              <th className="p-3 text-center text-nowrap">Fecha inicio</th>
+              <th className="p-3 text-center text-nowrap">Fecha fin</th>
               <th className="p-3 text-center">Acciones</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={5} className="p-4 text-center text-gray-500">
+                <td colSpan={7} className="p-4 text-center text-gray-500">
                   Cargando...
                 </td>
               </tr>
             ) : resultados.length === 0 ? (
               <tr>
-                <td colSpan={5} className="p-4 text-center text-gray-500">
+                <td colSpan={7} className="p-4 text-center text-gray-500">
                   No hay módulos registrados...
                 </td>
               </tr>
@@ -234,6 +242,12 @@ const AsignaturaList: React.FC = () => {
                     {a.oferta_educativa?.nombre_oferta || "Sin oferta educativa"}
                   </td>
                   <td className="p-3 text-center text-nowrap">{a.nombre_asignatura}</td>
+                  <td className="p-3 text-center text-nowrap">
+                    {a.fecha_inicio ? new Date(a.fecha_inicio).toLocaleDateString() : "—"}
+                  </td>
+                  <td className="p-3 text-center text-nowrap">
+                    {a.fecha_fin ? new Date(a.fecha_fin).toLocaleDateString() : "—"}
+                  </td>
                   <td className="p-3 text-center flex justify-center gap-2">
                     <Button
                       variant="outline"

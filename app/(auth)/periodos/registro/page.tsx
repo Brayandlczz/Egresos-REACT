@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { Atom } from "react-loading-indicators";
+import { ThreeDot } from "react-loading-indicators";
 
 const RegistroPeriodoPago: React.FC = () => {
   const supabase = createClientComponentClient();
@@ -105,7 +105,7 @@ const RegistroPeriodoPago: React.FC = () => {
     <div className="relative p-8 bg-white-100 max-h-screen">
       {loading && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-white bg-opacity-40">
-          <Atom color="#2464ec" size="large" />
+          <ThreeDot color="#2464ec" size="large" />
         </div>
       )}
 

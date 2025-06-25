@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { useRouter } from 'next/navigation';
-import { Atom } from "react-loading-indicators";
+import { ThreeDot } from "react-loading-indicators";
 
 const RegistroAsignatura: React.FC = () => {
   const supabase = createClientComponentClient();
@@ -15,6 +15,8 @@ const RegistroAsignatura: React.FC = () => {
   const [plantelId, setPlantelId] = useState('');
   const [ofertaId, setOfertaId] = useState('');
   const [nombreAsignatura, setNombreAsignatura] = useState('');
+  const [fechaInicio, setFechaInicio] = useState('');
+  const [fechaFin, setFechaFin] = useState('');
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
 
@@ -59,8 +61,8 @@ const RegistroAsignatura: React.FC = () => {
   }, [plantelId]);
 
   const handleGuardar = async () => {
-    if (!plantelId || !ofertaId || !nombreAsignatura.trim()) {
-      alert('Debe seleccionar un plantel, una oferta educativa y escribir el nombre del módulo.');
+    if (!plantelId || !ofertaId || !nombreAsignatura.trim() || !fechaInicio || !fechaFin) {
+      alert('Todos los campos son obligatorios.');
       return;
     }
 
@@ -72,6 +74,8 @@ const RegistroAsignatura: React.FC = () => {
         nombre_asignatura: nombreAsignatura.trim(),
         plantel_id: plantelId,
         oferta_educativa_id: ofertaId,
+        fecha_inicio: fechaInicio,
+        fecha_fin: fechaFin
       }]);
 
     setTimeout(() => setLoading(false), 1000);
@@ -95,7 +99,7 @@ const RegistroAsignatura: React.FC = () => {
     <div className="relative p-8 bg-white-100 max-h-screen">
       {loading && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-white bg-opacity-40">
-          <Atom color="#2464ec" size="large" text="" textColor="" />
+          <ThreeDot color="#2464ec" size="large" text="" textColor="" />
         </div>
       )}
 
@@ -150,6 +154,24 @@ const RegistroAsignatura: React.FC = () => {
             type="text"
             value={nombreAsignatura}
             onChange={(e) => setNombreAsignatura(e.target.value)}
+            className="w-full p-2 border rounded mb-4"
+            disabled={loading}
+          />
+
+          <label className="block mb-2 font-medium">Fecha de inicio:</label>
+          <input
+            type="date"
+            value={fechaInicio}
+            onChange={(e) => setFechaInicio(e.target.value)}
+            className="w-full p-2 border rounded mb-4"
+            disabled={loading}
+          />
+
+          <label className="block mb-2 font-medium">Fecha de fin:</label>
+          <input
+            type="date"
+            value={fechaFin}
+            onChange={(e) => setFechaFin(e.target.value)}
             className="w-full p-2 border rounded mb-4"
             disabled={loading}
           />

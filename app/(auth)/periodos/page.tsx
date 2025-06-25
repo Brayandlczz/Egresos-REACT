@@ -179,7 +179,7 @@ const PeriodoPagoList: React.FC = () => {
 
       <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
         <Input
-          placeholder="Buscar por plantel, tipo de periodo o concatenado..."
+          placeholder="Buscar por plantel, tipo de periodo o resumen..."
           value={search}
           onChange={e => setSearch(e.target.value)}
           className="flex-1"
