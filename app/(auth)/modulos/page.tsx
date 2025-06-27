@@ -243,10 +243,22 @@ const AsignaturaList: React.FC = () => {
                   </td>
                   <td className="p-3 text-center text-nowrap">{a.nombre_asignatura}</td>
                   <td className="p-3 text-center text-nowrap">
-                    {a.fecha_inicio ? new Date(a.fecha_inicio).toLocaleDateString() : "—"}
+                    {a.fecha_inicio
+                      ? new Date(a.fecha_inicio).toLocaleDateString("es-MX", {
+                          day: "2-digit",
+                          month: "long",
+                          year: "numeric",
+                        })
+                      : "—"}
                   </td>
                   <td className="p-3 text-center text-nowrap">
-                    {a.fecha_fin ? new Date(a.fecha_fin).toLocaleDateString() : "—"}
+                    {a.fecha_fin
+                      ? new Date(a.fecha_fin).toLocaleDateString("es-MX", {
+                          day: "2-digit",
+                          month: "long",
+                          year: "numeric",
+                        })
+                      : "—"}
                   </td>
                   <td className="p-3 text-center flex justify-center gap-2">
                     <Button

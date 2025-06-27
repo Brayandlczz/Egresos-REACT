@@ -180,6 +180,13 @@ const DocentesList = () => {
         >
           Eliminar seleccionados
         </Button>
+
+        <Button
+          className="bg-yellow-600 text-white flex items-center gap-2 whitespace-nowrap"
+          onClick={() => router.push('/constancias')}
+        >
+          Constancia de Servicios
+        </Button>
       </div>
 
       <div className="overflow-x-auto rounded shadow bg-white">

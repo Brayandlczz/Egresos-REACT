@@ -7,7 +7,7 @@ import { useEffect, useState } from "react"
 import {
   DollarSign, LogOut, Menu, X, Pen, Wallet, CalendarDays,
   Users2, Building, File, Slack, Library, Timer, FileSpreadsheet,
-  PersonStanding, Box, Bookmark, Workflow, FileStack,
+  PersonStanding, Box, Bookmark, FileStack, LandPlot,
 } from "lucide-react"
 
 export function Sidebar() {
@@ -156,8 +156,8 @@ export function Sidebar() {
                             : "hover:bg-white/10 hover:shadow-md hover:translate-y-[-1px]"
                         }`}
                       >
-                        <Workflow size={20} />
-                        <span>Áreas de consumo</span>
+                        <LandPlot size={20} />
+                        <span>Departamentos</span>
                       </Link>
                     </li>
                     <li>
