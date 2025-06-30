@@ -36,6 +36,8 @@ const PeriodoPagoList: React.FC = () => {
   const [planteles, setPlanteles] = useState<Plantel[]>([]);
   const [search, setSearch] = useState('');
   const [filtroPlantel, setFiltroPlantel] = useState('Todos');
+  const [paginaActual, setPaginaActual] = useState(1);
+  const periodosPorPagina = 10;
 
   useEffect(() => {
     const fetchPeriodos = async () => {
@@ -158,6 +160,7 @@ const PeriodoPagoList: React.FC = () => {
     );
   };
 
+  // Filtrado con búsqueda y filtro de plantel
   const resultados = periodos.filter((p) => {
     const query = search.toLowerCase();
     const coincideBusqueda =
@@ -171,9 +174,22 @@ const PeriodoPagoList: React.FC = () => {
     return coincideBusqueda && coincidePlantel;
   });
 
+  // Paginación
+  const totalPaginas = Math.ceil(resultados.length / periodosPorPagina);
+  const periodosPaginados = resultados.slice(
+    (paginaActual - 1) * periodosPorPagina,
+    paginaActual * periodosPorPagina
+  );
+
+  const cambiarPagina = (nuevaPagina: number) => {
+    if (nuevaPagina >= 1 && nuevaPagina <= totalPaginas) {
+      setPaginaActual(nuevaPagina);
+    }
+  };
+
   return (
     <div className="p-8 bg-gray-50 max-h-screen">
-      <h1 className="text-3xl font-bold text-center text-blue-800 mb-4">
+      <h1 className="text-3xl font-bold text-center text-black-800 mb-4">
         Listado de periodos de pago
       </h1>
 
@@ -229,14 +245,14 @@ const PeriodoPagoList: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {resultados.length === 0 ? (
+            {periodosPaginados.length === 0 ? (
               <tr>
                 <td colSpan={7} className="p-4 text-center text-gray-500">
                   No hay periodos de pago registrados...
                 </td>
               </tr>
             ) : (
-              resultados.map((periodo) => (
+              periodosPaginados.map((periodo) => (
                 <tr key={periodo.id} className="border-t">
                   <td className="p-3 text-center">
                     <input
@@ -278,6 +294,43 @@ const PeriodoPagoList: React.FC = () => {
           </tbody>
         </table>
       </div>
+
+      {totalPaginas > 1 && (
+        <div className="flex justify-center mt-6 space-x-1">
+          <button
+            onClick={() => cambiarPagina(paginaActual - 1)}
+            disabled={paginaActual === 1}
+            className="px-3 py-1 text-sm rounded-md border border-gray-300 text-gray-600 hover:bg-gray-100 disabled:opacity-50"
+            aria-label="Página anterior"
+          >
+            ←
+          </button>
+
+          {Array.from({ length: totalPaginas }, (_, i) => (
+            <button
+              key={i + 1}
+              onClick={() => cambiarPagina(i + 1)}
+              className={`px-3 py-1 text-sm rounded-md border ${
+                paginaActual === i + 1
+                  ? 'bg-blue-600 text-white border-blue-600'
+                  : 'border-gray-300 text-gray-700 hover:bg-gray-100'
+              }`}
+              aria-current={paginaActual === i + 1 ? 'page' : undefined}
+            >
+              {i + 1}
+            </button>
+          ))}
+
+          <button
+            onClick={() => cambiarPagina(paginaActual + 1)}
+            disabled={paginaActual === totalPaginas}
+            className="px-3 py-1 text-sm rounded-md border border-gray-300 text-gray-600 hover:bg-gray-100 disabled:opacity-50"
+            aria-label="Página siguiente"
+          >
+            →
+          </button>
+        </div>
+      )}
     </div>
   );
 };

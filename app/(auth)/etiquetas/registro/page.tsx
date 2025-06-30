@@ -34,7 +34,7 @@ const RegistroEtiqueta: React.FC = () => {
 
   const handleGuardar = async () => {
     if (!plantelId || !nombreEtiqueta.trim()) {
-      alert('Debe seleccionar un plantel e ingresar el nombre de la etiqueta.');
+      alert('Debe seleccionar un plantel e ingresar el nombre de la clasificación.');
       return;
     }
 
@@ -103,7 +103,7 @@ const RegistroEtiqueta: React.FC = () => {
             ))}
           </select>
 
-          <label className="block mb-2 font-medium">Nombre de la etiqueta:</label>
+          <label className="block mb-2 font-medium">Nombre de la Clasificación:</label>
           <input
             type="text"
             value={nombreEtiqueta}

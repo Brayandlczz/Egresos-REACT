@@ -7,7 +7,7 @@ import { useEffect, useState } from "react"
 import {
   DollarSign, LogOut, Menu, X, Pen, Wallet, CalendarDays,
   Users2, Building, File, Slack, Library, Timer, FileSpreadsheet,
-  PersonStanding, Box, Bookmark, FileStack, LandPlot,
+  LandPlot, FileBadge, Coins, PackageOpenIcon, FileDigit, CircleUserRoundIcon,
 } from "lucide-react"
 
 export function Sidebar() {
@@ -143,8 +143,8 @@ export function Sidebar() {
                             : "hover:bg-white/10 hover:shadow-md hover:translate-y-[-1px]"
                         }`}
                       >
-                        <Box size={20} />
-                        <span>Listado & registro</span>
+                        <PackageOpenIcon size={20} />
+                        <span>Listado & registro de proveedores</span>
                       </Link>
                     </li>
                     <li>
@@ -157,7 +157,7 @@ export function Sidebar() {
                         }`}
                       >
                         <LandPlot size={20} />
-                        <span>Departamentos</span>
+                        <span>Áreas de consumo de bienes</span>
                       </Link>
                     </li>
                     <li>
@@ -169,8 +169,8 @@ export function Sidebar() {
                             : "hover:bg-white/10 hover:shadow-md hover:translate-y-[-1px]"
                         }`}
                       >
-                        <Bookmark size={20} />
-                        <span>Etiquetas de egreso</span>
+                        <Coins size={20} />
+                        <span>Clasificación de gastos</span>
                       </Link>
                     </li>
                     <li>
@@ -182,8 +182,22 @@ export function Sidebar() {
                             : "hover:bg-white/10 hover:shadow-md hover:translate-y-[-1px]"
                         }`}
                       >
-                        <FileStack size={20} />
-                        <span>Registro de egresos</span>
+                        <FileDigit size={20} />
+                        <span>Facturas de egresos</span>
+                      </Link>
+                    </li>
+
+                      <li>
+                      <Link
+                        href="/reportes-proveedor"
+                        className={`flex items-center gap-3 p-2 rounded-md text-white transition-all ${
+                          isActive("/reportes-proveedor")
+                            ? "bg-white/30 hover:bg-white/50 shadow-md translate-y-[-1px]"
+                            : "hover:bg-white/10 hover:shadow-md hover:translate-y-[-1px]"
+                        }`}
+                      >
+                        <FileBadge size={20} />
+                        <span>Reporte de proveedores</span>
                       </Link>
                     </li>
                   </ul>
@@ -214,7 +228,7 @@ export function Sidebar() {
                           : "hover:bg-white/10 hover:shadow-md hover:translate-y-[-1px]"
                       }`}
                     >
-                      <PersonStanding size={20} />
+                      <CircleUserRoundIcon size={20} />
                       <span>Registro de usuarios</span>
                     </Link>
                   </li>

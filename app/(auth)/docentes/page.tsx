@@ -39,6 +39,9 @@ const DocentesList = () => {
   const [planteles, setPlanteles] = useState<Plantel[]>([]);
   const [filtroPlantel, setFiltroPlantel] = useState('Todos');
   const [search, setSearch] = useState('');
+  const [paginaActual, setPaginaActual] = useState(1);
+  const docentesPorPagina = 10;
+
   const supabase = createClientComponentClient();
   const router = useRouter();
 
@@ -132,6 +135,7 @@ const DocentesList = () => {
     setDocentes(prev => prev.filter(d => d.id !== id));
   };
 
+  // Filtrado según búsqueda y filtro plantel
   const resultados = docentes.filter(d => {
     const coincideBusqueda = d.nombre_docente.toLowerCase().includes(search.toLowerCase());
     const coincidePlantel =
@@ -139,9 +143,22 @@ const DocentesList = () => {
     return coincideBusqueda && coincidePlantel;
   });
 
+  // Paginación
+  const totalPaginas = Math.ceil(resultados.length / docentesPorPagina);
+  const docentesPaginados = resultados.slice(
+    (paginaActual - 1) * docentesPorPagina,
+    paginaActual * docentesPorPagina
+  );
+
+  const cambiarPagina = (nuevaPagina: number) => {
+    if (nuevaPagina >= 1 && nuevaPagina <= totalPaginas) {
+      setPaginaActual(nuevaPagina);
+    }
+  };
+
   return (
     <div className="p-8 bg-gray-50 max-h-screen">
-      <h1 className="text-3xl font-bold text-center text-blue-800 mb-6">Listado de docentes</h1>
+      <h1 className="text-3xl font-bold text-center text-black-800 mb-6">Listado de docentes</h1>
 
       <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
         <Input
@@ -203,14 +220,14 @@ const DocentesList = () => {
             </tr>
           </thead>
           <tbody>
-            {resultados.length === 0 ? (
+            {docentesPaginados.length === 0 ? (
               <tr>
                 <td colSpan={7} className="p-4 text-center text-gray-500">
                   No hay docentes registrados...
                 </td>
               </tr>
             ) : (
-              resultados.map(docente => (
+              docentesPaginados.map(docente => (
                 <tr key={docente.relacion_id} className="border-t">
                   <td className="p-3 text-center">
                     <input
@@ -250,6 +267,43 @@ const DocentesList = () => {
           </tbody>
         </table>
       </div>
+
+      {totalPaginas > 1 && (
+        <div className="flex justify-center mt-6 space-x-1">
+          <button
+            onClick={() => cambiarPagina(paginaActual - 1)}
+            disabled={paginaActual === 1}
+            className="px-3 py-1 text-sm rounded-md border border-gray-300 text-gray-600 hover:bg-gray-100 disabled:opacity-50"
+            aria-label="Página anterior"
+          >
+            ←
+          </button>
+
+          {Array.from({ length: totalPaginas }, (_, i) => (
+            <button
+              key={i + 1}
+              onClick={() => cambiarPagina(i + 1)}
+              className={`px-3 py-1 text-sm rounded-md border ${
+                paginaActual === i + 1
+                  ? 'bg-blue-600 text-white border-blue-600'
+                  : 'border-gray-300 text-gray-700 hover:bg-gray-100'
+              }`}
+              aria-current={paginaActual === i + 1 ? 'page' : undefined}
+            >
+              {i + 1}
+            </button>
+          ))}
+
+          <button
+            onClick={() => cambiarPagina(paginaActual + 1)}
+            disabled={paginaActual === totalPaginas}
+            className="px-3 py-1 text-sm rounded-md border border-gray-300 text-gray-600 hover:bg-gray-100 disabled:opacity-50"
+            aria-label="Página siguiente"
+          >
+            →
+          </button>
+        </div>
+      )}
     </div>
   );
 };

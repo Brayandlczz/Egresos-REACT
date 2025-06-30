@@ -56,14 +56,12 @@ export async function generarReportePagosPDF(periodoId: string) {
     const pageWidth = doc.internal.pageSize.getWidth();
     const margin = 10;
 
-    // Logo
     const logoX = 20;
     const logoY = 10;
     const logoWidth = 40;
     const logoHeight = 35;
     doc.addImage(logoBase64, "WEBP", logoX, logoY, logoWidth, logoHeight);
 
-    // Encabezado
     const textX = logoX + logoWidth + 10;
     const centerY = logoY + logoHeight / 2;
     const textBlockHeight = 4 * 6;
@@ -144,7 +142,6 @@ export async function generarReportePagosPDF(periodoId: string) {
       },
     });
 
-    // Total
     const totalImporte = dataFiltrada.reduce((acc, row) => acc + Number(row.importe), 0);
     doc.setFont("helvetica", "bold");
     doc.text(
@@ -190,22 +187,3 @@ export const BotonReportePagosPDF: React.FC<BotonReportePDFProps> = ({ periodoId
     </button>
   );
 };
-
-//generate periods.tsx {pdf}
-
-  //try {
-    //const { data, error } = await supabase
-      //.from("factura")
-      //.select(`
-        //folio,
-        //fecha_pago,
-        //importe,
-        //forma_pago,
-        //docente(nombre_docente),
-        //docente_relation:docente_relation_id (
-          //periodo_pago_id,
-          //plantel(nombre_plantel),
-          //asignatura(nombre_asignatura),
-          //periodo_pago(concatenado)
-        //)
-      //`);

@@ -33,6 +33,8 @@ const OfertaEducativaList: React.FC = () => {
   const [search, setSearch] = useState('');
   const [planteles, setPlanteles] = useState<Plantel[]>([]);
   const [filtroPlantel, setFiltroPlantel] = useState<string>('Todos');
+  const [paginaActual, setPaginaActual] = useState(1);
+  const registrosPorPagina = 7;
 
   useEffect(() => {
     const fetchPlanteles = async () => {
@@ -76,6 +78,10 @@ const OfertaEducativaList: React.FC = () => {
 
     fetchOfertas();
   }, [supabase]);
+
+  useEffect(() => {
+    setPaginaActual(1);
+  }, [search, filtroPlantel]);
 
   const handleAgregar = () => router.push('/ofertas/registro');
   const handleEditar = (id: string) => router.push(`/ofertas/editar/${id}`);
@@ -121,16 +127,22 @@ const OfertaEducativaList: React.FC = () => {
     );
   };
 
-  const resultados = ofertas.filter(o => {
+  const resultadosFiltrados = ofertas.filter(o => {
     const coincideNombre = o.nombre.toLowerCase().includes(search.toLowerCase());
     const coincidePlantel =
       filtroPlantel === 'Todos' || o.plantel === planteles.find(p => p.id === filtroPlantel)?.nombre_plantel;
     return coincideNombre && coincidePlantel;
   });
 
+  const totalPaginas = Math.ceil(resultadosFiltrados.length / registrosPorPagina);
+  const resultadosPaginados = resultadosFiltrados.slice(
+    (paginaActual - 1) * registrosPorPagina,
+    paginaActual * registrosPorPagina
+  );
+
   return (
     <div className="p-8 bg-gray-50 max-h-screen">
-      <h1 className="text-3xl font-bold text-center text-blue-800 mb-4">
+      <h1 className="text-3xl font-bold text-center text-black-800 mb-6">
         Listado de ofertas educativas
       </h1>
 
@@ -139,7 +151,7 @@ const OfertaEducativaList: React.FC = () => {
           placeholder="Buscar por nombre de la oferta educativa..."
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="flex-1 max-w"
+          className="flex-1"
         />
         <Select onValueChange={setFiltroPlantel} value={filtroPlantel}>
           <SelectTrigger className="w-48">
@@ -183,14 +195,14 @@ const OfertaEducativaList: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {resultados.length === 0 ? (
+            {resultadosPaginados.length === 0 ? (
               <tr>
                 <td colSpan={4} className="p-4 text-center text-gray-500">
                   No hay ofertas educativas registradas...
                 </td>
               </tr>
             ) : (
-              resultados.map((oferta) => (
+              resultadosPaginados.map((oferta) => (
                 <tr key={oferta.id} className="border-t">
                   <td className="p-3 text-center">
                     <input
@@ -203,27 +215,25 @@ const OfertaEducativaList: React.FC = () => {
                     {oferta.plantel || 'Sin plantel'}
                   </td>
                   <td className="p-3 text-center text-nowrap">{oferta.nombre}</td>
-                  <td className="p-3 text-center">
-                    <div className="flex justify-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="bg-yellow-400 hover:bg-yellow-400 text-white p-2 rounded"
-                        onClick={() => handleEditar(oferta.id)}
-                        title="Editar"
-                      >
-                        <Edit2 size={20} />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="bg-red-600 hover:bg-red-700 p-2 rounded text-white"
-                        onClick={() => handleEliminar(oferta.id)}
-                        title="Eliminar"
-                      >
-                        <Trash2 size={20} />
-                      </Button>
-                    </div>
+                  <td className="p-3 text-center flex justify-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="bg-yellow-400 hover:bg-yellow-400 text-white p-2 rounded"
+                      onClick={() => handleEditar(oferta.id)}
+                      title="Editar"
+                    >
+                      <Edit2 size={20} />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="bg-red-600 hover:bg-red-700 p-2 rounded text-white"
+                      onClick={() => handleEliminar(oferta.id)}
+                      title="Eliminar"
+                    >
+                      <Trash2 size={20} />
+                    </Button>
                   </td>
                 </tr>
               ))
@@ -231,6 +241,40 @@ const OfertaEducativaList: React.FC = () => {
           </tbody>
         </table>
       </div>
+
+      {totalPaginas > 1 && (
+        <div className="flex justify-center mt-6 space-x-1">
+          <button
+            onClick={() => setPaginaActual(prev => Math.max(prev - 1, 1))}
+            disabled={paginaActual === 1}
+            className="px-3 py-1 text-sm rounded-md border border-gray-300 text-gray-600 hover:bg-gray-100 disabled:opacity-50"
+          >
+            ←
+          </button>
+
+          {Array.from({ length: totalPaginas }, (_, i) => (
+            <button
+              key={i + 1}
+              onClick={() => setPaginaActual(i + 1)}
+              className={`px-3 py-1 text-sm rounded-md border ${
+                paginaActual === i + 1
+                  ? 'bg-blue-600 text-white border-blue-600'
+                  : 'border-gray-300 text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              {i + 1}
+            </button>
+          ))}
+
+          <button
+            onClick={() => setPaginaActual(prev => Math.min(prev + 1, totalPaginas))}
+            disabled={paginaActual === totalPaginas}
+            className="px-3 py-1 text-sm rounded-md border border-gray-300 text-gray-600 hover:bg-gray-100 disabled:opacity-50"
+          >
+            →
+          </button>
+        </div>
+      )}
     </div>
   );
 };

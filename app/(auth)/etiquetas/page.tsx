@@ -33,6 +33,10 @@ const EtiquetasList = () => {
   const [filtroPlantel, setFiltroPlantel] = useState('Todos');
   const [search, setSearch] = useState('');
 
+  // Paginación
+  const [paginaActual, setPaginaActual] = useState(1);
+  const etiquetasPorPagina = 10;
+
   const supabase = createClientComponentClient();
   const router = useRouter();
 
@@ -95,7 +99,9 @@ const EtiquetasList = () => {
   };
 
   const handleEliminar = async (id: string) => {
-    const confirmado = window.confirm('¿Estás seguro de eliminar esta etiqueta? Esta acción no se puede deshacer.');
+    const confirmado = window.confirm(
+      '¿Estás seguro de eliminar esta etiqueta? Esta acción no se puede deshacer.'
+    );
     if (!confirmado) return;
 
     const { error } = await supabase.from('etiquetas').delete().eq('id', id);
@@ -111,7 +117,9 @@ const EtiquetasList = () => {
     const idsAEliminar = etiquetas.filter(e => e.seleccionado).map(e => e.id);
     if (idsAEliminar.length === 0) return;
 
-    const confirmado = window.confirm('¿Estás seguro de eliminar las etiquetas seleccionadas? Esta acción no se puede deshacer.');
+    const confirmado = window.confirm(
+      '¿Estás seguro de eliminar las etiquetas seleccionadas? Esta acción no se puede deshacer.'
+    );
     if (!confirmado) return;
 
     const { error } = await supabase.from('etiquetas').delete().in('id', idsAEliminar);
@@ -125,9 +133,7 @@ const EtiquetasList = () => {
 
   const handleSeleccionar = (id: string) => {
     setEtiquetas(prev =>
-      prev.map(e =>
-        e.id === id ? { ...e, seleccionado: !e.seleccionado } : e
-      )
+      prev.map(e => (e.id === id ? { ...e, seleccionado: !e.seleccionado } : e))
     );
   };
 
@@ -137,15 +143,27 @@ const EtiquetasList = () => {
     return coincideBusqueda && coincidePlantel;
   });
 
+  const totalPaginas = Math.ceil(resultados.length / etiquetasPorPagina);
+  const etiquetasPaginadas = resultados.slice(
+    (paginaActual - 1) * etiquetasPorPagina,
+    paginaActual * etiquetasPorPagina
+  );
+
+  const cambiarPagina = (nuevaPagina: number) => {
+    if (nuevaPagina >= 1 && nuevaPagina <= totalPaginas) {
+      setPaginaActual(nuevaPagina);
+    }
+  };
+
   return (
     <div className="p-8 bg-gray-50 max-h-screen">
       <h1 className="text-3xl font-bold text-center text-blue-800 mb-6">
-        Listado de etiquetas de egreso
+        Listado de clasificación de gastos
       </h1>
 
       <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
         <Input
-          placeholder="Buscar por nombre de etiqueta..."
+          placeholder="Buscar por nombre de clasificación..."
           value={search}
           onChange={e => setSearch(e.target.value)}
           className="flex-1"
@@ -171,7 +189,7 @@ const EtiquetasList = () => {
           className="bg-green-600 text-white flex items-center gap-2 whitespace-nowrap"
           onClick={handleAgregar}
         >
-          Agregar etiqueta
+          Agregar clasificación
         </Button>
 
         <Button
@@ -188,19 +206,19 @@ const EtiquetasList = () => {
             <tr>
               <th className="p-3 text-left"></th>
               <th className="p-3 text-center">Plantel asociado</th>
-              <th className="p-3 text-center">Nombre de la etiqueta</th>
+              <th className="p-3 text-center">Nombre de la clasificación</th>
               <th className="p-3 text-center">Acciones</th>
             </tr>
           </thead>
           <tbody>
-            {resultados.length === 0 ? (
+            {etiquetasPaginadas.length === 0 ? (
               <tr>
                 <td colSpan={4} className="p-4 text-center text-gray-500">
                   No hay etiquetas registradas...
                 </td>
               </tr>
             ) : (
-              resultados.map(etiqueta => (
+              etiquetasPaginadas.map(etiqueta => (
                 <tr key={etiqueta.id} className="border-t">
                   <td className="p-3 text-center">
                     <input
@@ -212,9 +230,7 @@ const EtiquetasList = () => {
                   <td className="p-3 text-center text-nowrap">
                     {etiqueta.nombre_plantel ?? 'Sin plantel'}
                   </td>
-                  <td className="p-3 text-center text-nowrap">
-                    {etiqueta.nombre_etiqueta}
-                  </td>
+                  <td className="p-3 text-center text-nowrap">{etiqueta.nombre_etiqueta}</td>
                   <td className="p-3 text-center flex justify-center gap-2">
                     <Button
                       variant="outline"
@@ -241,6 +257,43 @@ const EtiquetasList = () => {
           </tbody>
         </table>
       </div>
+
+      {totalPaginas > 1 && (
+        <div className="flex justify-center mt-6 space-x-1">
+          <button
+            onClick={() => cambiarPagina(paginaActual - 1)}
+            disabled={paginaActual === 1}
+            className="px-3 py-1 text-sm rounded-md border border-gray-300 text-gray-600 hover:bg-gray-100 disabled:opacity-50"
+            aria-label="Página anterior"
+          >
+            ←
+          </button>
+
+          {Array.from({ length: totalPaginas }, (_, i) => (
+            <button
+              key={i + 1}
+              onClick={() => cambiarPagina(i + 1)}
+              className={`px-3 py-1 text-sm rounded-md border ${
+                paginaActual === i + 1
+                  ? 'bg-blue-600 text-white border-blue-600'
+                  : 'border-gray-300 text-gray-700 hover:bg-gray-100'
+              }`}
+              aria-current={paginaActual === i + 1 ? 'page' : undefined}
+            >
+              {i + 1}
+            </button>
+          ))}
+
+          <button
+            onClick={() => cambiarPagina(paginaActual + 1)}
+            disabled={paginaActual === totalPaginas}
+            className="px-3 py-1 text-sm rounded-md border border-gray-300 text-gray-600 hover:bg-gray-100 disabled:opacity-50"
+            aria-label="Página siguiente"
+          >
+            →
+          </button>
+        </div>
+      )}
     </div>
   );
 };

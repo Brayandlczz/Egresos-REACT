@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useRouter } from "next/navigation"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
-import { Button } from "@/components/ui/button"
 import { Atom } from "react-loading-indicators"
 
 export default function RegistroUsuarioForm() {
@@ -174,7 +173,7 @@ export default function RegistroUsuarioForm() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 disabled:opacity-50"
+                className="bg-green-600 text-white px-2 py-2 rounded hover:bg-green-700 disabled:opacity-50"
               >
                 {isSubmitting ? "Registrando..." : "Registrar usuario"}
               </button>

@@ -32,6 +32,8 @@ const DepartamentosList = () => {
   const [planteles, setPlanteles] = useState<Plantel[]>([]);
   const [filtroPlantel, setFiltroPlantel] = useState('Todos');
   const [search, setSearch] = useState('');
+  const [paginaActual, setPaginaActual] = useState(1);
+  const elementosPorPagina = 10;
 
   const supabase = createClientComponentClient();
   const router = useRouter();
@@ -84,15 +86,10 @@ const DepartamentosList = () => {
   }, [supabase]);
 
   const handleAgregar = () => router.push('/areas/registro');
-
-  const handleEditar = (id: string) => {
-    router.push(`/areas/editar/${id}`);
-  };
+  const handleEditar = (id: string) => router.push(`/areas/editar/${id}`);
 
   const handleEliminar = async (id: string) => {
-    const confirmado = window.confirm(
-      '¿Estás seguro? Esta acción no se puede deshacer.'
-    );
+    const confirmado = window.confirm('¿Estás seguro? Esta acción no se puede deshacer.');
     if (!confirmado) return;
 
     const { error } = await supabase.from('departamentos').delete().eq('id', id);
@@ -108,9 +105,7 @@ const DepartamentosList = () => {
     const ids = departamentos.filter(d => d.seleccionado).map(d => d.id);
     if (ids.length === 0) return;
 
-    const confirmado = window.confirm(
-      '¿Eliminar áreas seleccionadas? Esta acción no se puede deshacer.'
-    );
+    const confirmado = window.confirm('¿Eliminar áreas seleccionadas? Esta acción no se puede deshacer.');
     if (!confirmado) return;
 
     const { error } = await supabase.from('departamentos').delete().in('id', ids);
@@ -124,9 +119,7 @@ const DepartamentosList = () => {
 
   const handleSeleccionar = (id: string) => {
     setDepartamentos(prev =>
-      prev.map(d =>
-        d.id === id ? { ...d, seleccionado: !d.seleccionado } : d
-      )
+      prev.map(d => d.id === id ? { ...d, seleccionado: !d.seleccionado } : d)
     );
   };
 
@@ -136,9 +129,21 @@ const DepartamentosList = () => {
     return coincideBusqueda && coincidePlantel;
   });
 
+  const totalPaginas = Math.ceil(resultados.length / elementosPorPagina);
+  const departamentosPaginados = resultados.slice(
+    (paginaActual - 1) * elementosPorPagina,
+    paginaActual * elementosPorPagina
+  );
+
+  const cambiarPagina = (nuevaPagina: number) => {
+    if (nuevaPagina >= 1 && nuevaPagina <= totalPaginas) {
+      setPaginaActual(nuevaPagina);
+    }
+  };
+
   return (
     <div className="p-8 bg-gray-50 max-h-screen">
-      <h1 className="text-3xl font-bold text-center text-blue-800 mb-6">
+      <h1 className="text-3xl font-bold text-center text-black-800 mb-6">
         Listado de áreas
       </h1>
 
@@ -192,14 +197,14 @@ const DepartamentosList = () => {
             </tr>
           </thead>
           <tbody>
-            {resultados.length === 0 ? (
+            {departamentosPaginados.length === 0 ? (
               <tr>
                 <td colSpan={4} className="p-4 text-center text-gray-500">
                   No hay áreas registradas...
                 </td>
               </tr>
             ) : (
-              resultados.map(depto => (
+              departamentosPaginados.map(depto => (
                 <tr key={depto.id} className="border-t">
                   <td className="p-3 text-center">
                     <input
@@ -240,6 +245,40 @@ const DepartamentosList = () => {
           </tbody>
         </table>
       </div>
+
+      {totalPaginas > 1 && (
+        <div className="flex justify-center mt-6 space-x-1">
+          <button
+            onClick={() => cambiarPagina(paginaActual - 1)}
+            disabled={paginaActual === 1}
+            className="px-3 py-1 text-sm rounded-md border border-gray-300 text-gray-600 hover:bg-gray-100 disabled:opacity-50"
+          >
+            ←
+          </button>
+
+          {Array.from({ length: totalPaginas }, (_, i) => (
+            <button
+              key={i + 1}
+              onClick={() => cambiarPagina(i + 1)}
+              className={`px-3 py-1 text-sm rounded-md border ${
+                paginaActual === i + 1
+                  ? 'bg-blue-600 text-white border-blue-600'
+                  : 'border-gray-300 text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              {i + 1}
+            </button>
+          ))}
+
+          <button
+            onClick={() => cambiarPagina(paginaActual + 1)}
+            disabled={paginaActual === totalPaginas}
+            className="px-3 py-1 text-sm rounded-md border border-gray-300 text-gray-600 hover:bg-gray-100 disabled:opacity-50"
+          >
+            →
+          </button>
+        </div>
+      )}
     </div>
   );
 };

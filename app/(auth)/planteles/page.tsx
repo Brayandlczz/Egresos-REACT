@@ -20,12 +20,14 @@ interface Plantel {
   seleccionado: boolean;
 }
 
-const letrasFiltro = ['Todos', 'I', 'U']; 
+const letrasFiltro = ['Todos', 'I', 'U'];
 
 const PlantelList = () => {
   const [planteles, setPlanteles] = useState<Plantel[]>([]);
   const [search, setSearch] = useState('');
   const [filtroLetra, setFiltroLetra] = useState('Todos');
+  const [paginaActual, setPaginaActual] = useState(1);
+  const registrosPorPagina = 7;
 
   const supabase = createClientComponentClient();
   const router = useRouter();
@@ -53,6 +55,10 @@ const PlantelList = () => {
     fetchPlanteles();
   }, [supabase]);
 
+  useEffect(() => {
+    setPaginaActual(1);
+  }, [search, filtroLetra]);
+
   const handleAgregar = () => router.push('/planteles/registro');
   const handleEditar = (id: number) => router.push(`/planteles/editar/${id}`);
 
@@ -70,42 +76,48 @@ const PlantelList = () => {
     setPlanteles(prev => prev.filter(p => p.id !== id));
   };
 
-    const resultados = planteles.filter(p => {
-      const cumpleFiltroLetra =
-        filtroLetra === 'Todos' || p.nombre.toUpperCase().startsWith(filtroLetra);
-      const cumpleBusqueda = p.nombre.toLowerCase().includes(search.toLowerCase());
+  const resultadosFiltrados = planteles.filter(p => {
+    const cumpleFiltroLetra =
+      filtroLetra === 'Todos' || p.nombre.toUpperCase().startsWith(filtroLetra);
+    const cumpleBusqueda = p.nombre.toLowerCase().includes(search.toLowerCase());
+    return cumpleFiltroLetra && cumpleBusqueda;
+  });
 
-      return cumpleFiltroLetra && cumpleBusqueda;
-    });
+  const totalPaginas = Math.ceil(resultadosFiltrados.length / registrosPorPagina);
 
-    const handleEliminarSeleccionados = async () => {
-      const idsAEliminar = planteles.filter(p => p.seleccionado).map(p => p.id);
-      if (idsAEliminar.length === 0) return;
+  const resultadosPaginados = resultadosFiltrados.slice(
+    (paginaActual - 1) * registrosPorPagina,
+    paginaActual * registrosPorPagina
+  );
 
-      const confirmado = window.confirm(
-        '¡Espera! La acción es irreversible y podrá afectar otras funcionalidades. ¿Deseas continuar?'
-      );
-      if (!confirmado) return;
+  const handleEliminarSeleccionados = async () => {
+    const idsAEliminar = planteles.filter(p => p.seleccionado).map(p => p.id);
+    if (idsAEliminar.length === 0) return;
 
-      const { error } = await supabase.from('plantel').delete().in('id', idsAEliminar);
-      if (error) {
-        console.error('Error eliminando planteles seleccionados:', error.message);
-        return;
-      }
-      setPlanteles(prev => prev.filter(p => !p.seleccionado));
-    };
+    const confirmado = window.confirm(
+      '¡Espera! La acción es irreversible y podrá afectar otras funcionalidades. ¿Deseas continuar?'
+    );
+    if (!confirmado) return;
 
-      const handleSeleccionar = (id: number) => {
-        setPlanteles(prev =>
-          prev.map(p =>
-            p.id === id ? { ...p, seleccionado: !p.seleccionado } : p
-          )
-        );
-      };
+    const { error } = await supabase.from('plantel').delete().in('id', idsAEliminar);
+    if (error) {
+      console.error('Error eliminando planteles seleccionados:', error.message);
+      return;
+    }
+    setPlanteles(prev => prev.filter(p => !p.seleccionado));
+  };
+
+  const handleSeleccionar = (id: number) => {
+    setPlanteles(prev =>
+      prev.map(p =>
+        p.id === id ? { ...p, seleccionado: !p.seleccionado } : p
+      )
+    );
+  };
 
   return (
     <div className="p-8 bg-gray-50 max-h-screen">
-      <h1 className="text-3xl font-bold text-center text-blue-800 mb-6">
+      <h1 className="text-3xl font-bold text-center text-black-800 mb-6">
         Listado de planteles
       </h1>
 
@@ -157,14 +169,14 @@ const PlantelList = () => {
             </tr>
           </thead>
           <tbody>
-            {resultados.length === 0 ? (
+            {resultadosPaginados.length === 0 ? (
               <tr>
                 <td colSpan={3} className="p-4 text-center text-gray-500">
                   No hay planteles registrados...
                 </td>
               </tr>
             ) : (
-              resultados.map(plantel => (
+              resultadosPaginados.map(plantel => (
                 <tr key={plantel.id} className="border-t">
                   <td className="p-3 text-left">
                     <input
@@ -200,6 +212,40 @@ const PlantelList = () => {
           </tbody>
         </table>
       </div>
+
+      {totalPaginas > 1 && (
+        <div className="flex justify-center mt-6 space-x-1">
+          <button
+            onClick={() => setPaginaActual(prev => Math.max(prev - 1, 1))}
+            disabled={paginaActual === 1}
+            className="px-3 py-1 text-sm rounded-md border border-gray-300 text-gray-600 hover:bg-gray-100 disabled:opacity-50"
+          >
+            ←
+          </button>
+
+          {Array.from({ length: totalPaginas }, (_, i) => (
+            <button
+              key={i + 1}
+              onClick={() => setPaginaActual(i + 1)}
+              className={`px-3 py-1 text-sm rounded-md border ${
+                paginaActual === i + 1
+                  ? 'bg-blue-600 text-white border-blue-600'
+                  : 'border-gray-300 text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              {i + 1}
+            </button>
+          ))}
+
+          <button
+            onClick={() => setPaginaActual(prev => Math.min(prev + 1, totalPaginas))}
+            disabled={paginaActual === totalPaginas}
+            className="px-3 py-1 text-sm rounded-md border border-gray-300 text-gray-600 hover:bg-gray-100 disabled:opacity-50"
+          >
+            →
+          </button>
+        </div>
+      )}
     </div>
   );
 };

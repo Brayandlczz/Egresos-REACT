@@ -32,6 +32,8 @@ const ConceptosPagoList = () => {
   const [planteles, setPlanteles] = useState<Plantel[]>([]);
   const [filtroPlantel, setFiltroPlantel] = useState('Todos');
   const [search, setSearch] = useState('');
+  const [paginaActual, setPaginaActual] = useState(1);
+  const registrosPorPagina = 7;
 
   const supabase = createClientComponentClient();
   const router = useRouter();
@@ -88,11 +90,12 @@ const ConceptosPagoList = () => {
     fetchPlanteles();
   }, [supabase]);
 
-  const handleAgregar = () => router.push('/conceptos/registro');
+  useEffect(() => {
+    setPaginaActual(1);
+  }, [search, filtroPlantel]);
 
-  const handleEditar = (id: string) => {
-    router.push(`/conceptos/editar/${id}`);
-  };
+  const handleAgregar = () => router.push('/conceptos/registro');
+  const handleEditar = (id: string) => router.push(`/conceptos/editar/${id}`);
 
   const handleEliminar = async (id: string) => {
     const confirmado = window.confirm(
@@ -129,22 +132,25 @@ const ConceptosPagoList = () => {
 
   const handleSeleccionar = (id: string) => {
     setConceptos(prev =>
-      prev.map(c =>
-        c.id === id ? { ...c, seleccionado: !c.seleccionado } : c
-      )
+      prev.map(c => (c.id === id ? { ...c, seleccionado: !c.seleccionado } : c))
     );
   };
 
-  const resultados = conceptos.filter(c => {
+  const resultadosFiltrados = conceptos.filter(c => {
     const coincideBusqueda = c.descripcion.toLowerCase().includes(search.toLowerCase());
-    const coincidePlantel =
-      filtroPlantel === 'Todos' || c.plantel_id === filtroPlantel;
+    const coincidePlantel = filtroPlantel === 'Todos' || c.plantel_id === filtroPlantel;
     return coincideBusqueda && coincidePlantel;
   });
 
+  const totalPaginas = Math.ceil(resultadosFiltrados.length / registrosPorPagina);
+  const resultadosPaginados = resultadosFiltrados.slice(
+    (paginaActual - 1) * registrosPorPagina,
+    paginaActual * registrosPorPagina
+  );
+
   return (
     <div className="p-8 bg-gray-50 max-h-screen">
-      <h1 className="text-3xl font-bold text-center text-blue-800 mb-6">
+      <h1 className="text-3xl font-bold text-center text-black-800 mb-6">
         Listado de conceptos de pago
       </h1>
 
@@ -198,14 +204,14 @@ const ConceptosPagoList = () => {
             </tr>
           </thead>
           <tbody>
-            {resultados.length === 0 ? (
+            {resultadosPaginados.length === 0 ? (
               <tr>
                 <td colSpan={4} className="p-4 text-center text-gray-500">
                   No hay conceptos de pago registrados...
                 </td>
               </tr>
             ) : (
-              resultados.map(concepto => (
+              resultadosPaginados.map(concepto => (
                 <tr key={concepto.id} className="border-t">
                   <td className="p-3 text-center">
                     <input
@@ -244,6 +250,40 @@ const ConceptosPagoList = () => {
           </tbody>
         </table>
       </div>
+
+      {totalPaginas > 1 && (
+        <div className="flex justify-center mt-6 space-x-1">
+          <button
+            onClick={() => setPaginaActual(prev => Math.max(prev - 1, 1))}
+            disabled={paginaActual === 1}
+            className="px-3 py-1 text-sm rounded-md border border-gray-300 text-gray-600 hover:bg-gray-100 disabled:opacity-50"
+          >
+            ←
+          </button>
+
+          {Array.from({ length: totalPaginas }, (_, i) => (
+            <button
+              key={i + 1}
+              onClick={() => setPaginaActual(i + 1)}
+              className={`px-3 py-1 text-sm rounded-md border ${
+                paginaActual === i + 1
+                  ? 'bg-blue-600 text-white border-blue-600'
+                  : 'border-gray-300 text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              {i + 1}
+            </button>
+          ))}
+
+          <button
+            onClick={() => setPaginaActual(prev => Math.min(prev + 1, totalPaginas))}
+            disabled={paginaActual === totalPaginas}
+            className="px-3 py-1 text-sm rounded-md border border-gray-300 text-gray-600 hover:bg-gray-100 disabled:opacity-50"
+          >
+            →
+          </button>
+        </div>
+      )}
     </div>
   );
 };

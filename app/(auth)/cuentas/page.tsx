@@ -35,6 +35,8 @@ const CuentasBancariasList: React.FC = () => {
   const [planteles, setPlanteles] = useState<Plantel[]>([]);
   const [search, setSearch] = useState('');
   const [filtroPlantel, setFiltroPlantel] = useState<string>('Todos');
+  const [paginaActual, setPaginaActual] = useState(1);
+  const cuentasPorPagina = 10;
 
   useEffect(() => {
     const fetchPlanteles = async () => {
@@ -143,9 +145,21 @@ const CuentasBancariasList: React.FC = () => {
     return coincideBusqueda && coincidePlantel;
   });
 
+  const totalPaginas = Math.ceil(resultados.length / cuentasPorPagina);
+  const cuentasPaginadas = resultados.slice(
+    (paginaActual - 1) * cuentasPorPagina,
+    paginaActual * cuentasPorPagina
+  );
+
+  const cambiarPagina = (nuevaPagina: number) => {
+    if (nuevaPagina >= 1 && nuevaPagina <= totalPaginas) {
+      setPaginaActual(nuevaPagina);
+    }
+  };
+
   return (
     <div className="p-8 bg-gray-50 max-h-screen">
-      <h1 className="text-3xl font-bold text-center text-blue-800 mb-6">Listado de cuentas bancarias</h1>
+      <h1 className="text-3xl font-bold text-center text-black-800 mb-6">Listado de cuentas bancarias</h1>
 
       <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
         <Input
@@ -198,14 +212,14 @@ const CuentasBancariasList: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {resultados.length === 0 ? (
+            {cuentasPaginadas.length === 0 ? (
               <tr>
                 <td colSpan={6} className="p-4 text-center text-gray-500">
                   No hay cuentas bancarias registradas...
                 </td>
               </tr>
             ) : (
-              resultados.map(cuenta => (
+              cuentasPaginadas.map(cuenta => (
                 <tr key={cuenta.id} className="border-t">
                   <td className="p-3 text-center">
                     <input
@@ -246,6 +260,40 @@ const CuentasBancariasList: React.FC = () => {
           </tbody>
         </table>
       </div>
+
+      {totalPaginas > 1 && (
+        <div className="flex justify-center mt-6 space-x-1">
+          <button
+            onClick={() => cambiarPagina(paginaActual - 1)}
+            disabled={paginaActual === 1}
+            className="px-3 py-1 text-sm rounded-md border border-gray-300 text-gray-600 hover:bg-gray-100 disabled:opacity-50"
+          >
+            ←
+          </button>
+
+          {Array.from({ length: totalPaginas }, (_, i) => (
+            <button
+              key={i + 1}
+              onClick={() => cambiarPagina(i + 1)}
+              className={`px-3 py-1 text-sm rounded-md border ${
+                paginaActual === i + 1
+                  ? 'bg-blue-600 text-white border-blue-600'
+                  : 'border-gray-300 text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              {i + 1}
+            </button>
+          ))}
+
+          <button
+            onClick={() => cambiarPagina(paginaActual + 1)}
+            disabled={paginaActual === totalPaginas}
+            className="px-3 py-1 text-sm rounded-md border border-gray-300 text-gray-600 hover:bg-gray-100 disabled:opacity-50"
+          >
+            →
+          </button>
+        </div>
+      )}
     </div>
   );
 };

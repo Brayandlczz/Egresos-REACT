@@ -43,6 +43,8 @@ const AsignaturaList: React.FC = () => {
   const [filtroPlantel, setFiltroPlantel] = useState<string>("Todos");
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
+  const [paginaActual, setPaginaActual] = useState(1);
+  const registrosPorPagina = 7;
 
   useEffect(() => {
     fetchPlanteles();
@@ -155,9 +157,15 @@ const AsignaturaList: React.FC = () => {
     return coincideNombre && coincidePlantel;
   });
 
+  const totalPaginas = Math.ceil(resultados.length / registrosPorPagina);
+  const resultadosPaginados = resultados.slice(
+    (paginaActual - 1) * registrosPorPagina,
+    paginaActual * registrosPorPagina
+  );
+
   return (
     <div className="p-8 bg-gray-50 max-h-screen">
-      <h1 className="text-3xl font-bold text-center text-blue-800 mb-4">
+      <h1 className="text-3xl font-bold text-center text-black-800 mb-4">
         Listado de Módulos
       </h1>
 
@@ -219,14 +227,14 @@ const AsignaturaList: React.FC = () => {
                   Cargando...
                 </td>
               </tr>
-            ) : resultados.length === 0 ? (
+            ) : resultadosPaginados.length === 0 ? (
               <tr>
                 <td colSpan={7} className="p-4 text-center text-gray-500">
                   No hay módulos registrados...
                 </td>
               </tr>
             ) : (
-              resultados.map((a) => (
+              resultadosPaginados.map((a) => (
                 <tr key={a.id} className="border-t">
                   <td className="p-3 text-center">
                     <input
@@ -286,6 +294,40 @@ const AsignaturaList: React.FC = () => {
           </tbody>
         </table>
       </div>
+
+      {totalPaginas > 1 && (
+        <div className="flex justify-center mt-6 space-x-1">
+          <button
+            onClick={() => setPaginaActual(prev => Math.max(prev - 1, 1))}
+            disabled={paginaActual === 1}
+            className="px-3 py-1 text-sm rounded-md border border-gray-300 text-gray-600 hover:bg-gray-100 disabled:opacity-50"
+          >
+            ←
+          </button>
+
+          {Array.from({ length: totalPaginas }, (_, i) => (
+            <button
+              key={i + 1}
+              onClick={() => setPaginaActual(i + 1)}
+              className={`px-3 py-1 text-sm rounded-md border ${
+                paginaActual === i + 1
+                  ? 'bg-blue-600 text-white border-blue-600'
+                  : 'border-gray-300 text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              {i + 1}
+            </button>
+          ))}
+
+          <button
+            onClick={() => setPaginaActual(prev => Math.min(prev + 1, totalPaginas))}
+            disabled={paginaActual === totalPaginas}
+            className="px-3 py-1 text-sm rounded-md border border-gray-300 text-gray-600 hover:bg-gray-100 disabled:opacity-50"
+          >
+            →
+          </button>
+        </div>
+      )}
     </div>
   );
 };
