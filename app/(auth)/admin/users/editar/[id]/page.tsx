@@ -1,101 +1,100 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useEffect, useState } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useRouter } from "next/navigation"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { ThreeDot } from "react-loading-indicators"
 
-export default function RegistroUsuarioForm() {
+export default function EditarUsuarioForm() {
   const supabase = createClientComponentClient()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const userId = searchParams?.get("id") 
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [roles, setRoles] = useState<{ id: number; rol: string }[]>([])
-  const [rolId, setRolId] = useState<string>("")
+  const [rolId, setRolId] = useState("")
+  const [email, setEmail] = useState("")
   const [successMessage, setSuccessMessage] = useState("")
 
   useEffect(() => {
     const fetchRoles = async () => {
       const { data, error } = await supabase.from("roles").select("id, rol")
+      if (error) console.error("Error al obtener roles:", error)
+      else setRoles(data || [])
+    }
+
+    const fetchUser = async () => {
+      if (!userId) return
+      const { data, error } = await supabase
+        .from("usuarios")
+        .select("email, rol_id")
+        .eq("id", userId)
+        .single()
+
       if (error) {
-        console.error("Error al cargar roles:", error.message)
+        console.error("Error al cargar usuario:", error)
+        setError("No se pudo cargar el usuario.")
       } else {
-        setRoles(data || [])
+        setEmail(data.email || "")
+        setRolId(data.rol_id?.toString() || "")
       }
     }
-    fetchRoles()
-  }, [supabase])
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    fetchRoles()
+    fetchUser()
+  }, [userId])
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
     setError(null)
 
-    const formData = new FormData(e.currentTarget)
-    const email = formData.get("email") as string
-    const password = formData.get("password") as string
-
-    if (!email.trim() || !password.trim() || !rolId) {
-      setError("Por favor, completa todos los campos.")
+    if (!email.trim() || !rolId || !userId) {
+      setError("Todos los campos son obligatorios.")
       setIsSubmitting(false)
       return
     }
 
     try {
-      const response = await fetch("/api/usuarios/crear", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email,
-          password,
-          rol_id: rolId,
-        }),
+      const response = await fetch("/api/usuarios/editar", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: userId, email, rol_id: Number(rolId), }),
       })
 
       const result = await response.json()
 
       if (!response.ok) {
-        setError(result.error || "Error desconocido")
-        setIsSubmitting(false)
+        setError(result.error || "Error al editar usuario.")
         return
       }
 
-      setSuccessMessage("¡Usuario registrado con éxito!")
-      setTimeout(() => {
-        router.push("/admin/users")
-      }, 2000)
-    } catch (error: any) {
-      setError(error.message || "Error de red")
-      setIsSubmitting(false)
+      setSuccessMessage("¡Usuario actualizado con éxito!")
+      setTimeout(() => router.push("/admin/users"), 2000)
+    } catch (err: any) {
+      setError(err.message || "Error de red.")
     } finally {
-      setTimeout(() => {
-        setIsSubmitting(false)
-      }, 1000)
+      setIsSubmitting(false)
     }
   }
 
-  const handleCancelar = () => {
-    router.push("/admin/users")
-  }
+  const handleCancelar = () => router.push("/admin/users")
 
   return (
-    <div className="relative p-8 bg-gray-50 max-h-screen max-h-screen flex items-center justify-center">
+    <div className="relative p-8 bg-gray-50 max-h-screen flex items-center justify-center">
       {isSubmitting && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-white bg-opacity-40">
           <ThreeDot color="#2464ec" size="large" />
         </div>
       )}
 
-      <div className="w-full  bg-white border rounded shadow">
+      <div className="w-full bg-white border rounded shadow">
         <div className="bg-blue-600 text-white px-6 py-3 rounded-t">
-          <h1 className="text-xl font-semibold">
-            Usuarios | Registro de usuarios
-          </h1>
+          <h1 className="text-xl font-semibold">Usuarios | Editar usuario</h1>
         </div>
 
         <div className="p-6">
@@ -122,19 +121,8 @@ export default function RegistroUsuarioForm() {
                 type="email"
                 required
                 disabled={isSubmitting}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="password" className="block mb-1 font-medium">
-                Contraseña
-              </Label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                required
-                disabled={isSubmitting}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
               />
             </div>
 
@@ -173,9 +161,9 @@ export default function RegistroUsuarioForm() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="bg-green-600 text-white px-2 py-2 rounded hover:bg-green-700 disabled:opacity-50"
+                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
               >
-                {isSubmitting ? "Registrando..." : "Registrar usuario"}
+                {isSubmitting ? "Guardando..." : "Guardar cambios"}
               </button>
             </div>
           </form>

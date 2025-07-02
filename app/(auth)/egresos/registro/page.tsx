@@ -14,6 +14,7 @@ const RegistroFacturaProveedor: React.FC = () => {
   const [departamentos, setDepartamentos] = useState<any[]>([]);
   const [etiquetas, setEtiquetas] = useState<any[]>([]);
 
+  const [folioFiscal, setFolioFiscal] = useState('');
   const [plantelId, setPlantelId] = useState('');
   const [proveedorId, setProveedorId] = useState('');
   const [departamentoId, setDepartamentoId] = useState('');
@@ -25,10 +26,9 @@ const RegistroFacturaProveedor: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
 
-  // Cargar planteles al inicio
   useEffect(() => {
     const cargarPlanteles = async () => {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('plantel')
         .select('id, nombre_plantel')
         .order('nombre_plantel');
@@ -65,8 +65,54 @@ const RegistroFacturaProveedor: React.FC = () => {
     cargarRelacionados();
   }, [plantelId]);
 
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target?.result as string;
+      if (text) {
+        const parser = new DOMParser();
+        const xml = parser.parseFromString(text, "text/xml");
+
+        const comprobante = xml.getElementsByTagName("cfdi:Comprobante")[0];
+        const tfd = xml.getElementsByTagName("tfd:TimbreFiscalDigital")[0];
+        const conceptos = xml.getElementsByTagName("cfdi:Concepto");
+
+        const folio = comprobante?.getAttribute("Folio") || "";
+        const fecha = comprobante?.getAttribute("Fecha")?.substring(0, 10) || "";
+        const total = comprobante?.getAttribute("Total") || "";
+        const uuid = tfd?.getAttribute("UUID") || "";
+
+        let descripcion = "";
+        for (let i = 0; i < conceptos.length; i++) {
+          const desc = conceptos[i].getAttribute("Descripcion");
+          if (desc) {
+            descripcion += `• ${desc}\n`;
+          }
+        }
+
+        setFolioFiscal(uuid || folio);
+        setFecha(fecha);
+        setGasto(total);
+        setObservacion(descripcion.trim());
+      }
+    };
+    reader.readAsText(file);
+  };
+
   const handleGuardar = async () => {
-    if (!proveedorId || !fecha || !etiquetaId || !observacion.trim() || !gasto || !departamentoId || !plantelId) {
+    if (
+      !folioFiscal.trim() ||
+      !proveedorId ||
+      !fecha ||
+      !etiquetaId ||
+      !observacion.trim() ||
+      !gasto ||
+      !departamentoId ||
+      !plantelId
+    ) {
       alert("Todos los campos son obligatorios.");
       return;
     }
@@ -81,7 +127,8 @@ const RegistroFacturaProveedor: React.FC = () => {
       observación: observacion,
       gasto: parseFloat(gasto),
       departamento: departamentoId,
-      plantel_id: plantelId
+      plantel_id: plantelId,
+      folio_fiscal: folioFiscal.trim(),
     }]);
 
     setTimeout(() => setLoading(false), 1000);
@@ -91,6 +138,7 @@ const RegistroFacturaProveedor: React.FC = () => {
       alert("Error guardando la factura: " + JSON.stringify(error));
     } else {
       setSuccessMessage("¡Factura registrada con éxito!");
+      setFolioFiscal('');
       setProveedorId('');
       setFecha('');
       setEtiquetaId('');
@@ -132,6 +180,28 @@ const RegistroFacturaProveedor: React.FC = () => {
         </div>
 
         <div className="p-4 space-y-4">
+
+          <div>
+            <label className="block mb-1 font-medium">Cargar XML de factura:</label>
+            <input
+              type="file"
+              accept=".xml"
+              onChange={handleFileChange}
+              className="w-full p-2 border rounded bg-white"
+            />
+          </div>
+
+          <div>
+            <label className="block mb-1 font-medium">Folio Fiscal:</label>
+            <input
+              type="text"
+              value={folioFiscal}
+              onChange={(e) => setFolioFiscal(e.target.value)}
+              className="w-full p-2 border rounded"
+              placeholder="Ingresa el folio fiscal"
+            />
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block mb-1 font-medium">Plantel:</label>
@@ -161,9 +231,9 @@ const RegistroFacturaProveedor: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block mb-1 font-medium">Etiqueta:</label>
+              <label className="block mb-1 font-medium">Clasificación:</label>
               <select value={etiquetaId} onChange={(e) => setEtiquetaId(e.target.value)} className="w-full p-2 border rounded" disabled={!plantelId}>
-                <option value="">Seleccione una etiqueta</option>
+                <option value="">Seleccione una clasificación</option>
                 {etiquetas.map((e) => (
                   <option key={e.id} value={e.id}>{e.nombre_etiqueta}</option>
                 ))}
@@ -182,12 +252,12 @@ const RegistroFacturaProveedor: React.FC = () => {
           </div>
 
           <div>
-            <label className="block mb-1 font-medium">Observación:</label>
+            <label className="block mb-1 font-medium">Descripción:</label>
             <textarea value={observacion} onChange={(e) => setObservacion(e.target.value)} className="w-full p-2 border rounded" rows={3} />
           </div>
 
           <div>
-            <label className="block mb-1 font-medium">Monto del gasto:</label>
+            <label className="block mb-1 font-medium">Importe:</label>
             <input type="number" min="0" step="0.01" value={gasto} onChange={(e) => setGasto(e.target.value)} className="w-full p-2 border rounded" />
           </div>
 

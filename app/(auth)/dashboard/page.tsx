@@ -44,8 +44,7 @@ export default function DashboardPage() {
       </h1>
 
       <p className="text-center text-gray-700 mb-6">
-        Comienza a navegar dentro de los apartados para empezar a registrar
-        facturas.
+        Comienza a navegar dentro de los apartados para empezar a registrar facturas.
       </p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-5xl px-4">

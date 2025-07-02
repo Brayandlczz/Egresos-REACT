@@ -53,7 +53,7 @@ export default function UnauthorizedPage() {
       <main
         className="flex items-center justify-center bg-gray-50 px-4"
         style={{
-          height: '100dvh', // Altura real del viewport en todos los navegadores modernos
+          height: '100dvh',
         }}
       >
         <div className="text-center bg-white p-6 rounded shadow-md w-full max-w-md animate-fadeInBounce">

@@ -148,7 +148,7 @@ const TablaFacturasProveedores = () => {
 
   return (
     <div className="p-8 bg-gray-50 max-h-screen">
-      <h1 className="text-3xl font-bold text-center text-blue-800 mb-6">
+      <h1 className="text-3xl font-light text-center text-black-800 mb-6">
         Listado de facturas de proveedores
       </h1>
 
@@ -232,7 +232,7 @@ const TablaFacturasProveedores = () => {
                     <Button
                       variant="outline"
                       size="icon"
-                      className="bg-yellow-400 hover:bg-yellow-400 text-white p-2 rounded"
+                      className="text-yellow-400"
                       onClick={() => handleEditar(factura.id)}
                       title="Editar"
                     >
@@ -241,7 +241,7 @@ const TablaFacturasProveedores = () => {
                     <Button
                       variant="outline"
                       size="icon"
-                      className="bg-red-600 hover:bg-red-700 p-2 rounded text-white"
+                      className="text-red-600"
                       onClick={() => handleEliminar(factura.id)}
                       title="Eliminar"
                     >

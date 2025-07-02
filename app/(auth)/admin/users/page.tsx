@@ -68,16 +68,14 @@ const UserManagementView: React.FC = () => {
   };
 
   const handleEliminarSeleccionados = () => {
-    // Aquí deberías añadir lógica para eliminar del backend
     setUsuarios((prev) => prev.filter((u) => !u.seleccionado));
   };
 
   const handleEditar = (id: string) => {
-    router.push(`/admin/users/edit/${id}`);
+    router.push(`/admin/users/editar/${id}`);
   };
 
   const handleEliminar = (id: string) => {
-    // Aquí deberías añadir lógica para eliminar del backend
     setUsuarios((prev) => prev.filter((u) => u.id !== id));
   };
 
@@ -92,7 +90,7 @@ const UserManagementView: React.FC = () => {
 
   return (
     <div className="p-8 bg-gray-50 max-h-screen">
-      <h1 className="text-3xl font-bold text-center text-blue-800 mb-6">
+      <h1 className="text-3xl font-light text-center text-black-800 mb-6">
         Gestión de usuarios
       </h1>
 
@@ -169,6 +167,7 @@ const UserManagementView: React.FC = () => {
                     <Button
                       variant="outline"
                       size="icon"
+                      className="text-yellow-400"
                       onClick={() => handleEditar(user.id)}
                       title="Editar"
                     >

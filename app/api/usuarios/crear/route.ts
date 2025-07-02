@@ -9,7 +9,7 @@ const supabaseAdmin = createClient(
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { email, password, nombre } = body
+    const { email, password } = body
 
     if (!email || !password) {
       return NextResponse.json({ error: "Faltan datos obligatorios" }, { status: 400 })

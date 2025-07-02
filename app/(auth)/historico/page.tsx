@@ -117,7 +117,7 @@ const EstadoPagoList: React.FC = () => {
 
   return (
     <div className="p-8 bg-gray-50 max-h-screen">
-      <h1 className="text-3xl font-bold text-center text-blue-800 mb-4">Listado de estados de pago</h1>
+      <h1 className="text-3xl font-bold text-center text-black-800 mb-4">Listado de estados de pago</h1>
 
       <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-4">
         <input
@@ -134,12 +134,12 @@ const EstadoPagoList: React.FC = () => {
           <thead className="bg-gray-900 text-white">
             <tr>
               <th className="p-3 text-left"></th>
-              <th className="p-3 text-center text-nowrap">Folio de la Factura</th>
+              <th className="p-3 text-center text-nowrap">Folio de la factura</th>
               <th className="p-3 text-center text-nowrap">Periodo de pago</th>
               <th className="p-3 text-center text-nowrap">Estado de pago</th>
-              <th className="p-3 text-center text-nowrap">Importe Total de pago</th>
-              <th className="p-3 text-center text-nowrap">Importe Pagado</th>
-              <th className="p-3 text-center text-nowrap">Importe Restante</th>
+              <th className="p-3 text-center text-nowrap">Importe total de pago</th>
+              <th className="p-3 text-center text-nowrap">Importe pagado</th>
+              <th className="p-3 text-center text-nowrap">Importe restante</th>
               <th className="p-3 text-center">Acciones</th>
             </tr>
           </thead>

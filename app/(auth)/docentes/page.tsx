@@ -158,7 +158,7 @@ const DocentesList = () => {
 
   return (
     <div className="p-8 bg-gray-50 max-h-screen">
-      <h1 className="text-3xl font-bold text-center text-black-800 mb-6">Listado de docentes</h1>
+      <h1 className="text-3xl font-light text-center text-black-800 mb-6">Listado de docentes</h1>
 
       <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
         <Input
@@ -245,7 +245,7 @@ const DocentesList = () => {
                     <Button
                       variant="outline"
                       size="icon"
-                      className="bg-yellow-400 hover:bg-yellow-400 text-white p-2 rounded"
+                      className="text-red-400"
                       onClick={() => handleEditar(docente.id)}
                       title="Editar"
                     >
@@ -254,7 +254,7 @@ const DocentesList = () => {
                     <Button
                       variant="outline"
                       size="icon"
-                      className="bg-red-600 hover:bg-red-700 p-2 rounded text-white"
+                      className="text-red-600"
                       onClick={() => handleEliminar(docente.id)}
                       title="Eliminar"
                     >

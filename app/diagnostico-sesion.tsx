@@ -17,7 +17,7 @@ export default function DiagnosticoSesion() {
     console.log(message)
   }
 
-  // Función para decodificar un JWT sin necesidad de bibliotecas externas
+
   const decodeJWT = (token: string) => {
     try {
       const base64Url = token.split(".")[1]

@@ -189,7 +189,7 @@ const PeriodoPagoList: React.FC = () => {
 
   return (
     <div className="p-8 bg-gray-50 max-h-screen">
-      <h1 className="text-3xl font-bold text-center text-black-800 mb-4">
+      <h1 className="text-3xl font-light text-center text-black-800 mb-4">
         Listado de periodos de pago
       </h1>
 
@@ -271,7 +271,7 @@ const PeriodoPagoList: React.FC = () => {
                       <Button
                         variant="outline"
                         size="icon"
-                        className="bg-yellow-400 hover:bg-yellow-400 text-white p-2 rounded"
+                        className="text-yellow-400"
                         onClick={() => handleEditar(periodo.id)}
                         title="Editar"
                       >
@@ -280,7 +280,7 @@ const PeriodoPagoList: React.FC = () => {
                       <Button
                         variant="outline"
                         size="icon"
-                        className="bg-red-600 hover:bg-red-700 p-2 rounded text-white"
+                        className="text-red-600"
                         onClick={() => handleEliminar(periodo.id)}
                         title="Eliminar"
                       >

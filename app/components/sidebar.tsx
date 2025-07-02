@@ -5,8 +5,7 @@ import { usePathname } from "next/navigation"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { useEffect, useState } from "react"
 import {
-  DollarSign, LogOut, Menu, X, Pen, Wallet, CalendarDays,
-  Users2, Building, File, Slack, Library, Timer, FileSpreadsheet,
+  DollarSign, LogOut, Menu, X, Pen, Wallet, CalendarDays, Users2, Building, File, Slack, Library, Timer, FileSpreadsheet,
   LandPlot, FileBadge, Coins, PackageOpenIcon, FileDigit, CircleUserRoundIcon,
 } from "lucide-react"
 
@@ -88,9 +87,11 @@ export function Sidebar() {
 
       <div className={`fixed inset-y-0 left-0 z-40 w-64 bg-[#0e2238] transform transition-transform duration-300 ease-in-out ${isOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}>
         <div className="flex flex-col h-full">
-          <div className="p-4">
-            <img src="/uniciwhite.webp" alt="Logo UNICI" className="h-16 mx-auto" />
-          </div>
+        <div className="p-4">
+          <Link href="/dashboard">
+            <img src="/uniciwhite.webp" alt="Logo UNICI" className="h-16 mx-auto cursor-pointer" />
+          </Link>
+        </div>
 
           <nav className={`flex-1 p-4 transition-all duration-300 ${shouldScroll ? "overflow-y-auto" : "overflow-hidden"}`}>
             <ul className="space-y-2">

@@ -125,7 +125,7 @@ const ProveedorList = () => {
 
   return (
     <div className="p-8 bg-gray-50 max-h-screen">
-      <h1 className="text-3xl text-center font-bold text-blue-800 mb-6">Listado de proveedores</h1>
+      <h1 className="text-3xl text-center font-light text-black-800 mb-6">Listado de proveedores</h1>
 
       <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
         <Input
@@ -224,7 +224,7 @@ const ProveedorList = () => {
                     <Button
                       variant="outline"
                       size="icon"
-                      className="bg-yellow-400 hover:bg-yellow-400 text-white p-2 rounded"
+                      className="text-yellow-400"
                       onClick={() => handleEditar(p.id)}
                       title="Editar"
                     >
@@ -233,7 +233,7 @@ const ProveedorList = () => {
                     <Button
                       variant="outline"
                       size="icon"
-                      className="bg-red-600 hover:bg-red-700 p-2 rounded text-white"
+                      className="text-red-600"
                       onClick={() => handleEliminar(p.id)}
                       title="Eliminar"
                     >
