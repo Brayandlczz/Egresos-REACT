@@ -24,12 +24,9 @@ export async function middleware(req: NextRequest) {
   // Verificar si es un archivo estático
   const isStaticFile = req.nextUrl.pathname.includes(".")
 
-  // Agregar logs para depuración {comentado para mantener la terminal + limpia, *only testing*}
-  console.log(`[Middleware] Ruta: ${req.nextUrl.pathname}, Autenticado: ${!!session}`)
-
   // Si el usuario no está autenticado y está intentando acceder a una ruta protegida
   if (!session && !isPublicRoute && !isStaticFile) {
-    console.log(`[Middleware] Redirigiendo a login desde: ${req.nextUrl.pathname}`)
+    //console.log(`[Middleware] Redirigiendo a login desde: ${req.nextUrl.pathname}`)
     const redirectUrl = req.nextUrl.clone()
     redirectUrl.pathname = "/"
     return NextResponse.redirect(redirectUrl)
@@ -37,7 +34,7 @@ export async function middleware(req: NextRequest) {
 
   // Si el usuario está autenticado y está intentando acceder a la página de login
   if (session && req.nextUrl.pathname === "/") {
-    console.log("[Middleware] Usuario autenticado redirigiendo a dashboard")
+    //console.log("[Middleware] Usuario autenticado redirigiendo a dashboard")
     const redirectUrl = req.nextUrl.clone()
     redirectUrl.pathname = "/dashboard"
     return NextResponse.redirect(redirectUrl)

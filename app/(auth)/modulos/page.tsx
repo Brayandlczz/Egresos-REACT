@@ -13,7 +13,7 @@ import {
   SelectContent,
   SelectItem,
 } from '@/components/ui/select';
-
+import { useAuth } from '@/app/context/auth-context'; 
 interface Plantel {
   id: string;
   nombre_plantel: string;
@@ -37,6 +37,7 @@ interface Asignatura {
 const AsignaturaList: React.FC = () => {
   const supabase = createClientComponentClient();
   const router = useRouter();
+  const { rol } = useAuth();
 
   const [asignaturas, setAsignaturas] = useState<Asignatura[]>([]);
   const [planteles, setPlanteles] = useState<Plantel[]>([]);
@@ -110,8 +111,10 @@ const AsignaturaList: React.FC = () => {
   };
 
   const handleEliminar = async (id: string) => {
+    if (rol !== 'Administrador') return;
+
     const confirmado = window.confirm(
-      '¡Espera! La acción es irreversible y podrá afectar otras funcionalidades. ¿Deseas continuar?'
+      '¡Espera! La acción es irreversible y podrá afectar otros registros en el sistema. ¿Deseas continuar?'
     );
     if (!confirmado) return;
 
@@ -127,6 +130,8 @@ const AsignaturaList: React.FC = () => {
   };
 
   const handleEliminarSeleccionados = async () => {
+    if (rol !== 'Administrador') return;
+
     const seleccionados = asignaturas.filter(a => a.seleccionado).map(a => a.id);
 
     if (seleccionados.length === 0) {
@@ -135,7 +140,7 @@ const AsignaturaList: React.FC = () => {
     }
 
     const confirmado = window.confirm(
-      '¡Espera! La acción es irreversible y podrá afectar otras funcionalidades. ¿Deseas continuar?'
+      '¡Espera! La acción es irreversible y podrá afectar otros registros en el sistema. ¿Deseas continuar?'
     );
     if (!confirmado) return;
 
@@ -165,7 +170,7 @@ const AsignaturaList: React.FC = () => {
 
   return (
     <div className="p-8 bg-gray-50 max-h-screen">
-      <h1 className="text-3xl font-light text-center text-black-800 mb-4">
+      <h1 className="text-3xl font-light text-center text-black-800 mb-6">
         Listado de Módulos
       </h1>
 
@@ -174,7 +179,7 @@ const AsignaturaList: React.FC = () => {
           placeholder="Buscar por nombre del módulo..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 max-w"
+          className="flex-1"
         />
         <Select onValueChange={setFiltroPlantel} value={filtroPlantel}>
           <SelectTrigger className="w-48">
@@ -191,7 +196,7 @@ const AsignaturaList: React.FC = () => {
         </Select>
       </div>
 
-      <div className="flex flex-nowrap gap-2 mb-6 overflow-x-auto">
+      <div className="flex flex-nowrap gap-2 mb-4 overflow-x-auto">
         <Button
           className="bg-green-600 text-white flex items-center gap-2 whitespace-nowrap"
           onClick={handleAgregar}
@@ -200,23 +205,30 @@ const AsignaturaList: React.FC = () => {
         </Button>
 
         <Button
-          className="bg-red-600 text-white flex items-center gap-2 whitespace-nowrap"
+          className={`bg-red-600 text-white flex items-center gap-2 whitespace-nowrap
+            ${rol !== 'Administrador' ? 'opacity-50 pointer-events-auto' : ''}
+          `}
           onClick={handleEliminarSeleccionados}
+          title={
+            rol !== 'Administrador'
+              ? 'Función disponible únicamente para administradores'
+              : 'Eliminar seleccionados'
+          }
         >
           Eliminar seleccionados
         </Button>
       </div>
 
       <div className="overflow-x-auto rounded shadow bg-white">
-        <table className="min-w-full">
+        <table className="min-w-full text-sm">
           <thead className="bg-gray-900 text-white">
             <tr>
               <th className="p-3 text-left"></th>
               <th className="p-3 text-center text-nowrap">Plantel asociado</th>
               <th className="p-3 text-center text-nowrap">Oferta educativa asociada</th>
               <th className="p-3 text-center text-nowrap">Nombre del módulo</th>
-              <th className="p-3 text-center text-nowrap">Fecha inicio</th>
-              <th className="p-3 text-center text-nowrap">Fecha fin</th>
+              <th className="p-3 text-center text-nowrap">Fecha de inicio del módulo</th>
+              <th className="p-3 text-center text-nowrap">Fecha de fin del módulo</th>
               <th className="p-3 text-center">Acciones</th>
             </tr>
           </thead>
@@ -278,12 +290,19 @@ const AsignaturaList: React.FC = () => {
                     >
                       <Edit2 size={20} />
                     </Button>
+
                     <Button
                       variant="outline"
                       size="icon"
-                      className="text-red-600"
-                      onClick={() => handleEliminar(a.id)}
-                      title="Eliminar"
+                      className={`text-red-600 cursor-pointer
+                        ${rol !== 'Administrador' ? 'opacity-50 pointer-events-auto' : ''}
+                      `}
+                      onClick={() => rol === 'Administrador' && handleEliminar(a.id)}
+                      title={
+                        rol !== 'Administrador'
+                          ? 'Función disponible únicamente para administradores'
+                          : 'Eliminar'
+                      }
                     >
                       <Trash2 size={20} />
                     </Button>

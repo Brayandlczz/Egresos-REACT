@@ -14,6 +14,8 @@ import {
   SelectItem,
 } from '@/components/ui/select';
 
+import { useAuth } from '@/app/context/auth-context';
+
 interface CuentaBancaria {
   id: number;
   banco: string;
@@ -31,6 +33,7 @@ interface Plantel {
 const CuentasBancariasList: React.FC = () => {
   const supabase = createClientComponentClient();
   const router = useRouter();
+  const { rol } = useAuth(); 
   const [cuentas, setCuentas] = useState<CuentaBancaria[]>([]);
   const [planteles, setPlanteles] = useState<Plantel[]>([]);
   const [search, setSearch] = useState('');
@@ -48,7 +51,7 @@ const CuentasBancariasList: React.FC = () => {
       setPlanteles(data);
     };
     fetchPlanteles();
-  }, []);
+  }, [supabase]);
 
   useEffect(() => {
     const fetchCuentas = async () => {
@@ -89,8 +92,10 @@ const CuentasBancariasList: React.FC = () => {
   const handleEditar = (id: number) => router.push(`/cuentas/editar/${id}`);
 
   const handleEliminar = async (id: number) => {
+    if (rol !== 'Administrador') return; 
+
     const confirmar = window.confirm(
-      '¡Espera! La acción es irreversible y podrá afectar otras funcionalidades. ¿Deseas continuar?'
+      '¡Espera! La acción es irreversible y podrá afectar otros registros en el sistema. ¿Deseas continuar?'
     );
 
     if (!confirmar) return;
@@ -105,12 +110,14 @@ const CuentasBancariasList: React.FC = () => {
   };
 
   const handleEliminarSeleccionados = async () => {
+    if (rol !== 'Administrador') return; 
+
     const idsAEliminar = cuentas.filter(c => c.seleccionado).map(c => c.id);
 
     if (idsAEliminar.length === 0) return;
 
     const confirmar = window.confirm(
-      '¡Espera! La acción es irreversible y podrá afectar otras funcionalidades. ¿Deseas continuar?'
+      '¡Espera! La acción es irreversible y podrá afectar otros registros en el sistema. ¿Deseas continuar?'
     );
 
     if (!confirmar) return;
@@ -163,7 +170,7 @@ const CuentasBancariasList: React.FC = () => {
 
       <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
         <Input
-          placeholder="Buscar por plantel o nombre de dependencia bancaria..."
+          placeholder="Buscar por nombre de la dependencia bancaria..."
           value={search}
           onChange={e => setSearch(e.target.value)}
           className="flex-1"
@@ -183,7 +190,7 @@ const CuentasBancariasList: React.FC = () => {
         </Select>
       </div>
 
-      <div className="flex flex-nowrap gap-2 mb-6 overflow-x-auto">
+      <div className="flex flex-nowrap gap-2 mb-4 overflow-x-auto">
         <Button
           className="bg-green-600 text-white text-nowrap px-4 py-2 rounded flex items-center gap-2"
           onClick={handleAgregar}
@@ -192,15 +199,22 @@ const CuentasBancariasList: React.FC = () => {
         </Button>
 
         <Button
-          className="bg-red-600 text-white flex items-center gap-2 whitespace-nowrap"
+          className={`bg-red-600 text-white flex items-center gap-2 whitespace-nowrap
+            ${rol !== 'Administrador' ? 'opacity-50 pointer-events-auto' : ''}
+          `}
           onClick={handleEliminarSeleccionados}
+          title={
+            rol !== 'Administrador'
+              ? 'Función disponible únicamente para administradores'
+              : 'Eliminar seleccionados'
+          }
         >
           Eliminar seleccionados
         </Button>
       </div>
 
       <div className="overflow-x-auto rounded shadow bg-white">
-        <table className="min-w-full">
+        <table className="min-w-full text-sm">
           <thead className="bg-gray-900 text-white">
             <tr>
               <th className="p-3 text-left"></th>
@@ -243,12 +257,19 @@ const CuentasBancariasList: React.FC = () => {
                       >
                         <Edit2 size={20} />
                       </Button>
+
                       <Button
                         variant="outline"
                         size="icon"
-                        className="text-red-600"
-                        onClick={() => handleEliminar(cuenta.id)}
-                        title="Eliminar"
+                        className={`text-red-600 cursor-pointer
+                          ${rol !== 'Administrador' ? 'opacity-50 pointer-events-auto' : ''}
+                        `}
+                        onClick={() => rol === 'Administrador' && handleEliminar(cuenta.id)}
+                        title={
+                          rol !== 'Administrador'
+                            ? 'Función disponible únicamente para administradores'
+                            : 'Eliminar'
+                        }
                       >
                         <Trash2 size={20} />
                       </Button>

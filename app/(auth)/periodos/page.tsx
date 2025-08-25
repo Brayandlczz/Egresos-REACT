@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { Edit2, Trash2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -13,6 +13,7 @@ import {
   SelectContent,
   SelectItem,
 } from '@/components/ui/select';
+import { useAuth } from '@/app/context/auth-context'; 
 
 interface PeriodoPago {
   id: string;
@@ -32,12 +33,13 @@ interface Plantel {
 const PeriodoPagoList: React.FC = () => {
   const supabase = createClientComponentClient();
   const router = useRouter();
+  const { rol } = useAuth(); 
   const [periodos, setPeriodos] = useState<PeriodoPago[]>([]);
   const [planteles, setPlanteles] = useState<Plantel[]>([]);
   const [search, setSearch] = useState('');
   const [filtroPlantel, setFiltroPlantel] = useState('Todos');
   const [paginaActual, setPaginaActual] = useState(1);
-  const periodosPorPagina = 10;
+  const periodosPorPagina = 7;
 
   useEffect(() => {
     const fetchPeriodos = async () => {
@@ -74,9 +76,7 @@ const PeriodoPagoList: React.FC = () => {
     };
 
     const fetchPlanteles = async () => {
-      const { data, error } = await supabase
-        .from('plantel')
-        .select('id, nombre_plantel');
+      const { data, error } = await supabase.from('plantel').select('id, nombre_plantel');
 
       if (error) {
         console.error('Error obteniendo planteles:', error.message);
@@ -98,54 +98,42 @@ const PeriodoPagoList: React.FC = () => {
   const formatearFecha = (fechaISO: string): string => {
     const [año, mes, dia] = fechaISO.split('-').map(Number);
     const fecha = new Date(año, mes - 1, dia);
-    const opciones: Intl.DateTimeFormatOptions = {
+    return fecha.toLocaleDateString('es-MX', {
       day: 'numeric',
       month: 'long',
       year: 'numeric',
-    };
-    const formateada = fecha.toLocaleDateString('es-MX', opciones);
-    return formateada.charAt(0).toUpperCase() + formateada.slice(1);
+    });
   };
 
-  const handleAgregar = () => {
-    router.push('/periodos/registro');
-  };
-
-  const handleEditar = (id: string) => {
-    router.push(`/periodos/editar/${id}`);
-  };
+  const handleAgregar = () => router.push('/periodos/registro');
+  const handleEditar = (id: string) => router.push(`/periodos/editar/${id}`);
 
   const handleEliminar = async (id: string) => {
-    const confirmado = window.confirm(
-      '¡Espera! La acción es irreversible y podrá afectar otras funcionalidades. ¿Deseas continuar?'
-    );
+    if (rol !== 'Administrador') return;
+
+    const confirmado = window.confirm('¡Espera! La acción es irreversible y podrá afectar otros registros en el sistema. ¿Deseas continuar?');
     if (!confirmado) return;
 
     const { error } = await supabase.from('periodo_pago').delete().eq('id', id);
     if (error) {
-      console.error('Error eliminando el periodo de pago:', error.message);
+      console.error('Error eliminando el periodo:', error.message);
       return;
     }
-
     setPeriodos(prev => prev.filter(p => p.id !== id));
   };
 
   const handleEliminarSeleccionados = async () => {
+    if (rol !== 'Administrador') return;
+
     const idsAEliminar = periodos.filter(p => p.seleccionado).map(p => p.id);
     if (idsAEliminar.length === 0) return;
 
-    const confirmado = window.confirm(
-      '¡Espera! La acción es irreversible y podrá afectar otras funcionalidades. ¿Deseas continuar?'
-    );
+    const confirmado = window.confirm('¡Espera! La acción es irreversible y podrá afectar otros registros en el sistema. ¿Deseas continuar?');
     if (!confirmado) return;
 
-    const { error } = await supabase
-      .from('periodo_pago')
-      .delete()
-      .in('id', idsAEliminar);
-
+    const { error } = await supabase.from('periodo_pago').delete().in('id', idsAEliminar);
     if (error) {
-      console.error('Error eliminando periodos seleccionados:', error.message);
+      console.error('Error eliminando seleccionados:', error.message);
       return;
     }
 
@@ -154,27 +142,21 @@ const PeriodoPagoList: React.FC = () => {
 
   const handleSeleccionar = (id: string) => {
     setPeriodos(prev =>
-      prev.map(p =>
-        p.id === id ? { ...p, seleccionado: !p.seleccionado } : p
-      )
+      prev.map(p => (p.id === id ? { ...p, seleccionado: !p.seleccionado } : p))
     );
   };
 
-  // Filtrado con búsqueda y filtro de plantel
-  const resultados = periodos.filter((p) => {
+  const resultados = periodos.filter(p => {
     const query = search.toLowerCase();
     const coincideBusqueda =
       p.plantel_nombre.toLowerCase().includes(query) ||
       p.tipo_periodo.toLowerCase().includes(query) ||
       p.concatenado.toLowerCase().includes(query);
 
-    const coincidePlantel =
-      filtroPlantel === 'Todos' || p.plantel_nombre === filtroPlantel;
-
+    const coincidePlantel = filtroPlantel === 'Todos' || p.plantel_nombre === filtroPlantel;
     return coincideBusqueda && coincidePlantel;
   });
 
-  // Paginación
   const totalPaginas = Math.ceil(resultados.length / periodosPorPagina);
   const periodosPaginados = resultados.slice(
     (paginaActual - 1) * periodosPorPagina,
@@ -189,13 +171,11 @@ const PeriodoPagoList: React.FC = () => {
 
   return (
     <div className="p-8 bg-gray-50 max-h-screen">
-      <h1 className="text-3xl font-light text-center text-black-800 mb-4">
-        Listado de periodos de pago
-      </h1>
+      <h1 className="text-3xl font-light text-center mb-6">Listado de periodos de pago</h1>
 
       <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
         <Input
-          placeholder="Buscar por plantel, tipo de periodo o resumen..."
+          placeholder="Buscar por tipo de periodo de pago o resumen..."
           value={search}
           onChange={e => setSearch(e.target.value)}
           className="flex-1"
@@ -215,28 +195,33 @@ const PeriodoPagoList: React.FC = () => {
         </Select>
       </div>
 
-      <div className="flex flex-nowrap gap-2 mb-6 overflow-x-auto">
+      <div className="flex gap-2 mb-4 overflow-x-auto">
         <Button
-          className="bg-green-600 text-white flex items-center gap-2 whitespace-nowrap"
+          className="bg-green-600 text-white flex items-center gap-2"
           onClick={handleAgregar}
         >
           Agregar periodo
         </Button>
-
         <Button
-          className="bg-red-600 text-white flex items-center gap-2 whitespace-nowrap"
+          className={`bg-red-600 text-white flex items-center gap-2
+            ${rol !== 'Administrador' ? 'opacity-50 pointer-events-auto' : ''}`}
           onClick={handleEliminarSeleccionados}
+          title={
+            rol !== 'Administrador'
+              ? 'Función disponible únicamente para administradores'
+              : 'Eliminar seleccionados'
+          }
         >
           Eliminar seleccionados
         </Button>
       </div>
 
       <div className="overflow-x-auto rounded shadow bg-white">
-        <table className="min-w-full">
+        <table className="min-w-full text-sm">
           <thead className="bg-gray-900 text-white">
             <tr>
-              <th className="p-3 text-left"></th>
-              <th className="p-3 text-center text-nowrap">Plantel asociado</th>
+              <th className="p-3"></th>
+              <th className="p-3 text-center">Plantel</th>
               <th className="p-3 text-center text-nowrap">Inicio del periodo</th>
               <th className="p-3 text-center text-nowrap">Fin del periodo</th>
               <th className="p-3 text-center text-nowrap">Tipo de periodo</th>
@@ -248,31 +233,31 @@ const PeriodoPagoList: React.FC = () => {
             {periodosPaginados.length === 0 ? (
               <tr>
                 <td colSpan={7} className="p-4 text-center text-gray-500">
-                  No hay periodos de pago registrados...
+                  No hay periodos registrados...
                 </td>
               </tr>
             ) : (
-              periodosPaginados.map((periodo) => (
-                <tr key={periodo.id} className="border-t">
+              periodosPaginados.map(p => (
+                <tr key={p.id} className="border-t">
                   <td className="p-3 text-center">
                     <input
                       type="checkbox"
-                      checked={periodo.seleccionado}
-                      onChange={() => handleSeleccionar(periodo.id)}
+                      checked={p.seleccionado}
+                      onChange={() => handleSeleccionar(p.id)}
                     />
                   </td>
-                  <td className="p-3 text-center text-nowrap">{periodo.plantel_nombre}</td>
-                  <td className="p-3 text-center text-nowrap">{formatearFecha(periodo.inicio_periodo)}</td>
-                  <td className="p-3 text-center text-nowrap">{formatearFecha(periodo.fin_periodo)}</td>
-                  <td className="p-3 text-center text-nowrap">{periodo.tipo_periodo}</td>
-                  <td className="p-3 text-center text-nowrap">{periodo.concatenado}</td>
+                  <td className="p-3 text-center">{p.plantel_nombre}</td>
+                  <td className="p-3 text-center">{formatearFecha(p.inicio_periodo)}</td>
+                  <td className="p-3 text-center">{formatearFecha(p.fin_periodo)}</td>
+                  <td className="p-3 text-center">{p.tipo_periodo}</td>
+                  <td className="p-3 text-center">{p.concatenado}</td>
                   <td className="p-3 text-center">
                     <div className="flex justify-center gap-2">
                       <Button
                         variant="outline"
                         size="icon"
                         className="text-yellow-400"
-                        onClick={() => handleEditar(periodo.id)}
+                        onClick={() => handleEditar(p.id)}
                         title="Editar"
                       >
                         <Edit2 size={20} />
@@ -280,9 +265,13 @@ const PeriodoPagoList: React.FC = () => {
                       <Button
                         variant="outline"
                         size="icon"
-                        className="text-red-600"
-                        onClick={() => handleEliminar(periodo.id)}
-                        title="Eliminar"
+                        className={`text-red-600 ${rol !== 'Administrador' ? 'opacity-50 pointer-events-auto' : ''}`}
+                        onClick={() => rol === 'Administrador' && handleEliminar(p.id)}
+                        title={
+                          rol !== 'Administrador'
+                            ? 'Función disponible únicamente para administradores'
+                            : 'Eliminar'
+                        }
                       >
                         <Trash2 size={20} />
                       </Button>
@@ -300,32 +289,27 @@ const PeriodoPagoList: React.FC = () => {
           <button
             onClick={() => cambiarPagina(paginaActual - 1)}
             disabled={paginaActual === 1}
-            className="px-3 py-1 text-sm rounded-md border border-gray-300 text-gray-600 hover:bg-gray-100 disabled:opacity-50"
-            aria-label="Página anterior"
+            className="px-3 py-1 text-sm border rounded-md"
           >
             ←
           </button>
-
           {Array.from({ length: totalPaginas }, (_, i) => (
             <button
               key={i + 1}
               onClick={() => cambiarPagina(i + 1)}
-              className={`px-3 py-1 text-sm rounded-md border ${
+              className={`px-3 py-1 text-sm border rounded-md ${
                 paginaActual === i + 1
-                  ? 'bg-blue-600 text-white border-blue-600'
-                  : 'border-gray-300 text-gray-700 hover:bg-gray-100'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-700 hover:bg-gray-100'
               }`}
-              aria-current={paginaActual === i + 1 ? 'page' : undefined}
             >
               {i + 1}
             </button>
           ))}
-
           <button
             onClick={() => cambiarPagina(paginaActual + 1)}
             disabled={paginaActual === totalPaginas}
-            className="px-3 py-1 text-sm rounded-md border border-gray-300 text-gray-600 hover:bg-gray-100 disabled:opacity-50"
-            aria-label="Página siguiente"
+            className="px-3 py-1 text-sm border rounded-md"
           >
             →
           </button>

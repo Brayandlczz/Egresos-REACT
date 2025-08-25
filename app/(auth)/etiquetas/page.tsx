@@ -100,7 +100,7 @@ const EtiquetasList = () => {
 
   const handleEliminar = async (id: string) => {
     const confirmado = window.confirm(
-      '¿Estás seguro de eliminar esta etiqueta? Esta acción no se puede deshacer.'
+      '¡Espera! La acción es irreversible y podrá afectar otros registros en el sistema. ¿Deseas continuar?'
     );
     if (!confirmado) return;
 
@@ -118,7 +118,7 @@ const EtiquetasList = () => {
     if (idsAEliminar.length === 0) return;
 
     const confirmado = window.confirm(
-      '¿Estás seguro de eliminar las etiquetas seleccionadas? Esta acción no se puede deshacer.'
+      '¡Espera! La acción es irreversible y podrá afectar otros registros en el sistema. ¿Deseas continuar?'
     );
     if (!confirmado) return;
 
@@ -184,7 +184,7 @@ const EtiquetasList = () => {
         </Select>
       </div>
 
-      <div className="flex gap-2 mb-6 overflow-x-auto">
+      <div className="flex gap-2 mb-4 overflow-x-auto">
         <Button
           className="bg-green-600 text-white flex items-center gap-2 whitespace-nowrap"
           onClick={handleAgregar}
@@ -201,12 +201,12 @@ const EtiquetasList = () => {
       </div>
 
       <div className="overflow-x-auto rounded shadow bg-white">
-        <table className="min-w-full">
+        <table className="min-w-full text-sm">
           <thead className="bg-gray-900 text-white">
             <tr>
               <th className="p-3 text-left"></th>
-              <th className="p-3 text-center">Plantel asociado</th>
-              <th className="p-3 text-center">Nombre de la clasificación</th>
+              <th className="p-3 text-center text-nowrap">Plantel asociado</th>
+              <th className="p-3 text-center text-nowrap">Nombre de la clasificación</th>
               <th className="p-3 text-center">Acciones</th>
             </tr>
           </thead>

@@ -13,6 +13,7 @@ import {
   SelectContent,
   SelectItem,
 } from '@/components/ui/select';
+import { useAuth } from '@/app/context/auth-context';
 
 interface ConceptoPago {
   id: string;
@@ -37,6 +38,7 @@ const ConceptosPagoList = () => {
 
   const supabase = createClientComponentClient();
   const router = useRouter();
+  const { rol } = useAuth(); 
 
   useEffect(() => {
     const fetchConceptos = async () => {
@@ -98,8 +100,10 @@ const ConceptosPagoList = () => {
   const handleEditar = (id: string) => router.push(`/conceptos/editar/${id}`);
 
   const handleEliminar = async (id: string) => {
+    if (rol !== 'Administrador') return;
+
     const confirmado = window.confirm(
-      '¡Espera! La acción es irreversible y podrá afectar otras funcionalidades. ¿Deseas continuar?'
+      '¡Espera! La acción es irreversible y podrá afectar otros registros en el sistema. ¿Deseas continuar?'
     );
     if (!confirmado) return;
 
@@ -113,11 +117,13 @@ const ConceptosPagoList = () => {
   };
 
   const handleEliminarSeleccionados = async () => {
+    if (rol !== 'Administrador') return;
+
     const idsAEliminar = conceptos.filter(c => c.seleccionado).map(c => c.id);
     if (idsAEliminar.length === 0) return;
 
     const confirmado = window.confirm(
-      '¡Espera! La acción es irreversible y podrá afectar otras funcionalidades. ¿Deseas continuar?'
+      '¡Espera! La acción es irreversible y podrá afectar otros registros en el sistema. ¿Deseas continuar?'
     );
     if (!confirmado) return;
 
@@ -156,7 +162,7 @@ const ConceptosPagoList = () => {
 
       <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
         <Input
-          placeholder="Buscar por nombre del concepto de pago..."
+          placeholder="Buscar por nombre de concepto de pago..."
           value={search}
           onChange={e => setSearch(e.target.value)}
           className="flex-1"
@@ -177,7 +183,7 @@ const ConceptosPagoList = () => {
         </Select>
       </div>
 
-      <div className="flex flex-nowrap gap-2 mb-6 overflow-x-auto">
+      <div className="flex flex-nowrap gap-2 mb-4 overflow-x-auto">
         <Button
           className="bg-green-600 text-white flex items-center gap-2 whitespace-nowrap"
           onClick={handleAgregar}
@@ -186,8 +192,15 @@ const ConceptosPagoList = () => {
         </Button>
 
         <Button
+          className={`bg-red-600 text-white flex items-center gap-2 whitespace-nowrap
+            ${rol !== 'Administrador' ? 'opacity-50 pointer-events-auto' : ''}
+          `}
           onClick={handleEliminarSeleccionados}
-          className="bg-red-600 text-white flex items-center gap-2 whitespace-nowrap"
+          title={
+            rol !== 'Administrador'
+              ? 'Función disponible únicamente para administradores'
+              : 'Eliminar seleccionados'
+          }
         >
           Eliminar seleccionados
         </Button>
@@ -234,12 +247,19 @@ const ConceptosPagoList = () => {
                     >
                       <Edit2 size={20} />
                     </Button>
+                    
                     <Button
                       variant="outline"
                       size="icon"
-                      className="text-red-600"
-                      onClick={() => handleEliminar(concepto.id)}
-                      title="Eliminar"
+                      className={`text-red-600 cursor-pointer
+                        ${rol !== 'Administrador' ? 'opacity-50 pointer-events-auto' : ''}
+                      `}
+                      onClick={() => rol === 'Administrador' && handleEliminar(concepto.id)}
+                      title={
+                        rol !== 'Administrador'
+                          ? 'Función disponible únicamente para administradores'
+                          : 'Eliminar'
+                      }
                     >
                       <Trash2 size={20} />
                     </Button>

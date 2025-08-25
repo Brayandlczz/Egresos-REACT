@@ -142,22 +142,22 @@ export default function RegistroUsuarioForm() {
               <Label htmlFor="rol" className="block mb-1 font-medium">
                 Rol
               </Label>
-              <select
-                id="rol"
-                name="rol"
-                className="w-full border border-gray-300 rounded px-3 py-2"
-                value={rolId}
-                onChange={(e) => setRolId(e.target.value)}
-                disabled={isSubmitting}
-                required
-              >
-                <option value="">Selecciona un rol</option>
-                {roles.map((rol) => (
-                  <option key={rol.id} value={rol.id}>
-                    {rol.rol}
-                  </option>
-                ))}
-              </select>
+                <select
+                  id="rol"
+                  name="rol"
+                  className="w-full border border-gray-300 rounded px-3 py-2"
+                  value={rolId}
+                  onChange={(e) => setRolId(e.target.value)}
+                  disabled={isSubmitting}
+                  required
+                >
+                  <option value="">Selecciona un rol</option>
+                  {roles.map((rol) => (
+                    <option key={rol.id} value={rol.id}>
+                      {rol.rol} 
+                    </option>
+                  ))}
+                </select>
             </div>
 
             <div className="flex justify-end items-center gap-3">

@@ -2,20 +2,22 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
-import { useEffect, useState } from "react"
+import { useAuth } from "@/app/context/auth-context" 
+import { useState, useEffect } from "react"
 import {
-  DollarSign, LogOut, Menu, X, Pen, Wallet, CalendarDays, Users2, Building, File, Slack, Library, Timer, FileSpreadsheet,
+  LogOut, Menu, X, Pen, Wallet, CalendarDays, Users2, Building, File, Slack, Library, Timer, FileSpreadsheet,
   LandPlot, FileBadge, Coins, PackageOpenIcon, FileDigit, CircleUserRoundIcon,
+  ListCollapse,
+  Handshake,
+  MapPin,
 } from "lucide-react"
 
 export function Sidebar() {
   const [isOpen, setIsOpen] = useState(false)
   const [adminOpen, setAdminOpen] = useState(false)
   const [proveedorOpen, setProveedorOpen] = useState(false)
-  const [profile, setProfile] = useState<any>(null)
+  const { rol } = useAuth() 
   const pathname = usePathname()
-  const supabase = createClientComponentClient()
 
   const toggleSidebar = () => setIsOpen(!isOpen)
 
@@ -25,6 +27,8 @@ export function Sidebar() {
   }
 
   const handleSignOut = async () => {
+    const { createClientComponentClient } = await import("@supabase/auth-helpers-nextjs")
+    const supabase = createClientComponentClient()
     await supabase.auth.signOut()
     window.location.href = "/"
   }
@@ -32,40 +36,6 @@ export function Sidebar() {
   useEffect(() => {
     setIsOpen(false)
   }, [pathname])
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      const userId = session?.user?.id
-      if (!userId) return
-
-      const { data: user, error: userError } = await supabase
-        .from("usuarios")
-        .select("id, nombre, rol_id")
-        .eq("id", userId)
-        .single()
-
-      if (userError) {
-        console.error("Error al obtener usuario:", userError.message)
-        return
-      }
-
-      const { data: rol, error: rolError } = await supabase
-        .from("roles")
-        .select("rol")
-        .eq("id", user.rol_id)
-        .single()
-
-      if (rolError) {
-        console.error("Error al obtener rol:", rolError.message)
-        return
-      }
-
-      setProfile({ ...user, rol })
-    }
-
-    fetchProfile()
-  }, [])
 
   const shouldScroll = adminOpen || proveedorOpen
 
@@ -87,11 +57,11 @@ export function Sidebar() {
 
       <div className={`fixed inset-y-0 left-0 z-40 w-64 bg-[#0e2238] transform transition-transform duration-300 ease-in-out ${isOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}>
         <div className="flex flex-col h-full">
-        <div className="p-4">
-          <Link href="/dashboard">
-            <img src="/uniciwhite.webp" alt="Logo UNICI" className="h-16 mx-auto cursor-pointer" />
-          </Link>
-        </div>
+          <div className="p-4">
+            <Link href="/dashboard">
+              <img src="/uniciwhite.webp" alt="Logo UNICI" className="h-16 mx-auto cursor-pointer" />
+            </Link>
+          </div>
 
           <nav className={`flex-1 p-4 transition-all duration-300 ${shouldScroll ? "overflow-y-auto" : "overflow-hidden"}`}>
             <ul className="space-y-2">
@@ -99,7 +69,7 @@ export function Sidebar() {
                 { href: "/dashboard", label: "Panel principal", icon: <Slack size={20} /> },
                 { href: "/planteles", label: "Planteles", icon: <Building size={20} /> },
                 { href: "/facturas", label: "Facturas", icon: <File size={20} /> },
-                { href: "/conceptos", label: "Conceptos de pago", icon: <DollarSign size={20} /> },
+                { href: "/conceptos", label: "Conceptos de pago", icon: <ListCollapse size={20} /> },
                 { href: "/ofertas", label: "Ofertas Educativas", icon: <Library size={20} /> },
                 { href: "/modulos", label: "Módulos", icon: <Pen size={20} /> },
                 { href: "/cuentas", label: "Cuentas Bancarias", icon: <Wallet size={20} /> },
@@ -163,6 +133,19 @@ export function Sidebar() {
                     </li>
                     <li>
                       <Link
+                        href="/contratos"
+                        className={`flex items-center gap-3 p-2 rounded-md text-white transition-all ${
+                          isActive("/contratos")
+                            ? "bg-white/30 hover:bg-white/50 shadow-md translate-y-[-1px]"
+                            : "hover:bg-white/10 hover:shadow-md hover:translate-y-[-1px]"
+                        }`}
+                      >
+                        <Handshake size={20} />
+                        <span>Contrato a proveedores</span>
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
                         href="/etiquetas"
                         className={`flex items-center gap-3 p-2 rounded-md text-white transition-all ${
                           isActive("/etiquetas")
@@ -174,6 +157,21 @@ export function Sidebar() {
                         <span>Clasificación de gastos</span>
                       </Link>
                     </li>
+
+                    <li>
+                      <Link
+                        href="/sucursales"
+                        className={`flex items-center gap-3 p-2 rounded-md text-white transition-all ${
+                          isActive("/sucursales")
+                            ? "bg-white/30 hover:bg-white/50 shadow-md translate-y-[-1px]"
+                            : "hover:bg-white/10 hover:shadow-md hover:translate-y-[-1px]"
+                        }`}
+                      >
+                        <MapPin size={20} />
+                        <span>Sucursales UNICI</span>
+                      </Link>
+                    </li>
+
                     <li>
                       <Link
                         href="/egresos"
@@ -188,7 +186,7 @@ export function Sidebar() {
                       </Link>
                     </li>
 
-                      <li>
+                    <li>
                       <Link
                         href="/reportes-proveedor"
                         className={`flex items-center gap-3 p-2 rounded-md text-white transition-all ${
@@ -205,8 +203,9 @@ export function Sidebar() {
                 </div>
               </details>
             </div>
+            
 
-            {profile?.rol?.rol === "Administrador" && (
+            {rol === "Administrador" && (
               <div className="pt-6 border-t border-white/20 mt-4">
                 <button
                   onClick={() => setAdminOpen((prev) => !prev)}

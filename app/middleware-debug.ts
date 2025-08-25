@@ -4,68 +4,44 @@ import type { NextRequest } from "next/server"
 
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next()
-  const supabase = createMiddlewareClient({ req, res })
 
-  // Obtener la sesión actual
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
+  // Rutas protegidas (donde SÍ se requiere sesión)
+  const protectedRoutes = ["/dashboard", "/perfil", "/admin", "/periodos", "/cuentas", "/planteles", "/facturas", "/conceptos",  "/users"]
+  const pathname = req.nextUrl.pathname
 
-  // Agregar encabezados de depuración
-  const debugHeaders = new Headers(res.headers)
-  debugHeaders.set("x-middleware-cache", "no-cache")
-  debugHeaders.set("x-middleware-invoked", "true")
-  debugHeaders.set("x-auth-status", session ? "authenticated" : "unauthenticated")
+  const isProtected = protectedRoutes.some((route) =>
+    pathname === route || pathname.startsWith(`${route}/`)
+  )
 
-  if (session) {
-    debugHeaders.set("x-auth-user-id", session.user.id)
-    debugHeaders.set("x-auth-user-email", session.user.email || "no-email")
+  // Solo verificar sesión si la ruta es protegida o raíz
+  let session = null
+  if (isProtected || pathname === "/") {
+    const supabase = createMiddlewareClient({ req, res })
+    const result = await supabase.auth.getSession()
+    session = result.data.session
 
-    // Calcular tiempo de expiración
-    const expiresAt = session.expires_at ? new Date(session.expires_at * 1000).toISOString() : "unknown"
-    debugHeaders.set("x-auth-expires", expiresAt)
+    // Redirigir si no hay sesión en ruta protegida
+    if (!session && isProtected) {
+      const redirectUrl = req.nextUrl.clone()
+      redirectUrl.pathname = "/"
+      return NextResponse.redirect(redirectUrl)
+    }
+
+    // Redirigir si ya hay sesión y está en la raíz (página de login)
+    if (session && pathname === "/") {
+      const redirectUrl = req.nextUrl.clone()
+      redirectUrl.pathname = "/dashboard"
+      return NextResponse.redirect(redirectUrl)
+    }
+
+    // (Opcional) Headers de depuración
+    res.headers.set("x-auth-status", session ? "authenticated" : "unauthenticated")
   }
 
-  // Si el usuario no está autenticado y está intentando acceder a una ruta protegida
-  if (
-    !session &&
-    !req.nextUrl.pathname.startsWith("/_next") &&
-    !req.nextUrl.pathname.startsWith("/api") &&
-    req.nextUrl.pathname !== "/" &&
-    !req.nextUrl.pathname.includes(".") &&
-    !req.nextUrl.pathname.startsWith("/diagnostico") &&
-    !req.nextUrl.pathname.startsWith("/diagnostico-sesion")
-  ) {
-    debugHeaders.set("x-redirect-reason", "unauthenticated-protected-route")
-    const redirectUrl = req.nextUrl.clone()
-    redirectUrl.pathname = "/"
-    return NextResponse.redirect(redirectUrl)
-  }
-
-  // Si el usuario está autenticado y está intentando acceder a la página de login
-  if (session && req.nextUrl.pathname === "/") {
-    debugHeaders.set("x-redirect-reason", "authenticated-login-page")
-    const redirectUrl = req.nextUrl.clone()
-    redirectUrl.pathname = "/dashboard"
-    return NextResponse.redirect(redirectUrl)
-  }
-
-  // Crear una nueva respuesta con los encabezados de depuración
-  const debugResponse = NextResponse.next({
-    request: {
-      headers: req.headers,
-    },
-  })
-
-  // Copiar todos los encabezados de depuración a la respuesta
-  debugHeaders.forEach((value, key) => {
-    debugResponse.headers.set(key, value)
-  })
-
-  return debugResponse
+  return res
 }
 
+// Solo aplicar el middleware a rutas donde pueda ser relevante
 export const config = {
   matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 }
-

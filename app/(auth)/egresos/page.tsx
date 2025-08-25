@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { useEffect, useState } from 'react';
-import { Edit2, Trash2 } from 'lucide-react';
+import { Edit2, Trash2, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -14,16 +14,24 @@ import {
   SelectItem,
 } from '@/components/ui/select';
 
+interface ArchivoFactura {
+  id: string;
+  path: string;
+  nombre_original: string;
+  nombre_unico: string;
+}
+
 interface FacturaProveedor {
   id: string;
   fecha: string;
   gasto: number;
-  observación: string;
+  observacion: string;
   plantel_id: string;
   proveedor: { nombre_proveedor: string } | null;
   etiqueta: { nombre_etiqueta: string } | null;
   departamento: { nombre_departamento: string } | null;
   plantel: { nombre_plantel: string } | null;
+  archivos?: ArchivoFactura[];
   seleccionado?: boolean;
 }
 
@@ -42,14 +50,14 @@ const TablaFacturasProveedores = () => {
   const router = useRouter();
 
   useEffect(() => {
-    const fetchFacturas = async () => {
-      const { data, error } = await supabase
+    const fetchFacturasConArchivos = async () => {
+      const { data: facturasData, error: errorFacturas } = await supabase
         .from('factura_proveedores')
         .select(`
           id,
           fecha,
           gasto,
-          observación,
+          observacion,
           plantel_id,
           proveedor:proveedor_id (nombre_proveedor),
           etiqueta:etiqueta (nombre_etiqueta),
@@ -57,18 +65,40 @@ const TablaFacturasProveedores = () => {
           plantel:plantel_id (nombre_plantel)
         `);
 
-      if (error) {
-        console.error('Error al obtener facturas:', error.message);
+      if (errorFacturas) {
+        console.error('Error al obtener facturas:', errorFacturas.message);
         return;
       }
 
-      if (data) {
-        const facturasConSeleccion = data.map((f: any) => ({
-          ...f,
-          seleccionado: false,
-        }));
-        setFacturas(facturasConSeleccion);
+      if (!facturasData) return;
+
+      const facturaIds = facturasData.map(f => f.id);
+
+      const { data: archivosData, error: errorArchivos } = await supabase
+        .from('factura_archivos_proveedor')
+        .select('id, path, factura_id, nombre_original, nombre_unico')
+        .in('factura_id', facturaIds);
+
+      if (errorArchivos) {
+        console.error('Error al obtener archivos de facturas:', errorArchivos.message);
+        return;
       }
+
+      const archivosPorFactura: Record<string, ArchivoFactura[]> = {};
+      archivosData?.forEach(archivo => {
+        if (!archivosPorFactura[archivo.factura_id]) {
+          archivosPorFactura[archivo.factura_id] = [];
+        }
+        archivosPorFactura[archivo.factura_id].push(archivo);
+      });
+
+      const facturasConArchivos = facturasData.map((factura: any) => ({
+        ...factura,
+        archivos: archivosPorFactura[factura.id] || [],
+        seleccionado: false,
+      }));
+
+      setFacturas(facturasConArchivos);
     };
 
     const fetchPlanteles = async () => {
@@ -86,9 +116,24 @@ const TablaFacturasProveedores = () => {
       }
     };
 
-    fetchFacturas();
+    fetchFacturasConArchivos();
     fetchPlanteles();
   }, []);
+
+  const abrirArchivo = async (path: string) => {
+    const { data, error } = await supabase.storage
+      .from('factura-egresos-proveedor')
+      .createSignedUrl(path, 3600);
+
+    if (error) {
+      alert('Error al obtener archivo: ' + error.message);
+      return;
+    }
+
+    if (data?.signedUrl) {
+      window.open(data.signedUrl, '_blank');
+    }
+  };
 
   const handleAgregar = () => router.push('/egresos/registro');
   const handleEditar = (id: string) => router.push(`/egresos/editar/${id}`);
@@ -111,7 +156,7 @@ const TablaFacturasProveedores = () => {
     if (idsAEliminar.length === 0) return;
 
     const confirmado = window.confirm(
-      '¡Espera! La acción es irreversible y podrá afectar otras funcionalidades. ¿Deseas continuar?'
+      '¡Espera! La acción es irreversible y podrá afectar otros registros en el sistema. ¿Deseas continuar?'
     );
     if (!confirmado) return;
 
@@ -175,7 +220,7 @@ const TablaFacturasProveedores = () => {
         </Select>
       </div>
 
-      <div className="flex flex-nowrap gap-2 mb-6 overflow-x-auto">
+      <div className="flex flex-nowrap gap-2 mb-4 overflow-x-auto">
         <Button
           className="bg-green-600 text-white flex items-center gap-2 whitespace-nowrap"
           onClick={handleAgregar}
@@ -192,29 +237,30 @@ const TablaFacturasProveedores = () => {
       </div>
 
       <div className="overflow-x-auto rounded shadow bg-white">
-        <table className="min-w-full table-auto">
+        <table className="min-w-full text-sm">
           <thead className="bg-gray-900 text-white">
             <tr>
-              <th className="p-3 text-left w-12"></th>
+              <th className="p-3"></th>
               <th className="p-3 text-center text-nowrap">Plantel</th>
               <th className="p-3 text-center text-nowrap">Nombre del proveedor</th>
               <th className="p-3 text-center text-nowrap">Etiqueta de egreso</th>
               <th className="p-3 text-center text-nowrap">Departamento solicitante</th>
               <th className="p-3 text-center text-nowrap">Fecha de registro</th>
               <th className="p-3 text-center text-nowrap">Monto gastado</th>
+              <th className="p-3 text-center text-nowrap">Archivos</th>
               <th className="p-3 text-center">Acciones</th>
             </tr>
           </thead>
           <tbody>
             {resultados.length === 0 ? (
               <tr>
-                <td colSpan={8} className="p-4 text-center text-gray-500">
+                <td colSpan={9} className="p-4 text-center text-gray-500">
                   No hay facturas registradas...
                 </td>
               </tr>
             ) : (
               resultados.map(factura => (
-                <tr key={factura.id} className="border-t">
+                <tr key={factura.id} className="border-t hover:bg-gray-50">
                   <td className="p-3 text-left">
                     <input
                       type="checkbox"
@@ -226,8 +272,36 @@ const TablaFacturasProveedores = () => {
                   <td className="p-3 text-center text-nowrap">{factura.proveedor?.nombre_proveedor || '—'}</td>
                   <td className="p-3 text-center text-nowrap">{factura.etiqueta?.nombre_etiqueta || '—'}</td>
                   <td className="p-3 text-center text-nowrap">{factura.departamento?.nombre_departamento || '—'}</td>
-                  <td className="p-3 text-center text-nowrap">{factura.fecha}</td>
+                  <td className="p-3 text-center text-nowrap">
+                    {factura.fecha
+                      ? new Date(factura.fecha).toLocaleDateString('es-MX', {
+                          day: '2-digit',
+                          month: 'long',
+                          year: 'numeric',
+                        })
+                      : '—'}
+                  </td>
                   <td className="p-3 text-center text-nowrap">${factura.gasto.toFixed(2)}</td>
+                  <td className="p-3 text-center">
+                    <div className="flex justify-center items-center gap-1">
+                      {factura.archivos && factura.archivos.length > 0 ? (
+                        factura.archivos.map(archivo => (
+                          <Button
+                            key={archivo.id}
+                            variant="ghost"
+                            size="icon"
+                            title={`Ver archivo: ${archivo.nombre_original}`}
+                            onClick={() => abrirArchivo(archivo.path)}
+                            className="text-blue-600 hover:text-blue-800"
+                          >
+                            <FileText size={20} />
+                          </Button>
+                        ))
+                      ) : (
+                        <span className="text-gray-400 italic">No hay archivos</span>
+                      )}
+                    </div>
+                  </td>
                   <td className="p-3 text-center flex justify-center gap-2">
                     <Button
                       variant="outline"

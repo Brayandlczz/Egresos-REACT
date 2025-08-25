@@ -133,9 +133,9 @@ const UserManagementView: React.FC = () => {
           <thead className="bg-gray-900 text-white">
             <tr>
               <th className="p-3 text-left w-12"></th>
-              <th className="p-3 text-center whitespace-nowrap">Nombre</th>
-              <th className="p-3 text-center whitespace-nowrap">Correo</th>
-              <th className="p-3 text-center whitespace-nowrap">Rol</th>
+              <th className="p-3 text-center whitespace-nowrap">Nombre de usuario</th>
+              <th className="p-3 text-center whitespace-nowrap">Correo electrónico</th>
+              <th className="p-3 text-center whitespace-nowrap">Rol asignado</th>
               <th className="p-3 text-center whitespace-nowrap">Acciones</th>
             </tr>
           </thead>

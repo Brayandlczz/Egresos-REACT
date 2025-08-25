@@ -1,35 +1,9 @@
-"use client";
+"use client"
 
-import { useEffect, useState } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { useAuth } from "@/app/context/auth-context"
 
 export default function DashboardPage() {
-  const [nombre, setNombre] = useState<string | null>(null);
-  const supabase = createClientComponentClient();
-
-  useEffect(() => {
-    async function fetchUsuario() {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (user) {
-        const { data, error } = await supabase
-          .from("usuarios")
-          .select("nombre")
-          .eq("id", user.id)
-          .single();
-
-        if (error) {
-          console.error("Error al obtener el nombre:", error.message);
-        } else {
-          setNombre(data.nombre);
-        }
-      }
-    }
-
-    fetchUsuario();
-  }, []);
+  const { nombre } = useAuth()
 
   return (
     <div className="w-full h-full flex flex-col items-center justify-center gap-6 p-6">
@@ -83,5 +57,5 @@ export default function DashboardPage() {
         </a>
       </div>
     </div>
-  );
+  )
 }

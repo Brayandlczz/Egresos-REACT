@@ -14,6 +14,8 @@ import {
   SelectItem,
 } from '@/components/ui/select';
 
+import { useAuth } from '@/app/context/auth-context'; 
+
 interface OfertaEducativa {
   id: string;
   nombre: string;
@@ -29,6 +31,7 @@ interface Plantel {
 const OfertaEducativaList: React.FC = () => {
   const supabase = createClientComponentClient();
   const router = useRouter();
+  const { rol } = useAuth(); 
   const [ofertas, setOfertas] = useState<OfertaEducativa[]>([]);
   const [search, setSearch] = useState('');
   const [planteles, setPlanteles] = useState<Plantel[]>([]);
@@ -46,7 +49,7 @@ const OfertaEducativaList: React.FC = () => {
       setPlanteles(data || []);
     };
     fetchPlanteles();
-  }, []);
+  }, [supabase]);
 
   useEffect(() => {
     const fetchOfertas = async () => {
@@ -87,8 +90,10 @@ const OfertaEducativaList: React.FC = () => {
   const handleEditar = (id: string) => router.push(`/ofertas/editar/${id}`);
 
   const handleEliminar = async (id: string) => {
+    if (rol !== 'Administrador') return; // Sólo admins
+
     const confirmado = window.confirm(
-      '¡Espera! La acción es irreversible y podrá afectar otras funcionalidades. ¿Deseas continuar?'
+      '¡Espera! La acción es irreversible y podrá afectar otros registros en el sistema. ¿Deseas continuar?'
     );
     if (!confirmado) return;
 
@@ -102,11 +107,13 @@ const OfertaEducativaList: React.FC = () => {
   };
 
   const handleEliminarSeleccionados = async () => {
+    if (rol !== 'Administrador') return; // Sólo admins
+
     const idsAEliminar = ofertas.filter(o => o.seleccionado).map(o => o.id);
     if (idsAEliminar.length === 0) return;
 
     const confirmado = window.confirm(
-      '¡Espera! La acción es irreversible y podrá afectar otras funcionalidades. ¿Deseas continuar?'
+      '¡Espera! La acción es irreversible y podrá afectar otros registros en el sistema. ¿Deseas continuar?'
     );
     if (!confirmado) return;
 
@@ -168,7 +175,7 @@ const OfertaEducativaList: React.FC = () => {
         </Select>
       </div>
 
-      <div className="flex flex-nowrap gap-2 mb-6 overflow-x-auto">
+      <div className="flex flex-nowrap gap-2 mb-4 overflow-x-auto">
         <Button
           onClick={handleAgregar}
           className="bg-green-600 text-white flex items-center gap-2 whitespace-nowrap"
@@ -177,8 +184,15 @@ const OfertaEducativaList: React.FC = () => {
         </Button>
 
         <Button
+          className={`bg-red-600 text-white flex items-center gap-2 whitespace-nowrap
+            ${rol !== 'Administrador' ? 'opacity-50 pointer-events-auto' : ''}
+          `}
           onClick={handleEliminarSeleccionados}
-          className="bg-red-600 text-white flex items-center gap-2 whitespace-nowrap"
+          title={
+            rol !== 'Administrador'
+              ? 'Función disponible únicamente para administradores'
+              : 'Eliminar seleccionados'
+          }
         >
           Eliminar seleccionados
         </Button>
@@ -225,12 +239,19 @@ const OfertaEducativaList: React.FC = () => {
                     >
                       <Edit2 size={20} />
                     </Button>
+
                     <Button
                       variant="outline"
                       size="icon"
-                      className="text-red-600"
-                      onClick={() => handleEliminar(oferta.id)}
-                      title="Eliminar"
+                      className={`text-red-600 cursor-pointer
+                        ${rol !== 'Administrador' ? 'opacity-50 pointer-events-auto' : ''}
+                      `}
+                      onClick={() => rol === 'Administrador' && handleEliminar(oferta.id)}
+                      title={
+                        rol !== 'Administrador'
+                          ? 'Función disponible únicamente para administradores'
+                          : 'Eliminar'
+                      }
                     >
                       <Trash2 size={20} />
                     </Button>

@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { useEffect, useState } from 'react';
@@ -14,6 +13,7 @@ import {
   SelectContent,
   SelectItem,
 } from '@/components/ui/select';
+import { useAuth } from '@/app/context/auth-context';
 
 interface Docente {
   relacion_id: string;
@@ -44,6 +44,7 @@ const DocentesList = () => {
 
   const supabase = createClientComponentClient();
   const router = useRouter();
+  const { rol } = useAuth();
 
   useEffect(() => {
     const fetchDocentes = async () => {
@@ -76,8 +77,8 @@ const DocentesList = () => {
         return;
       }
 
-      const docentesMapeados = data.map((rel: any) => ({
-        relacion_id: rel.id,
+      const docentesMapeados = (data ?? []).map((rel: any) => ({
+        relacion_id: rel.id.toString(),
         id: rel.docente.id,
         nombre_docente: rel.docente.nombre_docente,
         plantel_id: rel.plantel_id,
@@ -103,7 +104,7 @@ const DocentesList = () => {
         return;
       }
 
-      const plantelesMapeados = data.map((p: any) => ({
+      const plantelesMapeados = (data ?? []).map((p: any) => ({
         id: p.id,
         nombre: p.nombre_plantel,
       }));
@@ -123,19 +124,59 @@ const DocentesList = () => {
     );
   };
 
-  const handleEliminarSeleccionados = () => {
-    setDocentes(docentes.filter(d => !d.seleccionado));
+  const handleEliminarSeleccionados = async () => {
+    if (rol !== 'Administrador') return;
+
+    const confirmado = window.confirm('¿Estás seguro de eliminar los docentes seleccionados? Esta acción no se puede deshacer.');
+    if (!confirmado) return;
+
+    const idsAEliminar = docentes
+      .filter(d => d.seleccionado)
+      .map(d => d.relacion_id);
+
+    if (idsAEliminar.length === 0) {
+      alert('No hay docentes seleccionados para eliminar.');
+      return;
+    }
+
+    const { error } = await supabase
+      .from('docente_relations')
+      .delete()
+      .in('id', idsAEliminar);
+
+    if (error) {
+      alert('Error al eliminar docentes: ' + error.message);
+      return;
+    }
+
+    setDocentes(prev =>
+      prev.filter(d => !idsAEliminar.includes(d.relacion_id))
+    );
   };
 
   const handleEditar = (id: number) => {
-    router.push(`/docentes/edit/${id}`);
+    router.push(`/docentes/editar/${id}`);
   };
 
-  const handleEliminar = (id: number) => {
-    setDocentes(prev => prev.filter(d => d.id !== id));
+  const handleEliminar = async (relacion_id: string) => {
+    if (rol !== 'Administrador') return;
+
+    const confirmado = window.confirm('¿Estás seguro de eliminar este docente? Esta acción no se puede deshacer.');
+    if (!confirmado) return;
+
+    const { error } = await supabase
+      .from('docente_relations')
+      .delete()
+      .eq('id', relacion_id);
+
+    if (error) {
+      alert('Error al eliminar docente: ' + error.message);
+      return;
+    }
+
+    setDocentes(prev => prev.filter(d => d.relacion_id !== relacion_id));
   };
 
-  // Filtrado según búsqueda y filtro plantel
   const resultados = docentes.filter(d => {
     const coincideBusqueda = d.nombre_docente.toLowerCase().includes(search.toLowerCase());
     const coincidePlantel =
@@ -143,7 +184,6 @@ const DocentesList = () => {
     return coincideBusqueda && coincidePlantel;
   });
 
-  // Paginación
   const totalPaginas = Math.ceil(resultados.length / docentesPorPagina);
   const docentesPaginados = resultados.slice(
     (paginaActual - 1) * docentesPorPagina,
@@ -183,7 +223,7 @@ const DocentesList = () => {
         </Select>
       </div>
 
-      <div className="flex flex-nowrap gap-2 mb-6 overflow-x-auto">
+      <div className="flex flex-nowrap gap-2 mb-4 overflow-x-auto">
         <Button
           className="bg-green-600 text-white flex items-center gap-2 whitespace-nowrap"
           onClick={() => router.push('/docentes/registro')}
@@ -192,8 +232,15 @@ const DocentesList = () => {
         </Button>
 
         <Button
-          className="bg-red-600 text-white flex items-center gap-2 whitespace-nowrap"
+          className={`bg-red-600 text-white flex items-center gap-2 whitespace-nowrap ${
+            rol !== 'Administrador' ? 'opacity-50 pointer-events-none' : ''
+          }`}
           onClick={handleEliminarSeleccionados}
+          title={
+            rol !== 'Administrador'
+              ? 'Función disponible solo para administradores'
+              : 'Eliminar seleccionados'
+          }
         >
           Eliminar seleccionados
         </Button>
@@ -207,7 +254,7 @@ const DocentesList = () => {
       </div>
 
       <div className="overflow-x-auto rounded shadow bg-white">
-        <table className="min-w-full">
+        <table className="min-w-full text-sm">
           <thead className="bg-gray-900 text-white">
             <tr>
               <th className="p-3 text-left"></th>
@@ -245,7 +292,7 @@ const DocentesList = () => {
                     <Button
                       variant="outline"
                       size="icon"
-                      className="text-red-400"
+                      className="text-yellow-400"
                       onClick={() => handleEditar(docente.id)}
                       title="Editar"
                     >
@@ -254,9 +301,15 @@ const DocentesList = () => {
                     <Button
                       variant="outline"
                       size="icon"
-                      className="text-red-600"
-                      onClick={() => handleEliminar(docente.id)}
-                      title="Eliminar"
+                      className={`text-red-600 ${
+                        rol !== 'Administrador' ? 'opacity-50 pointer-events-none' : ''
+                      }`}
+                      onClick={() => rol === 'Administrador' && handleEliminar(docente.relacion_id)}
+                      title={
+                        rol !== 'Administrador'
+                          ? 'Función disponible solo para administradores'
+                          : 'Eliminar'
+                      }
                     >
                       <Trash2 size={20} />
                     </Button>

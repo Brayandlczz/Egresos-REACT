@@ -18,6 +18,8 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (isLoading) return 
+
     setIsLoading(true)
     setError(null)
     setLoginStatus("idle")
@@ -66,7 +68,7 @@ export default function LoginPage() {
           <Image src="/uniciflama.webp" alt="Logo" width={30} height={30} />
         </div>
 
-        <h3 className="text-center text-2xl font-bold mb-3">Bienvenido(a)</h3>
+        <h3 className="text-center text-2xl font-semibold mb-3">Bienvenido(a)</h3>
 
         {error && (
           <div className="alert alert-danger text-sm mb-4 bg-red-100 text-red-700 border border-red-300 rounded-md px-3 py-2 text-center">
@@ -86,7 +88,7 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="form-control w-full rounded-full border border-gray-300 px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="form-control w-full text-center rounded-full border border-gray-300 px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
@@ -101,7 +103,7 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="form-control w-full rounded-full border border-gray-300 px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="form-control w-full text-center rounded-full border border-gray-300 px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
@@ -129,7 +131,7 @@ export default function LoginPage() {
             className="text-blue-600 font-medium cursor-pointer"
             onClick={() => setShowSupportModal(true)}
           >
-            Contacta al administrador
+            Contacta al administrador.
           </span>
         </p>
       </div>
@@ -137,17 +139,16 @@ export default function LoginPage() {
       {showSupportModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white rounded-lg p-6 max-w-xs text-center shadow-lg">
-            <h4 className="text-lg font-semibold mb-3">Soporte Técnico</h4>
+            <h4 className="text-lg font-light mb-3">Soporte Técnico</h4>
             <p className="mb-4">Puedes contactar al administrador del sistema a través del correo:</p>
             <a
-              href="mailto:sistemas@unici.edu.mx"
               className="text-blue-600 font-medium hover:underline mb-6 block"
             >
               sistemas@unici.edu.mx
             </a>
             <button
               onClick={() => setShowSupportModal(false)}
-              className="mt-0 px-4 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition"
+              className="mt-0 px-4 py-2 bg-blue-600 text-white rounded-full hover:bg-red-600 transition"
             >
               Cerrar
             </button>

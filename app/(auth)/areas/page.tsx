@@ -89,7 +89,7 @@ const DepartamentosList = () => {
   const handleEditar = (id: string) => router.push(`/areas/editar/${id}`);
 
   const handleEliminar = async (id: string) => {
-    const confirmado = window.confirm('¿Estás seguro? Esta acción no se puede deshacer.');
+    const confirmado = window.confirm('¡Espera! La acción es irreversible y podrá afectar otros registros en el sistema. ¿Deseas continuar?');
     if (!confirmado) return;
 
     const { error } = await supabase.from('departamentos').delete().eq('id', id);
@@ -105,7 +105,7 @@ const DepartamentosList = () => {
     const ids = departamentos.filter(d => d.seleccionado).map(d => d.id);
     if (ids.length === 0) return;
 
-    const confirmado = window.confirm('¿Eliminar áreas seleccionadas? Esta acción no se puede deshacer.');
+    const confirmado = window.confirm('¡Espera! La acción es irreversible y podrá afectar otros registros en el sistema. ¿Deseas continuar?');
     if (!confirmado) return;
 
     const { error } = await supabase.from('departamentos').delete().in('id', ids);
@@ -170,7 +170,7 @@ const DepartamentosList = () => {
         </Select>
       </div>
 
-      <div className="flex flex-nowrap gap-2 mb-6 overflow-x-auto">
+      <div className="flex flex-nowrap gap-2 mb-4 overflow-x-auto">
         <Button
           className="bg-green-600 text-white flex items-center gap-2 whitespace-nowrap"
           onClick={handleAgregar}
@@ -187,7 +187,7 @@ const DepartamentosList = () => {
       </div>
 
       <div className="overflow-x-auto rounded shadow bg-white">
-        <table className="min-w-full">
+        <table className="min-w-full text-sm">
           <thead className="bg-gray-900 text-white">
             <tr>
               <th className="p-3 text-left"></th>

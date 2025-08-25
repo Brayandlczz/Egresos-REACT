@@ -1,17 +1,29 @@
 'use client';
 
-import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { Edit2, Trash2, FileText, FileImage, File } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/components/ui/select';
+import { useAuth } from '@/app/context/auth-context';
 
 interface Archivo {
   path: string;
   nombre_original: string;
   nombre_unico: string;
+}
+
+interface Plantel {
+  id: string;
+  nombre_plantel: string;
 }
 
 interface Proveedor {
@@ -25,16 +37,37 @@ interface Proveedor {
   email: string;
   bien_proveido: string;
   tipo_persona: string;
-  plantel: { nombre_plantel: string };
+  plantel: Plantel | null;
   archivos: Archivo[];
   seleccionado?: boolean;
 }
 
 const ProveedorList = () => {
   const [proveedores, setProveedores] = useState<Proveedor[]>([]);
+  const [planteles, setPlanteles] = useState<Plantel[]>([]);
   const [search, setSearch] = useState('');
+  const [filtroPlantel, setFiltroPlantel] = useState('Todos');
+
   const supabase = createClientComponentClient();
   const router = useRouter();
+  const { rol } = useAuth();
+
+  useEffect(() => {
+    const fetchPlanteles = async () => {
+      const { data, error } = await supabase
+        .from('plantel')
+        .select('id, nombre_plantel');
+
+      if (error) {
+        console.error('Error al obtener planteles:', error.message);
+        return;
+      }
+
+      setPlanteles(data || []);
+    };
+
+    fetchPlanteles();
+  }, [supabase]);
 
   useEffect(() => {
     const fetchProveedores = async () => {
@@ -51,7 +84,7 @@ const ProveedorList = () => {
           email,
           bien_proveido,
           tipo_persona,
-          plantel:plantel_id (nombre_plantel),
+          plantel:plantel_id (id, nombre_plantel),
           archivos_p_fisica!archivos_p_fisica_proveedor_id_fkey (path, nombre_original, nombre_unico),
           archivos_p_moral!archivos_p_moral_proveedor_id_fkey (path, nombre_original, nombre_unico)
         `);
@@ -72,12 +105,12 @@ const ProveedorList = () => {
         email: p.email,
         bien_proveido: p.bien_proveido,
         tipo_persona: p.tipo_persona,
-        plantel: p.plantel,
+        plantel: p.plantel ?? null,
         archivos: [
           ...(p.archivos_p_fisica || []),
-          ...(p.archivos_p_moral || [])
+          ...(p.archivos_p_moral || []),
         ],
-        seleccionado: false
+        seleccionado: false,
       }));
 
       setProveedores(lista);
@@ -106,22 +139,71 @@ const ProveedorList = () => {
     );
   };
 
-  const handleEliminarSeleccionados = () => {
+  const handleEliminarSeleccionados = async () => {
+    if (rol !== 'Administrador') {
+      alert('No tienes permisos para eliminar proveedores.');
+      return;
+    }
+    const idsSeleccionados = proveedores.filter(p => p.seleccionado).map(p => p.id);
+    if (idsSeleccionados.length === 0) {
+      alert('No hay proveedores seleccionados para eliminar.');
+      return;
+    }
+
+    const confirmado = window.confirm(
+      '¿Deseas eliminar los proveedores seleccionados? Esta acción es irreversible.'
+    );
+    if (!confirmado) return;
+
+    const { error } = await supabase.from('proveedores').delete().in('id', idsSeleccionados);
+    if (error) {
+      alert('Error eliminando proveedores: ' + error.message);
+      return;
+    }
+
     setProveedores(prev => prev.filter(p => !p.seleccionado));
   };
 
-  const handleEditar = (id: string) => {
-    router.push(`/proveedores/edit/${id}`);
+  const handleAgregar = () => {
+    if (rol !== 'Administrador') {
+      alert('No tienes permisos para agregar proveedores.');
+      return;
+    }
+    router.push('/proveedores/registro');
   };
 
-  const handleEliminar = (id: string) => {
+  const handleEditar = (id: string) => {
+    router.push(`/proveedores/editar/${id}`);
+  };
+
+  const handleEliminar = async (id: string) => {
+    if (rol !== 'Administrador') {
+      alert('No tienes permisos para eliminar proveedores.');
+      return;
+    }
+
+    const confirmado = window.confirm('¿Deseas eliminar este proveedor? Esta acción es irreversible.');
+    if (!confirmado) return;
+
+    const { error } = await supabase.from('proveedores').delete().eq('id', id);
+    if (error) {
+      alert('Error eliminando proveedor: ' + error.message);
+      return;
+    }
     setProveedores(prev => prev.filter(p => p.id !== id));
   };
 
-  const resultados = proveedores.filter(p =>
-    p.numero_proveedor.toLowerCase().includes(search.toLowerCase()) ||
-    p.nombre_proveedor.toLowerCase().includes(search.toLowerCase())
-  );
+  // Filtro que incluye búsqueda y filtro por plantel
+  const resultados = proveedores.filter(p => {
+    const cumpleBusqueda =
+      p.numero_proveedor.toLowerCase().includes(search.toLowerCase()) ||
+      p.nombre_proveedor.toLowerCase().includes(search.toLowerCase());
+
+    const cumpleFiltroPlantel =
+      filtroPlantel === 'Todos' || p.plantel?.id === filtroPlantel;
+
+    return cumpleBusqueda && cumpleFiltroPlantel;
+  });
 
   return (
     <div className="p-8 bg-gray-50 max-h-screen">
@@ -132,23 +214,42 @@ const ProveedorList = () => {
           placeholder="Buscar por número o nombre..."
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="flex-1 max-w"
+          className="flex-1"
         />
+
+        <Select onValueChange={setFiltroPlantel} value={filtroPlantel}>
+          <SelectTrigger className="w-48">
+            <SelectValue placeholder="Filtrar por plantel" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Todos">Todos los planteles</SelectItem>
+            {planteles.map(p => (
+              <SelectItem key={p.id} value={p.id}>
+                {p.nombre_plantel}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="flex flex-nowrap gap-2 mb-4 overflow-x-auto">
-        <Link
-          href="/proveedores/registro"
-          className="bg-green-600 text-white text-nowrap px-4 py-2 rounded hover:bg-green-700 transition flex items-center gap-2"
-        >
-          Agregar proveedor
-        </Link>
-        <button
-          onClick={handleEliminarSeleccionados}
-          className="bg-red-600 text-white text-nowrap px-4 py-2 rounded hover:bg-red-700 transition flex items-center gap-2"
-        >
-          Eliminar seleccionados
-        </button>
+        {rol === 'Administrador' && (
+          <>
+            <Button
+              className="bg-green-600 text-white flex items-center gap-2 whitespace-nowrap"
+              onClick={handleAgregar}
+            >
+              Agregar proveedor
+            </Button>
+
+            <Button
+              className="bg-red-600 text-white flex items-center gap-2 whitespace-nowrap"
+              onClick={handleEliminarSeleccionados}
+            >
+              Eliminar seleccionados
+            </Button>
+          </>
+        )}
       </div>
 
       <div className="rounded shadow bg-white overflow-x-auto">
@@ -185,6 +286,7 @@ const ProveedorList = () => {
                       type="checkbox"
                       checked={p.seleccionado || false}
                       onChange={() => handleSeleccionar(p.id)}
+                      disabled={rol !== 'Administrador'}
                     />
                   </td>
                   <td className="p-3 text-center text-nowrap">{p.numero_proveedor}</td>
@@ -196,14 +298,17 @@ const ProveedorList = () => {
                   <td className="p-3 text-center text-nowrap">{p.email}</td>
                   <td className="p-3 text-center text-nowrap">{p.bien_proveido}</td>
                   <td className="p-3 text-center text-nowrap">{p.tipo_persona}</td>
-                  <td className="p-3 text-center text-nowrap">{p.plantel.nombre_plantel}</td>
+                  <td className="p-3 text-center text-nowrap">{p.plantel?.nombre_plantel || 'Sin plantel'}</td>
                   <td className="p-3 text-center text-nowrap">
                     {p.archivos.length > 0 ? (
                       p.archivos.map(archivo => {
                         const ext = archivo.nombre_unico.split('.').pop()?.toLowerCase();
-                        const Icon = ext === 'pdf' ? FileText :
-                          ['jpg', 'jpeg', 'png'].includes(ext || '') ? FileImage :
-                          File;
+                        const Icon =
+                          ext === 'pdf'
+                            ? FileText
+                            : ['jpg', 'jpeg', 'png'].includes(ext || '')
+                            ? FileImage
+                            : File;
                         return (
                           <button
                             key={archivo.nombre_unico}
@@ -230,15 +335,17 @@ const ProveedorList = () => {
                     >
                       <Edit2 size={20} />
                     </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="text-red-600"
-                      onClick={() => handleEliminar(p.id)}
-                      title="Eliminar"
-                    >
-                      <Trash2 size={20} />
-                    </Button>
+                    {rol === 'Administrador' && (
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="text-red-600"
+                        onClick={() => handleEliminar(p.id)}
+                        title="Eliminar"
+                      >
+                        <Trash2 size={20} />
+                      </Button>
+                    )}
                   </td>
                 </tr>
               ))

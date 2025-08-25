@@ -22,7 +22,7 @@ const formatearConcatenado = (inicioISO: string, finISO: string) => {
   const añoFin = fin.getFullYear();
 
   if (añoInicio === añoFin) {
-    return `${mesInicio}-${mesFin} ${añoInicio}`;
+    return `${mesInicio} - ${mesFin} ${añoInicio}`;
   } else {
     return `${mesInicio} ${añoInicio} - ${mesFin} ${añoFin}`;
   }

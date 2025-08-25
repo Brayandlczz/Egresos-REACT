@@ -1,10 +1,15 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 
 const RegistroDocente: React.FC = () => {
   const supabase = createClientComponentClient();
+
+  const router = useRouter();
 
   const [planteles, setPlanteles] = useState<any[]>([]);
   const [periodos, setPeriodos] = useState<any[]>([]);
@@ -173,9 +178,19 @@ const RegistroDocente: React.FC = () => {
 
   return (
     <div className="p-8 bg-white-100">
-      <h2 className="text-2xl font-semibold mb-6">
-        <span className="font-bold text-black">Docentes</span> | Registro de Docente
-      </h2>
+      <div className="flex items-center mb-6">
+        <Button
+          onClick={() => router.back()}
+          className="bg-white text-black-800 border hover:bg-gray-100 mr-4 p-2 rounded-full"
+          aria-label="Volver"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+
+        <h2 className="text-2xl font-semibold text-gray-800">
+          Docentes | Registro de Docentes
+        </h2>
+      </div>
 
       <form role="form" className="border rounded shadow bg-white" onSubmit={e => e.preventDefault()}>
         <div className="bg-blue-600 text-white px-4 py-2 rounded-t" role="heading" aria-level={3}>

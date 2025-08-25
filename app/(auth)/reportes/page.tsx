@@ -38,10 +38,14 @@ const ReportFilters: React.FC = () => {
         .eq("plantel_id", filtroPlantelDocente);
 
       if (!error && data) {
-        const docentesData = data.map((r) =>
-          Array.isArray(r.docente) ? r.docente[0] : r.docente
-        );
-        setDocentes(docentesData);
+        const docentesMap = new Map();
+        data.forEach((r) => {
+          const docente = Array.isArray(r.docente) ? r.docente[0] : r.docente;
+          if (docente && !docentesMap.has(docente.id)) {
+            docentesMap.set(docente.id, docente);
+          }
+        });
+        setDocentes(Array.from(docentesMap.values()));
       }
     }
     fetchDocentes();
@@ -59,13 +63,19 @@ const ReportFilters: React.FC = () => {
     fetchPeriodosPorPlantel();
   }, [filtroPlantelPeriodo]);
 
-  async function ejecutarConValidacion(condicion: boolean, mensaje: string, accion: () => Promise<void>) {
+  async function ejecutarConValidacion(
+    condicion: boolean,
+    mensaje: string,
+    accion: () => Promise<void>,
+    reset?: () => void
+  ) {
     if (!condicion) {
       alert(mensaje);
       return;
     }
     try {
       await accion();
+      if (reset) reset();
     } catch {
       alert("Ocurrió un error, revisa la consola.");
     }
@@ -73,7 +83,7 @@ const ReportFilters: React.FC = () => {
 
   return (
     <div className="p-6 bg-white-100 max-h-full">
-      <h1 className="text-3xl font-bold mb-6">Filtros de reporte</h1>
+      <h1 className="text-3xl font-light text-center text-black-800 mb-6">Filtros de reportes</h1>
       <div className="grid md:grid-cols-3 gap-6">
         <CardReporte
           titulo="Reporte por docente"
@@ -105,7 +115,11 @@ const ReportFilters: React.FC = () => {
                 onClick={() => ejecutarConValidacion(
                   !!filtroPlantelDocente && !!filtroDocente,
                   "Selecciona un plantel y un docente para generar el PDF.",
-                  () => generarReporteDocentes(filtroDocente, filtroPlantelDocente)
+                  () => generarReporteDocentes(filtroDocente, filtroPlantelDocente),
+                  () => {
+                    setFiltroDocente("");
+                    setFiltroPlantelDocente("");
+                  }
                 )}
               />
               <BotonReporte
@@ -113,7 +127,11 @@ const ReportFilters: React.FC = () => {
                 onClick={() => ejecutarConValidacion(
                   !!filtroPlantelDocente && !!filtroDocente,
                   "Selecciona un plantel y un docente para generar el Excel.",
-                  () => generarReporteDocentesExcel(filtroDocente, filtroPlantelDocente)
+                  () => generarReporteDocentesExcel(filtroDocente, filtroPlantelDocente),
+                  () => {
+                    setFiltroDocente("");
+                    setFiltroPlantelDocente("");
+                  }
                 )}
               />
             </>
@@ -138,7 +156,8 @@ const ReportFilters: React.FC = () => {
                 onClick={() => ejecutarConValidacion(
                   !!filtroPlantelPlantel,
                   "Selecciona un plantel para generar el PDF.",
-                  () => generarReportePlanteles(filtroPlantelPlantel)
+                  () => generarReportePlanteles(filtroPlantelPlantel),
+                  () => setFiltroPlantelPlantel("")
                 )}
               />
               <BotonReporte
@@ -146,7 +165,8 @@ const ReportFilters: React.FC = () => {
                 onClick={() => ejecutarConValidacion(
                   !!filtroPlantelPlantel,
                   "Selecciona un plantel para generar el Excel.",
-                  () => generarReportePlantelesExcel(filtroPlantelPlantel)
+                  () => generarReportePlantelesExcel(filtroPlantelPlantel),
+                  () => setFiltroPlantelPlantel("")
                 )}
               />
             </>
@@ -183,7 +203,11 @@ const ReportFilters: React.FC = () => {
                 onClick={() => ejecutarConValidacion(
                   !!filtroPeriodoPago,
                   "Selecciona un periodo de pago para generar el PDF.",
-                  () => generarReportePagosPDF(filtroPeriodoPago)
+                  () => generarReportePagosPDF(filtroPeriodoPago),
+                  () => {
+                    setFiltroPeriodoPago("");
+                    setFiltroPlantelPeriodo("");
+                  }
                 )}
               />
               <BotonReporte
@@ -191,7 +215,11 @@ const ReportFilters: React.FC = () => {
                 onClick={() => ejecutarConValidacion(
                   !!filtroPeriodoPago,
                   "Selecciona un periodo de pago para generar el Excel.",
-                  () => generarReportePagosExcel(filtroPeriodoPago)
+                  () => generarReportePagosExcel(filtroPeriodoPago),
+                  () => {
+                    setFiltroPeriodoPago("");
+                    setFiltroPlantelPeriodo("");
+                  }
                 )}
               />
             </>

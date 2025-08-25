@@ -3,13 +3,13 @@
 import React, { useEffect } from 'react';
 import { Sidebar } from '@/app/components/sidebar';
 import { Inter } from 'next/font/google';
-import { AuthProvider, useAuth } from '@/app/context/auth-context'; 
+import { AuthProvider, useAuth } from '@/app/context/auth-context';
 import { useRouter } from 'next/navigation';
 
 const inter = Inter({ subsets: ['latin'] });
 
 function ProtectedContent({ children }: { children: React.ReactNode }) {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, rol } = useAuth();
   const router = useRouter();
 
   useEffect(() => {

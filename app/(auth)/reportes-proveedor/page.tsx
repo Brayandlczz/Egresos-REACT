@@ -2,18 +2,22 @@
 
 import React, { useEffect, useState } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { generarReporteProveedoresPDF } from "./components/generate-plantel";
+import { generarReporteFacturasPorProveedorPDF } from "./components/generate-proveedor";
+import { generarReporteFacturasPorEtiquetaPDF } from "./components/generate-clasificacion";
 
 const supabase = createClientComponentClient();
 
 const ReportFilters: React.FC = () => {
   const [planteles, setPlanteles] = useState<{ id: string; nombre_plantel: string }[]>([]);
-  const [docentes, setDocentes] = useState<{ id: string; nombre_docente: string }[]>([]);
-  const [periodosPago, setPeriodosPago] = useState<{ id: string; concatenado: string }[]>([]);
-  const [filtroPlantelDocente, setFiltroPlantelDocente] = useState("");
-  const [filtroDocente, setFiltroDocente] = useState("");
-  const [filtroPlantelPlantel, setFiltroPlantelPlantel] = useState("");
-  const [filtroPlantelPeriodo, setFiltroPlantelPeriodo] = useState("");
-  const [filtroPeriodoPago, setFiltroPeriodoPago] = useState("");
+  const [proveedores, setProveedores] = useState<{ id: string; nombre_proveedor: string }[]>([]);
+  const [etiquetas, setEtiquetas] = useState<{ id: string; nombre_etiqueta: string }[]>([]);
+
+  const [filtroPlantelReportePlantel, setFiltroPlantelReportePlantel] = useState("");
+  const [filtroPlantelReporteProveedor, setFiltroPlantelReporteProveedor] = useState("");
+  const [filtroProveedor, setFiltroProveedor] = useState("");
+  const [filtroPlantelReporteClasificacion, setFiltroPlantelReporteClasificacion] = useState("");
+  const [filtroEtiqueta, setFiltroEtiqueta] = useState("");
 
   useEffect(() => {
     async function fetchPlanteles() {
@@ -24,42 +28,54 @@ const ReportFilters: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    async function fetchDocentes() {
-      if (!filtroPlantelDocente) return setDocentes([]);
-      const { data, error } = await supabase
-        .from("docente_relations")
-        .select("docente(id, nombre_docente)")
-        .eq("plantel_id", filtroPlantelDocente);
-
-      if (!error && data) {
-        const docentesData = data.map((r) =>
-          Array.isArray(r.docente) ? r.docente[0] : r.docente
-        );
-        setDocentes(docentesData);
+    async function fetchEtiquetas() {
+      if (!filtroPlantelReporteClasificacion) {
+        setEtiquetas([]);
+        setFiltroEtiqueta("");
+        return;
       }
+      const { data, error } = await supabase
+        .from("etiquetas")
+        .select("id,nombre_etiqueta")
+        .eq("plantel_id", filtroPlantelReporteClasificacion);
+
+      if (!error && data) setEtiquetas(data);
     }
-    fetchDocentes();
-  }, [filtroPlantelDocente]);
+    fetchEtiquetas();
+  }, [filtroPlantelReporteClasificacion]);
 
   useEffect(() => {
-    async function fetchPeriodosPorPlantel() {
-      if (!filtroPlantelPeriodo) return setPeriodosPago([]);
+    async function fetchProveedores() {
+      if (!filtroPlantelReporteProveedor) {
+        setProveedores([]);
+        setFiltroProveedor("");
+        return;
+      }
       const { data, error } = await supabase
-        .from("periodo_pago")
-        .select("id,concatenado")
-        .eq("plantel_id", filtroPlantelPeriodo);
-      if (!error && data) setPeriodosPago(data);
-    }
-    fetchPeriodosPorPlantel();
-  }, [filtroPlantelPeriodo]);
+        .from("proveedores")
+        .select("id, nombre_proveedor")
+        .eq("plantel_id", filtroPlantelReporteProveedor);
 
-  async function ejecutarConValidacion(condicion: boolean, mensaje: string, accion: () => Promise<void>) {
+      if (!error && data) {
+        setProveedores(data);
+      }
+    }
+    fetchProveedores();
+  }, [filtroPlantelReporteProveedor]);
+
+  async function ejecutarConValidacion(
+    condicion: boolean,
+    mensaje: string,
+    accion: () => Promise<void>,
+    limpiarFiltros?: () => void
+  ) {
     if (!condicion) {
       alert(mensaje);
       return;
     }
     try {
       await accion();
+      if (limpiarFiltros) limpiarFiltros();
     } catch {
       alert("Ocurrió un error, revisa la consola.");
     }
@@ -67,8 +83,49 @@ const ReportFilters: React.FC = () => {
 
   return (
     <div className="p-6 bg-white-100 max-h-full">
-      <h1 className="text-3xl font-bold mb-6">Filtros de reporte de proveedores</h1>
+      <h1 className="text-3xl font-light text-center text-black-800 mb-6">
+        Filtros de reporte de proveedores
+      </h1>
       <div className="grid md:grid-cols-3 gap-6">
+        <CardReporte
+          titulo="Reporte por plantel"
+          color="blue"
+          filtros={
+            <Select
+              label="Plantel"
+              options={planteles.map((p) => ({ value: p.id, label: p.nombre_plantel }))}
+              value={filtroPlantelReportePlantel}
+              onChange={setFiltroPlantelReportePlantel}
+            />
+          }
+          botones={
+            <>
+              <BotonReporte
+                tipo="pdf"
+                onClick={() =>
+                  ejecutarConValidacion(
+                    !!filtroPlantelReportePlantel,
+                    "Selecciona un plantel para generar el PDF.",
+                    () => generarReporteProveedoresPDF(filtroPlantelReportePlantel),
+                    () => setFiltroPlantelReportePlantel("") // limpiar filtro al terminar
+                  )
+                }
+              />
+              <BotonReporte
+                tipo="excel"
+                onClick={() =>
+                  ejecutarConValidacion(
+                    !!filtroPlantelReportePlantel,
+                    "Selecciona un plantel para generar el Excel.",
+                    () => generarReportePlantelesExcel(filtroPlantelReportePlantel),
+                    () => setFiltroPlantelReportePlantel("") // limpiar filtro
+                  )
+                }
+              />
+            </>
+          }
+        />
+
         <CardReporte
           titulo="Reporte por proveedor"
           color="blue"
@@ -77,18 +134,18 @@ const ReportFilters: React.FC = () => {
               <Select
                 label="Plantel"
                 options={planteles.map((p) => ({ value: p.id, label: p.nombre_plantel }))}
-                value={filtroPlantelDocente}
+                value={filtroPlantelReporteProveedor}
                 onChange={(val) => {
-                  setFiltroPlantelDocente(val);
-                  setFiltroDocente("");
+                  setFiltroPlantelReporteProveedor(val);
+                  setFiltroProveedor("");
                 }}
               />
               <Select
-                label="Docente"
-                options={docentes.map((d) => ({ value: d.id, label: d.nombre_docente }))}
-                value={filtroDocente}
-                onChange={setFiltroDocente}
-                disabled={!filtroPlantelDocente}
+                label="Proveedor"
+                options={proveedores.map((p) => ({ value: p.id, label: p.nombre_proveedor }))}
+                value={filtroProveedor}
+                onChange={setFiltroProveedor}
+                disabled={!filtroPlantelReporteProveedor}
               />
             </>
           }
@@ -96,77 +153,38 @@ const ReportFilters: React.FC = () => {
             <>
               <BotonReporte
                 tipo="pdf"
-                onClick={() => ejecutarConValidacion(
-                  !!filtroPlantelDocente && !!filtroDocente,
-                  "Selecciona un plantel y un docente para generar el PDF.",
-                  () => generarReporteDocentes(filtroDocente, filtroPlantelDocente)
-                )}
-              />
-              <BotonReporte
-                tipo="excel"
-                onClick={() => ejecutarConValidacion(
-                  !!filtroPlantelDocente && !!filtroDocente,
-                  "Selecciona un plantel y un docente para generar el Excel.",
-                  () => generarReporteDocentesExcel(filtroDocente, filtroPlantelDocente)
-                )}
+                onClick={() =>
+                  ejecutarConValidacion(
+                    !!filtroPlantelReporteProveedor && !!filtroProveedor,
+                    "Selecciona un plantel y un proveedor para generar el PDF.",
+                    () => generarReporteFacturasPorProveedorPDF(filtroProveedor),
+                    () => {
+                      setFiltroPlantelReporteProveedor("");
+                      setFiltroProveedor("");
+                    }
+                  )
+                }
               />
             </>
           }
         />
 
         <CardReporte
-          titulo="Reporte por área"
-          color="blue"
-          filtros={
-            <Select
-              label="Plantel"
-              options={planteles.map((p) => ({ value: p.id, label: p.nombre_plantel }))}
-              value={filtroPlantelPlantel}
-              onChange={setFiltroPlantelPlantel}
-            />
-          }
-          botones={
-            <>
-              <BotonReporte
-                tipo="pdf"
-                onClick={() => ejecutarConValidacion(
-                  !!filtroPlantelPlantel,
-                  "Selecciona un plantel para generar el PDF.",
-                  () => generarReportePlanteles(filtroPlantelPlantel)
-                )}
-              />
-              <BotonReporte
-                tipo="excel"
-                onClick={() => ejecutarConValidacion(
-                  !!filtroPlantelPlantel,
-                  "Selecciona un plantel para generar el Excel.",
-                  () => generarReportePlantelesExcel(filtroPlantelPlantel)
-                )}
-              />
-            </>
-          }
-        />
-
-        <CardReporte
-          titulo="Reporte por clasificación"
+          titulo="Reporte por tipo de gasto"
           color="blue"
           filtros={
             <>
               <Select
                 label="Plantel"
                 options={planteles.map((p) => ({ value: p.id, label: p.nombre_plantel }))}
-                value={filtroPlantelPeriodo}
-                onChange={(val) => {
-                  setFiltroPlantelPeriodo(val);
-                  setFiltroPeriodoPago("");
-                }}
+                value={filtroPlantelReporteClasificacion}
+                onChange={setFiltroPlantelReporteClasificacion}
               />
               <Select
-                label="Periodo de pago"
-                options={periodosPago.map((p) => ({ value: p.id, label: p.concatenado }))}
-                value={filtroPeriodoPago}
-                onChange={setFiltroPeriodoPago}
-                disabled={!filtroPlantelPeriodo}
+                label="Etiqueta"
+                options={etiquetas.map((e) => ({ value: e.id, label: e.nombre_etiqueta }))}
+                value={filtroEtiqueta}
+                onChange={setFiltroEtiqueta}
               />
             </>
           }
@@ -174,19 +192,21 @@ const ReportFilters: React.FC = () => {
             <>
               <BotonReporte
                 tipo="pdf"
-                onClick={() => ejecutarConValidacion(
-                  !!filtroPeriodoPago,
-                  "Selecciona un periodo de pago para generar el PDF.",
-                  () => generarReportePagosPDF(filtroPeriodoPago)
-                )}
-              />
-              <BotonReporte
-                tipo="excel"
-                onClick={() => ejecutarConValidacion(
-                  !!filtroPeriodoPago,
-                  "Selecciona un periodo de pago para generar el Excel.",
-                  () => generarReportePagosExcel(filtroPeriodoPago)
-                )}
+                onClick={() =>
+                  ejecutarConValidacion(
+                    !!filtroPlantelReporteClasificacion && !!filtroEtiqueta,
+                    "Selecciona un plantel y una etiqueta para generar el reporte por tipo de gasto.",
+                    () =>
+                      generarReporteFacturasPorEtiquetaPDF(
+                        filtroPlantelReporteClasificacion,
+                        filtroEtiqueta
+                      ),
+                    () => {
+                      setFiltroPlantelReporteClasificacion("");
+                      setFiltroEtiqueta("");
+                    }
+                  )
+                }
               />
             </>
           }
@@ -233,7 +253,9 @@ const Select: React.FC<{
     <label className="block mb-1 font-semibold">{label}</label>
     <select
       disabled={disabled}
-      className={`w-full border border-gray-300 rounded px-2 py-1 ${disabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
+      className={`w-full border border-gray-300 rounded px-2 py-1 ${
+        disabled ? "bg-gray-100 cursor-not-allowed" : ""
+      }`}
       value={value}
       onChange={(e) => onChange(e.target.value)}
     >
@@ -247,12 +269,17 @@ const Select: React.FC<{
   </div>
 );
 
-const BotonReporte: React.FC<{ tipo: "pdf" | "excel"; onClick: () => void }> = ({ tipo, onClick }) => {
+const BotonReporte: React.FC<{ tipo: "pdf" | "excel"; onClick: () => void }> = ({
+  tipo,
+  onClick,
+}) => {
   const isPDF = tipo === "pdf";
   return (
     <button
       onClick={onClick}
-      className={`${isPDF ? "bg-red-600 hover:bg-red-700" : "bg-green-600 hover:bg-green-700"} text-white px-3 py-2.5 rounded flex items-center gap-2`}
+      className={`${
+        isPDF ? "bg-red-600 hover:bg-red-700" : "bg-green-600 hover:bg-green-700"
+      } text-white px-3 py-2.5 rounded flex items-center gap-2`}
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
