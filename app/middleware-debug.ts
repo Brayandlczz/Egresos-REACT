@@ -43,5 +43,5 @@ export async function middleware(req: NextRequest) {
 
 // Solo aplicar el middleware a rutas donde pueda ser relevante
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/((?!_next/static|_next/image).*)"],
 }

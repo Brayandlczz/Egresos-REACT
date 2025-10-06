@@ -4,10 +4,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import type { PSTPFFormValues } from "@/app/(auth)/contratos/servicio-pf/tipos";
 
-function fechaActualLegibleEs(d = new Date()) {
-  const opts: Intl.DateTimeFormatOptions = { day: '2-digit', month: 'long', year: 'numeric' };
-  return d.toLocaleDateString('es-MX', opts);
-}
 function mxn(n: number) {
   if (isNaN(n)) return '$0.00';
   return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(n);
@@ -52,12 +48,18 @@ function convertirEnteros(n: number): string {
   return partes.join(' ').replace(/\s+/g, ' ').trim();
 }
 
+function normalizeDateLocal(dateStr: string) {
+  if (!dateStr) return '';
+  return /^\d{4}-\d{2}-\d{2}$/.test(dateStr) ? `${dateStr}T00:00:00` : dateStr;
+}
+
 type Proveedor = {
   id: string;
   nombre_proveedor: string;
   bien_proveido: string;
   tipo_persona: string;
   plantel_id: string;
+  rfc?: string;
 };
 type Sucursal = { id: string; nombre: string; plantel_id: string };
 type Municipio = { id: string; nombre: string; sucursal_id: string };
@@ -65,10 +67,8 @@ type Municipio = { id: string; nombre: string; sucursal_id: string };
 const baseInput =
   'mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-slate-800 shadow-sm ring-0 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition';
 const baseLabel = 'block text-sm font-medium text-slate-700';
-const section =
-  'bg-white rounded-2xl border border-slate-200 shadow-sm p-5';
-const legend =
-  'text-base font-semibold text-slate-800';
+const section = 'bg-white rounded-2xl border border-slate-200 shadow-sm p-5';
+const legend = 'text-base font-semibold text-slate-800';
 
 export default function PSTPFForm({
   onSubmit,
@@ -82,6 +82,8 @@ export default function PSTPFForm({
   const [municipios, setMunicipios] = useState<Municipio[]>([]);
 
   const [form, setForm] = useState({
+    fechaActualISO: '',
+
     proveedorId: '',
     proveedorNombre: '',
     proveedorRFC: '',
@@ -128,7 +130,7 @@ export default function PSTPFForm({
     (async () => {
       let query = supabase
         .from('proveedores')
-        .select('id, nombre_proveedor, bien_proveido, tipo_persona, plantel_id')
+        .select('id, nombre_proveedor, bien_proveido, tipo_persona, plantel_id, rfc')
         .eq('tipo_persona', 'Física')
         .order('nombre_proveedor', { ascending: true });
 
@@ -172,6 +174,7 @@ export default function PSTPFForm({
       ...f,
       proveedorNombre: p?.nombre_proveedor ?? '',
       actividadPreponderante: p?.bien_proveido ?? '',
+      proveedorRFC: p?.rfc ?? '',
     }));
   }, [form.proveedorId, proveedores]);
 
@@ -202,7 +205,8 @@ export default function PSTPFForm({
     const suc = sucursales.find((s) => s.id === form.sucursalId);
 
     const payload: PSTPFFormValues = {
-      fechaActualISO: new Date().toISOString(),
+      // Normalizamos aquí para que el generador no reste un día
+      fechaActualISO: normalizeDateLocal(form.fechaActualISO),
 
       proveedorId: form.proveedorId,
       proveedorNombre: form.proveedorNombre.trim(),
@@ -244,10 +248,20 @@ export default function PSTPFForm({
 
   return (
     <form onSubmit={handleSubmit} className="mx-auto max-w-5xl p-6 space-y-6">
-      <header className="flex items-center justify-between">
+      <header className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
         <h1 className="text-2xl font-semibold text-slate-800">Contrato de Servicio · Persona Física</h1>
-        <div className="text-sm text-slate-500 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl">
-          <strong>Fecha:</strong> {fechaActualLegibleEs()}
+        <div>
+          <label className={baseLabel}>
+            Fecha del contrato <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="date"
+            name="fechaActualISO"
+            value={form.fechaActualISO}
+            onChange={onChange}
+            className={baseInput}
+            required
+          />
         </div>
       </header>
 
@@ -318,13 +332,15 @@ export default function PSTPFForm({
           </div>
 
           <div>
-            <label className={baseLabel}>RFC del proveedor <span className="text-red-500">*</span></label>
+            <label className={baseLabel}>
+              RFC del proveedor <span className="text-red-500">*</span>
+            </label>
             <input
               name="proveedorRFC"
               value={form.proveedorRFC}
-              onChange={onChange}
-              className={baseInput}
-              placeholder="p. ej. PESF850118GS7"
+              readOnly
+              className={`${baseInput} bg-slate-50 text-slate-600 cursor-not-allowed`}
+              placeholder="Se completará al elegir proveedor"
               required
             />
           </div>
@@ -412,7 +428,7 @@ export default function PSTPFForm({
               readOnly
               rows={2}
               className={`${baseInput} bg-slate-50 text-slate-600 cursor-not-allowed`}
-              placeholder="Se completará al elegir proveedor (viene de 'bien_proveido')"
+              placeholder="Se completará al elegir proveedor"
               required
             />
           </div>

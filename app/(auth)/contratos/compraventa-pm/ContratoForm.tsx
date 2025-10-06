@@ -68,13 +68,11 @@ export default function CompraventaPMForm({
   const [municipios, setMunicipios] = useState<Municipio[]>([]);
 
   const [form, setForm] = useState({
-    // Sucursal & municipio
     sucursalId: '',
     sucursalNombre: '',
     municipioId: '',
     municipioNombre: '',
 
-    // Proveedor PM
     proveedorId: '',
     proveedorRazonSocial: '',
     representanteLegalNombre: '',
@@ -83,37 +81,31 @@ export default function CompraventaPMForm({
     proveedorTipoBien: '' as '' | 'arrendamiento' | 'título de propiedad',
     actividadPreponderante: '',
 
-    // Datos notariales
     numeroEscritura: '',
     volumenEscritura: '',
     nombreNotario: '',
     numeroNotaria: '',
     estadoNotaria: '',
 
-    // Pedido
     articulosComprar: '',
     descripcionCompra: '',
 
-    // Entrega & contacto
     correoProveedor: '',
     plazoEntregaHoras: '' as string,
     entregaDomicilioSucursal: '',
 
-    // Pagos
     pagoMedio: '' as '' | 'transferencia' | 'cuenta_bancaria_prestador' | 'efectivo' | 'cheque',
     pagoEsquema: 'pago_unico' as 'pago_unico' | 'anticipo_1',
     anticipoPct: '',
     importeAnticipo: '',
     condicionSegundoPago: 'al día siguiente',
 
-    // Garantía / pena / testigos
     plazoGarantiaDias: '',
     diasPlazoPena: '',
     testigo1: '',
     testigo2: '',
   });
 
-  // Carga sucursales
   useEffect(() => {
     (async () => {
       const { data, error } = await supabase
@@ -124,7 +116,6 @@ export default function CompraventaPMForm({
     })();
   }, [supabase]);
 
-  // Carga proveedores (solo Persona Moral) filtrados por plantel si hay sucursal
   useEffect(() => {
     (async () => {
       let query = supabase
@@ -141,7 +132,6 @@ export default function CompraventaPMForm({
     })();
   }, [supabase, form.sucursalId, sucursales]);
 
-  // Carga municipios de la sucursal
   useEffect(() => {
     if (!form.sucursalId) {
       setMunicipios([]);
@@ -169,7 +159,6 @@ export default function CompraventaPMForm({
     })();
   }, [form.sucursalId, supabase, sucursales]);
 
-  // Al elegir proveedor, prellenar razón social y actividad
   useEffect(() => {
     const p = proveedores.find((x) => x.id === form.proveedorId);
     setForm((f) => ({
@@ -194,13 +183,11 @@ export default function CompraventaPMForm({
     const payload: CompraventaPMFormValues = {
       fechaActualISO: new Date().toISOString(),
 
-      // Sucursal & municipio
       sucursalId: form.sucursalId,
       sucursalNombre: suc?.nombre || '',
       municipioId: form.municipioId,
       municipioNombre: form.municipioNombre,
 
-      // Proveedor PM
       proveedorId: form.proveedorId,
       proveedorRazonSocial: form.proveedorRazonSocial.trim(),
       representanteLegalNombre: form.representanteLegalNombre.trim(),
@@ -209,34 +196,28 @@ export default function CompraventaPMForm({
       proveedorTipoBien: (form.proveedorTipoBien || 'arrendamiento') as 'arrendamiento' | 'título de propiedad',
       actividadPreponderante: form.actividadPreponderante.trim(),
 
-      // Notariales
       numeroEscritura: form.numeroEscritura.trim(),
       volumenEscritura: form.volumenEscritura.trim(),
       nombreNotario: form.nombreNotario.trim(),
       numeroNotaria: form.numeroNotaria.trim(),
       estadoNotaria: form.estadoNotaria.trim(),
 
-      // Pedido
       articulosComprar: form.articulosComprar.trim(),
       descripcionCompra: form.descripcionCompra.trim(),
 
-      // Entrega & contacto
       correoProveedor: form.correoProveedor.trim(),
       plazoEntregaHoras: Number(form.plazoEntregaHoras || '0'),
       entregaDomicilioSucursal: form.entregaDomicilioSucursal.trim() || (suc?.nombre || ''),
 
-      // Pagos
       pagoEsquema: form.pagoEsquema,
       pagoMedio: (form.pagoMedio || 'transferencia') as 'transferencia' | 'cuenta_bancaria_prestador' | 'efectivo' | 'cheque',
       anticipoPct: form.pagoEsquema === 'anticipo_1' ? anticipoPctNum : undefined,
       importeAnticipo: form.pagoEsquema === 'anticipo_1' && importeAnticipoNum > 0 ? importeAnticipoNum : undefined,
       condicionSegundoPago: form.pagoEsquema === 'anticipo_1' ? (form.condicionSegundoPago || 'al día siguiente') : undefined,
 
-      // Garantía / pena
       plazoGarantiaDias: Number(form.plazoGarantiaDias || '0'),
       diasPlazoPena: Number(form.diasPlazoPena || '0'),
 
-      // Testigos
       testigo1: form.testigo1.trim(),
       testigo2: form.testigo2.trim(),
     };
@@ -253,7 +234,6 @@ export default function CompraventaPMForm({
         </div>
       </header>
 
-      {/* A) Sucursal & Municipio */}
       <section className={section}>
         <h2 className={legend}>A) Sucursal & Municipio</h2>
         <p className="text-sm text-slate-500 mb-4">Selecciona primero la sucursal; el municipio se llenará automáticamente.</p>
@@ -275,7 +255,6 @@ export default function CompraventaPMForm({
         </div>
       </section>
 
-      {/* B) Vendedor (PM) */}
       <section className={section}>
         <h2 className={legend}>B) Vendedor (Persona Moral)</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -323,7 +302,6 @@ export default function CompraventaPMForm({
         </div>
       </section>
 
-      {/* C) Datos notariales PM */}
       <section className={section}>
         <h2 className={legend}>C) Datos notariales del proveedor</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -350,7 +328,6 @@ export default function CompraventaPMForm({
         </div>
       </section>
 
-      {/* D) Pedido y productos */}
       <section className={section}>
         <h2 className={legend}>D) Pedido y productos</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -365,7 +342,6 @@ export default function CompraventaPMForm({
         </div>
       </section>
 
-      {/* E) Entrega & contacto */}
       <section className={section}>
         <h2 className={legend}>E) Entrega & contacto</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -384,7 +360,6 @@ export default function CompraventaPMForm({
         </div>
       </section>
 
-      {/* F) Pagos */}
       <section className={section}>
         <h2 className={legend}>F) Pagos</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -430,7 +405,6 @@ export default function CompraventaPMForm({
         )}
       </section>
 
-      {/* G) Garantía, pena y testigos */}
       <section className={section}>
         <h2 className={legend}>G) Garantía, pena y testigos</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">

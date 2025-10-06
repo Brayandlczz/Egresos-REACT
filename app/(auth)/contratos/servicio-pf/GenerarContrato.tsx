@@ -1,7 +1,18 @@
 'use client';
 
 import { useEffect, useRef } from "react";
-import { Document, Packer, Paragraph, TextRun, AlignmentType } from "docx";
+import {
+  Document,
+  Packer,
+  Paragraph,
+  TextRun,
+  AlignmentType,
+  Table,
+  TableRow,
+  TableCell,
+  WidthType,
+  BorderStyle,
+} from "docx";
 import { saveAs } from "file-saver";
 import type { PSTPFFormValues } from "@/app/(auth)/contratos/servicio-pf/tipos";
 
@@ -51,6 +62,26 @@ function convertirEnteros(n: number): string {
   return partes.join(" ").replace(/\s+/g, " ").trim();
 }
 
+function hCenterBold(text: string) {
+  return new Paragraph({
+    spacing: { after: 400 },
+    alignment: AlignmentType.CENTER,
+    children: [new TextRun({ text, bold: true })],
+  });
+}
+function incisoTitulo(text: string) {
+  return new Paragraph({
+    spacing: { after: 200 },
+    children: [new TextRun({ text, bold: true })],
+  });
+}
+function clausulaTitulo(textoNumeroYNombre: string) {
+  return new Paragraph({
+    spacing: { after: 200 },
+    children: [new TextRun({ text: textoNumeroYNombre, bold: true })],
+  });
+}
+
 type Props = {
   values: PSTPFFormValues;
   autoExportOnValuesChange?: boolean;
@@ -79,17 +110,17 @@ export default function ContratoPSTPF({
     const anticipoMonto = values.pagoEsquema === "pago_unico" ? importe : (importe * anticipoPct) / 100;
 
     const segundoPct =
-      values.pagoEsquema === "anticipo_1" ? (100 - anticipoPct)
+      values.pagoEsquema === "anticipo_1" ? 100 - anticipoPct
       : values.pagoEsquema === "anticipo_2" ? (values.segundoPagoPct ?? 0)
       : 0;
 
     const segundoMonto =
-      values.pagoEsquema === "anticipo_1" ? (importe - anticipoMonto)
+      values.pagoEsquema === "anticipo_1" ? importe - anticipoMonto
       : values.pagoEsquema === "anticipo_2" ? (importe * segundoPct) / 100
       : 0;
 
-    const terceroPct = values.pagoEsquema === "anticipo_2" ? (100 - anticipoPct - segundoPct) : 0;
-    const tercerMonto = values.pagoEsquema === "anticipo_2" ? (importe - anticipoMonto - segundoMonto) : 0;
+    const terceroPct = values.pagoEsquema === "anticipo_2" ? 100 - anticipoPct - segundoPct : 0;
+    const tercerMonto = values.pagoEsquema === "anticipo_2" ? importe - anticipoMonto - segundoMonto : 0;
 
     const pagoParrafos = (() => {
       if (values.pagoEsquema === "pago_unico") {
@@ -97,8 +128,9 @@ export default function ContratoPSTPF({
           new Paragraph({
             spacing: { after: 400 },
             children: [
+              new TextRun({ text: "A). - ", bold: true }),
               new TextRun(
-                `A). - A la firma del contrato se cobrará el 100% del total del importe acordado como precio del servicio, el cual corresponde a ${mxn(importe)} (${importeLetra}) IVA incluido.`
+                `A la firma del contrato se cobrará el 100% del total del importe acordado como precio del servicio, el cual corresponde a ${mxn(importe)} (${importeLetra}) IVA incluido.`
               ),
             ],
           }),
@@ -108,16 +140,18 @@ export default function ContratoPSTPF({
         new Paragraph({
           spacing: { after: 200 },
           children: [
+            new TextRun({ text: "A). - ", bold: true }),
             new TextRun(
-              `A). - A la firma del contrato se cobrará el ${anticipoPct}% del total del importe acordado como precio del servicio, el cual corresponde a ${mxn(anticipoMonto)} (${numeroALetrasMX(anticipoMonto)}) IVA incluido.`
+              `A la firma del contrato se cobrará el ${anticipoPct}% del total del importe acordado como precio del servicio, el cual corresponde a ${mxn(anticipoMonto)} (${numeroALetrasMX(anticipoMonto)}) IVA incluido.`
             ),
           ],
         }),
         new Paragraph({
           spacing: { after: values.pagoEsquema === "anticipo_2" ? 200 : 400 },
           children: [
+            new TextRun({ text: "B). - ", bold: true }),
             new TextRun(
-              `B). - ${values.fechaSegundoPago || "a la entrega"} del evento se pagará el ${segundoPct}% pendiente de pago, el cual corresponde a ${mxn(segundoMonto)} (${numeroALetrasMX(segundoMonto)}) IVA incluido.`
+              `${values.fechaSegundoPago || "a la entrega"} del evento se pagará el ${segundoPct}% pendiente de pago, el cual corresponde a ${mxn(segundoMonto)} (${numeroALetrasMX(segundoMonto)}) IVA incluido.`
             ),
           ],
         }),
@@ -127,8 +161,9 @@ export default function ContratoPSTPF({
           new Paragraph({
             spacing: { after: 400 },
             children: [
+              new TextRun({ text: "C). - ", bold: true }),
               new TextRun(
-                `C). - ${values.fechaTercerPago || "fecha/condición del tercer pago"} se pagará el ${terceroPct}% restante, equivalente a ${mxn(tercerMonto)} (${numeroALetrasMX(tercerMonto)}) IVA incluido.`
+                `${values.fechaTercerPago || "fecha/condición del tercer pago"} se pagará el ${terceroPct}% restante, equivalente a ${mxn(tercerMonto)} (${numeroALetrasMX(tercerMonto)}) IVA incluido.`
               ),
             ],
           })
@@ -140,10 +175,7 @@ export default function ContratoPSTPF({
     const doc = new Document({
       styles: {
         default: {
-          document: {
-            run: { font: "Arial", size: 24 },
-            paragraph: { alignment: AlignmentType.JUSTIFIED, spacing: { line: 276 } },
-          },
+          document: { run: { font: "Arial", size: 24 }, paragraph: { alignment: AlignmentType.JUSTIFIED, spacing: { line: 276 } } },
         },
       },
       sections: [
@@ -165,13 +197,9 @@ export default function ContratoPSTPF({
               ],
             }),
 
-            new Paragraph({
-              spacing: { after: 400 },
-              alignment: AlignmentType.CENTER,
-              children: [new TextRun({ text: "DECLARACIONES", bold: true })],
-            }),
+            hCenterBold("DECLARACIONES"),
 
-            new Paragraph({ spacing: { after: 200 }, children: [new TextRun("A). - DE LA CONTRATANTE:")] }),
+            incisoTitulo("A). - DE LA CONTRATANTE:"),
             new Paragraph({
               spacing: { after: 200 },
               children: [
@@ -209,28 +237,20 @@ export default function ContratoPSTPF({
               ],
             }),
             new Paragraph({
-              spacing: { after: 200 },
+              spacing: { after: 400 },
               children: [
                 new TextRun(
                   `6.- Que le es indispensable para cumplir con su objeto social, contratar el servicio ${values.objetoLargo}`
                 ),
               ],
             }),
-            new Paragraph({
-              spacing: { after: 400 },
-              children: [
-                new TextRun(
-                  "7.- Manifiesta tener solvencia económica, que no existe coacción física, verbal, ni psicológica para comprometerse, y además que no tiene ningún impedimento legal para formalizar el presente contrato."
-                ),
-              ],
-            }),
 
-            new Paragraph({ spacing: { after: 200 }, children: [new TextRun("B). - DEL PRESTADOR DE SERVICIO TÉCNICO.")] }),
+            incisoTitulo("B). - DEL PRESTADOR DE SERVICIO TÉCNICO."),
             new Paragraph({
               spacing: { after: 200 },
               children: [
                 new TextRun(
-                  `1.- Manifiesta la persona física C. ${values.proveedorNombre}, ser una persona física mexicana, lo cual acredita con registro federal de contribuyente ${values.proveedorRFC}, expedida por Secretaria de Hacienda y Crédito Público.`
+                  `1.- Manifiesta la persona física C. ${values.proveedorNombre}, ser una persona física mexicana, lo cual acredita con registro federal de contribuyente ${values.proveedorRFC}, expedida por Secretaría de Hacienda y Crédito Público.`
                 ),
               ],
             }),
@@ -252,19 +272,11 @@ export default function ContratoPSTPF({
             }),
             new Paragraph({
               spacing: { after: 200 },
-              children: [
-                new TextRun(
-                  `4.- El lugar donde se encuentra su domicilio actual lo tiene en calidad de ${values.proveedorTipoBien}.`
-                ),
-              ],
+              children: [new TextRun(`4.- El lugar donde se encuentra su domicilio actual lo tiene en calidad de ${values.proveedorTipoBien}.`)],
             }),
             new Paragraph({
               spacing: { after: 200 },
-              children: [
-                new TextRun(
-                  `5.- Que su actividad preponderante es ${values.actividadPreponderante}.`
-                ),
-              ],
+              children: [new TextRun(`5.- Que su actividad preponderante es ${values.actividadPreponderante}.`)],
             }),
             new Paragraph({
               spacing: { after: 400 },
@@ -284,27 +296,29 @@ export default function ContratoPSTPF({
               ],
             }),
 
-            new Paragraph({
-              spacing: { after: 400 },
-              alignment: AlignmentType.CENTER,
-              children: [new TextRun({ text: "CLAUSULAS", bold: true })],
-            }),
+            hCenterBold("CLÁUSULAS"),
 
             new Paragraph({
               spacing: { after: 200 },
               children: [
-                new TextRun(
-                  `UNO. OBJETO DEL CONTRATO. - La contratante manifiesta que, debido a ${values.objetoCorto}.`
-                ),
+                new TextRun({ text: "UNO. OBJETO DEL CONTRATO. - ", bold: true }),
+                new TextRun(`La contratante manifiesta que, debido a ${values.objetoCorto}.`),
               ],
             }),
-            new Paragraph({ spacing: { after: 200 }, children: [new TextRun("DESCRIBIR DETALLADAMENTE LOS SERVICIOS, ALCANCES Y ESPECIFICACIONES EN EL ANEXO CORRESPONDIENTE, SI APLICA.")] }),
 
             new Paragraph({
               spacing: { after: 200 },
               children: [
+                new TextRun({ text: "DOS. DEL PRECIO. - ", bold: true }),
                 new TextRun(
-                  `DOS. DEL PRECIO. - Ambos contratantes han acordado como precio del servicio la cantidad de ${mxn(importe)} (${importeLetra}). El cual se pagará de la siguiente manera: ${values.pagoEsquema === "pago_unico" ? "pago único" : values.pagoEsquema === "anticipo_1" ? "anticipo y un pago" : "anticipo y dos pagos"}.`
+                  `Ambos contratantes han acordado como precio del servicio la cantidad de ${mxn(importe)} (${importeLetra}). ` +
+                  `El cual se pagará de la siguiente manera: ${
+                    values.pagoEsquema === "pago_unico"
+                      ? "pago único"
+                      : values.pagoEsquema === "anticipo_1"
+                      ? "anticipo y un pago"
+                      : "anticipo y dos pagos"
+                  }.`
                 ),
               ],
             }),
@@ -313,15 +327,14 @@ export default function ContratoPSTPF({
             new Paragraph({
               spacing: { after: 200 },
               children: [
+                new TextRun({ text: "TRES. DE LA FACTURA. - ", bold: true }),
                 new TextRun(
-                  "TRES. DE LA FACTURA. - El prestador de servicio deberá entregar su CFDI (factura (s)) a nombre de la contratante para que le sea pagado su servicio."
+                  "El prestador de servicio deberá entregar su CFDI (factura (s)) a nombre de la contratante para que le sea pagado su servicio."
                 ),
               ],
             }),
-            new Paragraph({
-              spacing: { after: 200 },
-              children: [new TextRun("Además, para dar cumplimiento a las leyes fiscales, deberá proporcionar a la contratante la siguiente información y documentación:")],
-            }),
+
+            new Paragraph({ spacing: { after: 200 }, children: [new TextRun("Además, para dar cumplimiento a las leyes fiscales, deberá proporcionar a la contratante la siguiente información y documentación:")] }),
             new Paragraph({ spacing: { after: 100 }, children: [new TextRun("1.- Constancia de situación fiscal actualizada.")] }),
             new Paragraph({ spacing: { after: 100 }, children: [new TextRun("*Notificar los cambios relacionados con su domicilio fiscal a fin de poder actualizar la base de datos para la emisión de su CFDI.")] }),
             new Paragraph({ spacing: { after: 100 }, children: [new TextRun("2.- Formato 32-D Opinión del cumplimiento de obligaciones fiscales actualizado “con opinión positiva”.")] }),
@@ -330,22 +343,16 @@ export default function ContratoPSTPF({
             new Paragraph({ spacing: { after: 200 }, children: [new TextRun("5.- Identificación oficial vigente.")] }),
             new Paragraph({ spacing: { after: 400 }, children: [new TextRun("La documentación deberá ser enviada de forma escaneada (no foto) al correo electrónico facturas@unici.edu.mx")] }),
 
-            new Paragraph({
-              spacing: { after: 200 },
-              children: [
-                new TextRun(
-                  `CUATRO. EL PAGO. - El pago del servicio se hará a través de ${pagoMedioTxt} previo envío del CFDI. Por el sólo hecho de hacerse la transferencia de pago se tendrá por aceptado el pago por el prestador de servicio, sin más requisito alguno.`
-                ),
-              ],
-            }),
+            new Paragraph({ spacing: { after: 200 }, children: [ new TextRun({ text: "CUATRO. EL PAGO. - ", bold: true }), new TextRun("El pago del servicio se hará a través de transferencia electrónica a su cuenta bancaria previo envío del CFDI. Por el sólo hecho de hacerse la transferencia de pago se tendrá por aceptado el pago por el prestador de servicio, sin más requisito alguno.") ] }),
 
-            new Paragraph({ spacing: { after: 200 }, children: [new TextRun("CINCO. MATERIAL DE INSUMO. - Se acuerda que sea la contratante quién compre el material de insumo necesario.")] }),
+            new Paragraph({ spacing: { after: 200 }, children: [ new TextRun({ text: "CINCO. MATERIAL DE INSUMO. - ", bold: true }), new TextRun("Se acuerda que sea la contratante quién compre el material de insumo necesario.") ] }),
 
             new Paragraph({
               spacing: { after: 200 },
               children: [
+                new TextRun({ text: "SEIS. DE LA GARANTÍA. - ", bold: true }),
                 new TextRun(
-                  `SEIS. DE LA GARANTÍA. - El prestador de servicio ofrece como garantía de su servicio el plazo de ${values.plazoGarantiaDias || 30} días contado a partir de que entregue las instalaciones. Para hacer efectivo la garantía bastará con que la contratante dé aviso por teléfono al prestador de servicio.`
+                  `El prestador de servicio ofrece como garantía de su servicio el plazo de ${values.plazoGarantiaDias || 30} días contado a partir de que entregue las instalaciones. Para hacer efectivo la garantía bastará con que la contratante dé aviso por teléfono al prestador de servicio.`
                 ),
               ],
             }),
@@ -353,27 +360,9 @@ export default function ContratoPSTPF({
             new Paragraph({
               spacing: { after: 200 },
               children: [
+                new TextRun({ text: "SIETE. PLAZO DE CONCLUSIÓN. - ", bold: true }),
                 new TextRun(
-                  `SIETE. PLAZO DE CONCLUSIÓN. - Ambos acuerdan que el plazo para la entrega del servicio solicitado sea concluido en ${values.plazoConclusionDias || 15} días naturales contados a partir de la firma del presente contrato.`
-                ),
-              ],
-            }),
-
-            new Paragraph({
-              spacing: { after: 200 },
-              children: [new TextRun("OCHO. HORARIO DE ACCESO. - El prestador de servicio dispone libremente del horario que así convenga llegar o salir del lugar para llevar a cabo el servicio contratado. Sin embargo, deberá ser dentro del horario que se encuentra laborando la contratante.")],
-            }),
-
-            new Paragraph({
-              spacing: { after: 200 },
-              children: [new TextRun("NUEVE. INEXISTENCIA DE RELACIÓN LABORAL. -  Ambos contratantes manifiestan expresamente que no existe relación laboral por el servicio que se contrata. Por lo que, no genera ninguna prestación laboral, ni seguridad social alguno.")],
-            }),
-
-            new Paragraph({
-              spacing: { after: 200 },
-              children: [
-                new TextRun(
-                  `DIEZ. PENA CONVENCIONAL. - Las partes acuerdan que en el caso de que EL PRESTADOR DE SERVICIO no haga la entrega en el plazo en los ${values.diasPlazoPena || values.plazoConclusionDias || 15} días naturales establecido en la cláusula SIETE, o LA CONTRANTE no pague después de concluido los servicios, pagará por mora el nueve (9%) por ciento sobre el monto establecido como precio de la contraprestación.`
+                  `Ambos acuerdan que el plazo para la entrega del servicio solicitado sea concluido en ${values.plazoConclusionDias || 15} días naturales contados a partir de la firma del presente contrato.`
                 ),
               ],
             }),
@@ -381,11 +370,44 @@ export default function ContratoPSTPF({
             new Paragraph({
               spacing: { after: 200 },
               children: [
+                new TextRun({ text: "OCHO. HORARIO DE ACCESO. - ", bold: true }),
                 new TextRun(
-                  `ONCE. DAÑOS Y PERJUICIO. -  EL PRESTADOR DE SERVICIO se hará responsable de los daños y perjuicios que sufra LA CONTRATANTE en caso de que no dé cumplimiento al objeto del contrato, ya sea por negligencia, o por utilizar un personal que no tenga los conocimientos (${values.objetoCorto}). Siendo a costa del PRESTADOR DE SERVICIO la mano de obra y el material de insumo que se requiera para que la Institución Educativa cumpla con el objetivo solicitado por LA CONTRATANTE.`
+                  "El prestador de servicio dispone libremente del horario que así convenga llegar o salir del lugar para llevar a cabo el servicio contratado. Sin embargo, deberá ser dentro del horario que se encuentra laborando la contratante."
                 ),
               ],
             }),
+
+            new Paragraph({
+              spacing: { after: 200 },
+              children: [
+                new TextRun({ text: "NUEVE. INEXISTENCIA DE RELACIÓN LABORAL. - ", bold: true }),
+                new TextRun(
+                  "Ambos contratantes manifiestan expresamente que no existe relación laboral por el servicio que se contrata. Por lo que, no genera ninguna prestación laboral, ni seguridad social alguno."
+                ),
+              ],
+            }),
+
+
+            new Paragraph({
+              spacing: { after: 200 },
+              children: [
+                new TextRun({ text: "DIEZ. PENA CONVENCIONAL. - ", bold: true }),
+                new TextRun(
+                  `Las partes acuerdan que en el caso de que EL PRESTADOR DE SERVICIO no haga la entrega en el plazo en los ${values.diasPlazoPena || values.plazoConclusionDias || 15} días naturales establecido en la cláusula SIETE, o LA CONTRANTE no pague después de concluido los servicios, pagará por mora el nueve (9%) por ciento sobre el monto establecido como precio de la contraprestación.`
+                ),
+              ],
+            }),
+
+            new Paragraph({
+              spacing: { after: 200 },
+              children: [
+                new TextRun({ text: "ONCE. DAÑOS Y PERJUICIO. - ", bold: true }),
+                new TextRun(
+                  `EL PRESTADOR DE SERVICIO se hará responsable de los daños y perjuicios que sufra LA CONTRATANTE en caso de que no dé cumplimiento al objeto del contrato, ya sea por negligencia, o por utilizar un personal que no tenga los conocimientos (${values.objetoCorto}). Siendo a costa del PRESTADOR DE SERVICIO la mano de obra y el material de insumo que se requiera para que la Institución Educativa cumpla con el objetivo solicitado por LA CONTRATANTE.`
+                ),
+              ],
+            }),
+
             new Paragraph({
               spacing: { after: 400 },
               children: [
@@ -398,8 +420,9 @@ export default function ContratoPSTPF({
             new Paragraph({
               spacing: { after: 200 },
               children: [
+                new TextRun({ text: "DOCE. - ", bold: true }),
                 new TextRun(
-                  `DOCE: Ambas partes manifiestan que en el caso de que exista controversia sobre la aplicación del presente contrato, en someterse a la jurisdicción de las autoridades de la ciudad de ${values.municipioNombre || "________"}.`
+                  `Ambas partes manifiestan que en el caso de que exista controversia sobre la aplicación del presente contrato, en someterse a la jurisdicción de las autoridades de la ciudad de ${values.municipioNombre || "________"}.`
                 ),
               ],
             }),
@@ -413,15 +436,73 @@ export default function ContratoPSTPF({
               ],
             }),
 
-            new Paragraph({ spacing: { after: 200 }, children: [new TextRun("CONTRATANTE")] }),
-            new Paragraph({ spacing: { after: 200 }, children: [new TextRun("Dra. María Xóchilt Ortega Grillasca")] }),
+            hCenterBold("FIRMAS"),
+            new Table({
+              width: { size: 100, type: WidthType.PERCENTAGE },
+              borders: {
+                top: { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
+                bottom: { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
+                left: { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
+                right: { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
+                insideHorizontal: { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
+                insideVertical: { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
+              },
+              rows: [
+                new TableRow({
+                  children: [
+                    new TableCell({
+                      width: { size: 50, type: WidthType.PERCENTAGE },
+                      children: [
+                        new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 600, after: 100 }, children: [new TextRun("_____________________________")] }),
+                        new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun("CONTRATANTE")] }),
+                        new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun("Dra. María Xóchilt Ortega Grillasca")] }),
+                      ],
+                    }),
+                    new TableCell({
+                      width: { size: 50, type: WidthType.PERCENTAGE },
+                      children: [
+                        new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 600, after: 100 }, children: [new TextRun("_____________________________")] }),
+                        new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun("PRESTADOR DE SERVICIO")] }),
+                        new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun(`C. ${values.proveedorNombre}`)] }),
+                      ],
+                    }),
+                  ],
+                }),
+              ],
+            }),
 
-            new Paragraph({ spacing: { after: 200 }, children: [new TextRun("PRESTADOR DE SERVICIO")] }),
-            new Paragraph({ spacing: { after: 400 }, children: [new TextRun(`C. ${values.proveedorNombre}`)] }),
-
-            new Paragraph({ spacing: { after: 200 }, children: [new TextRun("T E S T I G O S")] }),
-            new Paragraph({ spacing: { after: 200 }, children: [new TextRun(values.testigo1 || "_________________________")] }),
-            new Paragraph({ spacing: { after: 200 }, children: [new TextRun(values.testigo2 || "_________________________")] }),
+            new Paragraph({ spacing: { before: 400, after: 200 }, alignment: AlignmentType.CENTER, children: [new TextRun({ text: "TESTIGOS", bold: true })] }),
+            new Table({
+              width: { size: 100, type: WidthType.PERCENTAGE },
+              borders: {
+                top: { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
+                bottom: { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
+                left: { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
+                right: { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
+                insideHorizontal: { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
+                insideVertical: { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
+              },
+              rows: [
+                new TableRow({
+                  children: [
+                    new TableCell({
+                      width: { size: 50, type: WidthType.PERCENTAGE },
+                      children: [
+                        new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 600, after: 100 }, children: [new TextRun("_____________________________")] }),
+                        new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun(values.testigo1 || "_________________________")] }),
+                      ],
+                    }),
+                    new TableCell({
+                      width: { size: 50, type: WidthType.PERCENTAGE },
+                      children: [
+                        new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 600, after: 100 }, children: [new TextRun("_____________________________")] }),
+                        new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun(values.testigo2 || "_________________________")] }),
+                      ],
+                    }),
+                  ],
+                }),
+              ],
+            }),
           ],
         },
       ],
@@ -451,6 +532,7 @@ export default function ContratoPSTPF({
     return (
       <div className="p-6 max-w-3xl mx-auto space-y-4">
         <button onClick={generarDocx} className="bg-blue-600 text-white px-4 py-2 rounded">
+          Generar DOCX
         </button>
       </div>
     );

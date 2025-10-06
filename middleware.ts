@@ -12,7 +12,7 @@ export async function middleware(req: NextRequest) {
   } = await supabase.auth.getSession()
 
   // Rutas públicas que no requieren autenticación
-  const publicRoutes = ["/", "/login", "/api", "/_next", "/favicon.ico"]
+  const publicRoutes = ["/", "/login", "/api", "/_next"]
 
   // Asegurémonos de que el middleware permita el acceso a la ruta de directorio
 
@@ -44,6 +44,6 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/((?!_next/static|_next/image).*)"],
 }
 

@@ -86,7 +86,7 @@ function convertirEnteros(n: number): string {
   return partes.join(' ').replace(/\s+/g, ' ').trim();
 }
 
-type Proveedor = { id: string; nombre_proveedor: string; bien_proveido: string; tipo_persona: string; plantel_id: string; };
+type Proveedor = { id: string; nombre_proveedor: string; bien_proveido: string; tipo_persona: string; plantel_id: string; rfc?: string }; 
 type Sucursal = { id: string; nombre: string; plantel_id: string };
 type Municipio = { id: string; nombre: string; sucursal_id: string };
 
@@ -114,7 +114,7 @@ export default function PSBGPFForm({
 
     proveedorId: '',
     proveedorNombre: '',
-    proveedorRFC: '',
+    proveedorRFC: '', 
     proveedorDomicilio: '',
     proveedorTipoBien: '' as '' | 'arrendamiento' | 'título de propiedad',
     actividadPreponderante: '',
@@ -155,7 +155,7 @@ export default function PSBGPFForm({
     (async () => {
       let query = supabase
         .from('proveedores')
-        .select('id, nombre_proveedor, bien_proveido, tipo_persona, plantel_id')
+        .select('id, nombre_proveedor, bien_proveido, tipo_persona, plantel_id, rfc') 
         .eq('tipo_persona', 'Física') 
         .order('nombre_proveedor', { ascending: true });
 
@@ -199,6 +199,7 @@ export default function PSBGPFForm({
       ...f,
       proveedorNombre: p?.nombre_proveedor ?? '',
       actividadPreponderante: p?.bien_proveido ?? '',
+      proveedorRFC: p?.rfc ?? '', 
     }));
   }, [form.proveedorId, proveedores]);
 
@@ -242,7 +243,7 @@ export default function PSBGPFForm({
 
       proveedorId: form.proveedorId,
       proveedorNombre: form.proveedorNombre.trim(),
-      proveedorRFC: form.proveedorRFC.trim(),
+      proveedorRFC: form.proveedorRFC.trim(), 
       proveedorDomicilio: form.proveedorDomicilio.trim(),
       proveedorTipoBien: (form.proveedorTipoBien || 'arrendamiento') as 'arrendamiento' | 'título de propiedad',
       actividadPreponderante: form.actividadPreponderante.trim(),
@@ -320,8 +321,21 @@ export default function PSBGPFForm({
           </div>
 
           <div>
-            <label className={baseLabel}>RFC del proveedor <span className="text-red-500">*</span></label>
-            <input name="proveedorRFC" value={form.proveedorRFC} onChange={onChange} className={baseInput} placeholder="p. ej. PESF850118GS7" required />
+            <label className={baseLabel}>
+              RFC del proveedor{" "}
+              <span className="ml-1 inline-flex items-center rounded-lg bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700">
+                {form.proveedorRFC || "—"}
+              </span>
+              <span className="text-red-500">*</span>
+            </label>
+            <input
+              name="proveedorRFC"
+              value={form.proveedorRFC}
+              readOnly
+              className={`${baseInput} bg-slate-50 text-slate-600 cursor-not-allowed`}
+              placeholder="Se completa al elegir proveedor"
+              required
+            />
           </div>
 
           <div className="md:col-span-2">
