@@ -238,7 +238,7 @@ const PeriodoPagoList: React.FC = () => {
               </tr>
             ) : (
               periodosPaginados.map(p => (
-                <tr key={p.id} className="border-t">
+                <tr key={p.id} className="border-t hover:bg-gray-50">
                   <td className="p-3 text-center">
                     <input
                       type="checkbox"
@@ -246,11 +246,11 @@ const PeriodoPagoList: React.FC = () => {
                       onChange={() => handleSeleccionar(p.id)}
                     />
                   </td>
-                  <td className="p-3 text-center">{p.plantel_nombre}</td>
-                  <td className="p-3 text-center">{formatearFecha(p.inicio_periodo)}</td>
-                  <td className="p-3 text-center">{formatearFecha(p.fin_periodo)}</td>
-                  <td className="p-3 text-center">{p.tipo_periodo}</td>
-                  <td className="p-3 text-center">{p.concatenado}</td>
+                  <td className="p-3 text-center text-nowrap">{p.plantel_nombre}</td>
+                  <td className="p-3 text-center text-nowrap">{formatearFecha(p.inicio_periodo)}</td>
+                  <td className="p-3 text-center text-nowrap">{formatearFecha(p.fin_periodo)}</td>
+                  <td className="p-3 text-center text-nowrap">{p.tipo_periodo}</td>
+                  <td className="p-3 text-center text-nowrap">{p.concatenado}</td>
                   <td className="p-3 text-center">
                     <div className="flex justify-center gap-2">
                       <Button

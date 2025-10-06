@@ -10,6 +10,9 @@ interface Plantel {
   nombre_plantel: string;
 }
 
+const RFC_REGEX =
+  /^([A-ZÑ&]{3,4})(\d{2})(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])[A-Z0-9]{2}[A0-9]$/;
+
 const RegistroProveedor: React.FC = () => {
   const supabase = createClientComponentClient();
   const router = useRouter();
@@ -27,6 +30,8 @@ const RegistroProveedor: React.FC = () => {
     email: '',
     bienProveido: '',
     tipoPersona: '',
+    rfc: '',                     
+    actividadPreponderante: '',
   });
 
   const [archivos, setArchivos] = useState<(File | null)[]>([]);
@@ -117,14 +122,23 @@ const RegistroProveedor: React.FC = () => {
       email,
       bienProveido,
       tipoPersona,
+      rfc,
+      actividadPreponderante,
     } = formData;
 
     if (
       !plantelId || !numeroProveedor ||
       !nombreProveedor || !nombreComercial || !razonSocial ||
-      !personaContacto || !telefonoContacto || !email || !bienProveido || !tipoPersona
+      !personaContacto || !telefonoContacto || !email ||
+      !bienProveido || !tipoPersona || !rfc || !actividadPreponderante
     ) {
       alert('Debe llenar todos los campos.');
+      return;
+    }
+
+    const rfcVal = rfc.trim().toUpperCase();
+    if (!RFC_REGEX.test(rfcVal)) {
+      alert('El RFC no es válido. Verifique el formato (MOR/PM + fecha + homoclave).');
       return;
     }
 
@@ -149,6 +163,8 @@ const RegistroProveedor: React.FC = () => {
           tipo_persona: tipoPersona,
           numero_proveedor: numeroProveedor,
           plantel_id: plantelId,
+          rfc: rfcVal,                                       
+          actividad_preponderante: actividadPreponderante,   
         },
       ])
       .select()
@@ -192,7 +208,12 @@ const RegistroProveedor: React.FC = () => {
       })
     );
 
-    const archivosFiltrados = uploads.filter(Boolean);
+    const archivosFiltrados = uploads.filter(Boolean) as {
+      proveedor_id: string;
+      path: string;
+      nombre_original: string;
+      nombre_unico: string;
+    }[];
 
     if (archivosFiltrados.length > 0) {
       const { error: insertArchivosError } = await supabase
@@ -227,7 +248,7 @@ const RegistroProveedor: React.FC = () => {
           {successMessage}
         </div>
       )}
-
+  
       <h2 className="text-2xl font-semibold mb-6">
         <span className="font-bold text-black">Proveedores</span> | Registro de Proveedor
       </h2>
@@ -297,6 +318,25 @@ const RegistroProveedor: React.FC = () => {
           </div>
 
           <div>
+            <label className="block mb-1 font-medium">RFC del proveedor:</label>
+            <input
+              type="text"
+              value={formData.rfc}
+              onChange={(e) =>
+                handleInputChange('rfc', e.target.value.toUpperCase().replace(/\s+/g, ''))
+              }
+              className={`w-full p-2 border rounded ${
+                formData.rfc && !RFC_REGEX.test(formData.rfc.toUpperCase())
+                  ? 'border-red-500'
+                  : ''
+              }`}
+              disabled={loading}
+              maxLength={13}
+              autoComplete="off"
+            />
+          </div>
+
+          <div>
             <label className="block mb-1 font-medium">Persona de contacto:</label>
             <input
               type="text"
@@ -352,6 +392,17 @@ const RegistroProveedor: React.FC = () => {
               <option value="Física">Física</option>
               <option value="Moral">Moral</option>
             </select>
+          </div>
+
+          <div className="md:col-span-3">
+            <label className="block mb-1 font-medium">Actividad preponderante del proveedor:</label>
+            <textarea
+              value={formData.actividadPreponderante}
+              onChange={(e) => handleInputChange('actividadPreponderante', e.target.value)}
+              placeholder="Describa la actividad preponderante (p. ej., Servicios de mantenimiento de equipo de cómputo)"
+              className="w-full p-2 border rounded min-h-[72px]"
+              disabled={loading}
+            />
           </div>
         </div>
 

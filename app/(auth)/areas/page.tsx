@@ -205,7 +205,7 @@ const DepartamentosList = () => {
               </tr>
             ) : (
               departamentosPaginados.map(depto => (
-                <tr key={depto.id} className="border-t">
+                <tr key={depto.id} className="border-t hover:bg-gray-50">
                   <td className="p-3 text-center">
                     <input
                       type="checkbox"

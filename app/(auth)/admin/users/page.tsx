@@ -129,7 +129,7 @@ const UserManagementView: React.FC = () => {
       </div>
 
       <div className="overflow-x-auto rounded shadow bg-white">
-        <table className="min-w-full table-auto">
+        <table className="min-w-full table-auto text-sm">
           <thead className="bg-gray-900 text-white">
             <tr>
               <th className="p-3 text-left w-12"></th>
@@ -148,7 +148,7 @@ const UserManagementView: React.FC = () => {
               </tr>
             ) : (
               filteredUsers.map((user) => (
-                <tr key={user.id} className="border-t">
+                <tr key={user.id} className="border-t hover:bg-gray-50">
                   <td className="p-3 text-left">
                     <input
                       type="checkbox"

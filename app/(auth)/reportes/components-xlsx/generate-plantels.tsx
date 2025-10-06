@@ -1,4 +1,3 @@
-// ./components/generate-plantel-excel.ts
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";

@@ -49,7 +49,7 @@ const CartaPDFViewer: React.FC = () => {
   };
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="p-4 space-y-4 text-center">
       <h2 className="text-xl font-bold"> Docente | Generar Constancia de Prestación de Servicios</h2>
 
       <div>

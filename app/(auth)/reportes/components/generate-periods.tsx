@@ -96,7 +96,6 @@ export async function generarReportePagosPDF(periodoId: string) {
     doc.setFontSize(14);
     doc.text("REPORTE DE PAGO A DOCENTES", pageWidth / 2, logoY + logoHeight + 15, { align: "center" });
 
-    // Tabla
     autoTable(doc, {
       startY: logoY + logoHeight + 20,
       head: [

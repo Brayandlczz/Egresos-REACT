@@ -138,7 +138,6 @@ export async function generarReportePlanteles(plantelId: string) {
       (doc as any).lastAutoTable.finalY + 10
     );
 
-    // 🔁 Vista previa sin descarga automática
     const pdfBlob = doc.output("blob");
     const url = URL.createObjectURL(pdfBlob);
     window.open(url, "_blank");

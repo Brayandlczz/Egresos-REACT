@@ -99,7 +99,6 @@ export async function generateCartaPDF(
   const baseY = 170;
   const maxTextWidth = xDerecha - margenIzquierdo;
 
-  // Encabezado
   doc.setFont("helvetica", "bold").setFontSize(12);
   const fechaFormateada = `${fecha.getDate()} de ${meses[fecha.getMonth()]} de ${fecha.getFullYear()}`;
   doc.text(fechaFormateada, xDerecha, 100, { align: "right" });

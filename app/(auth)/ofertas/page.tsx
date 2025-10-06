@@ -80,7 +80,7 @@ const OfertaEducativaList: React.FC = () => {
     };
 
     fetchOfertas();
-  }, [supabase]);
+  }, []);
 
   useEffect(() => {
     setPaginaActual(1);
@@ -90,7 +90,7 @@ const OfertaEducativaList: React.FC = () => {
   const handleEditar = (id: string) => router.push(`/ofertas/editar/${id}`);
 
   const handleEliminar = async (id: string) => {
-    if (rol !== 'Administrador') return; // Sólo admins
+    if (rol !== 'Administrador') return; 
 
     const confirmado = window.confirm(
       '¡Espera! La acción es irreversible y podrá afectar otros registros en el sistema. ¿Deseas continuar?'
@@ -107,7 +107,7 @@ const OfertaEducativaList: React.FC = () => {
   };
 
   const handleEliminarSeleccionados = async () => {
-    if (rol !== 'Administrador') return; // Sólo admins
+    if (rol !== 'Administrador') return; 
 
     const idsAEliminar = ofertas.filter(o => o.seleccionado).map(o => o.id);
     if (idsAEliminar.length === 0) return;
@@ -199,7 +199,7 @@ const OfertaEducativaList: React.FC = () => {
       </div>
 
       <div className="overflow-x-auto rounded shadow bg-white">
-        <table className="min-w-full">
+        <table className="min-w-full table-auto text-sm">
           <thead className="bg-gray-900 text-white">
             <tr>
               <th className="p-3 text-left"></th>
@@ -217,7 +217,7 @@ const OfertaEducativaList: React.FC = () => {
               </tr>
             ) : (
               resultadosPaginados.map((oferta) => (
-                <tr key={oferta.id} className="border-t">
+                <tr key={oferta.id} className="border-t hover:bg-gray-50">
                   <td className="p-3 text-center">
                     <input
                       type="checkbox"

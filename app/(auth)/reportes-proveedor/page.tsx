@@ -107,7 +107,7 @@ const ReportFilters: React.FC = () => {
                     !!filtroPlantelReportePlantel,
                     "Selecciona un plantel para generar el PDF.",
                     () => generarReporteProveedoresPDF(filtroPlantelReportePlantel),
-                    () => setFiltroPlantelReportePlantel("") // limpiar filtro al terminar
+                    () => setFiltroPlantelReportePlantel("") 
                   )
                 }
               />
@@ -118,7 +118,7 @@ const ReportFilters: React.FC = () => {
                     !!filtroPlantelReportePlantel,
                     "Selecciona un plantel para generar el Excel.",
                     () => generarReportePlantelesExcel(filtroPlantelReportePlantel),
-                    () => setFiltroPlantelReportePlantel("") // limpiar filtro
+                    () => setFiltroPlantelReportePlantel("") 
                   )
                 }
               />

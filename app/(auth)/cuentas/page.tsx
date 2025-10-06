@@ -234,7 +234,7 @@ const CuentasBancariasList: React.FC = () => {
               </tr>
             ) : (
               cuentasPaginadas.map(cuenta => (
-                <tr key={cuenta.id} className="border-t">
+                <tr key={cuenta.id} className="border-t hover:bg-gray-50">
                   <td className="p-3 text-center">
                     <input
                       type="checkbox"

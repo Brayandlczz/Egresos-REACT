@@ -6,10 +6,9 @@ import { useAuth } from "@/app/context/auth-context"
 import { useState, useEffect } from "react"
 import {
   LogOut, Menu, X, Pen, Wallet, CalendarDays, Users2, Building, File, Slack, Library, Timer, FileSpreadsheet,
-  LandPlot, FileBadge, Coins, PackageOpenIcon, FileDigit, CircleUserRoundIcon,
-  ListCollapse,
-  Handshake,
-  MapPin,
+  LandPlot, FileBadge, Coins, PackageOpenIcon, FileDigit, CircleUserRoundIcon, ListCollapse, Handshake, MapPin,
+  Ticket,
+  MailWarning,
 } from "lucide-react"
 
 export function Sidebar() {
@@ -197,6 +196,88 @@ export function Sidebar() {
                       >
                         <FileBadge size={20} />
                         <span>Reporte de proveedores</span>
+                      </Link>
+                    </li>
+                  </ul>
+                </div>
+              </details>
+            </div>
+
+            <div className="pt-6 border-t border-white/20 mt-4">
+              <details
+                className="group transition-all duration-300 overflow-hidden"
+                onToggle={(e) => setProveedorOpen((e.target as HTMLDetailsElement).open)}
+              >
+                <summary className="flex items-center justify-between p-2 rounded-md text-sm text-white hover:bg-white/10 hover:shadow-md transition-all cursor-pointer group-open:bg-white/10 group-open:shadow">
+                  <span className="w-full text-left">Adquisición de bienes</span>
+                  <span className="transform transition-transform duration-300 group-open:rotate-180">▼</span>
+                </summary>
+                <div className="transition-all duration-300 max-h-0 group-open:max-h-[500px]">
+                  <ul className="space-y-2 pl-2 pt-2">
+                    <li>
+                      <Link
+                        href="/proveedores"
+                        className={`flex items-center gap-3 p-2 rounded-md text-white transition-all ${
+                          isActive("/proveedores")
+                            ? "bg-white/30 hover:bg-white/50 shadow-md translate-y-[-1px]"
+                            : "hover:bg-white/10 hover:shadow-md hover:translate-y-[-1px]"
+                        }`}
+                      >
+                        <Ticket size={20} />
+                        <span>Tickets solicitantes</span>
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        href="/areas"
+                        className={`flex items-center gap-3 p-2 rounded-md text-white transition-all ${
+                          isActive("/areas")
+                            ? "bg-white/30 hover:bg-white/50 shadow-md translate-y-[-1px]"
+                            : "hover:bg-white/10 hover:shadow-md hover:translate-y-[-1px]"
+                        }`}
+                      >
+                        <MailWarning size={20} />
+                        <span>Pendientes</span>
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        href="/contratos"
+                        className={`flex items-center gap-3 p-2 rounded-md text-white transition-all ${
+                          isActive("/contratos")
+                            ? "bg-white/30 hover:bg-white/50 shadow-md translate-y-[-1px]"
+                            : "hover:bg-white/10 hover:shadow-md hover:translate-y-[-1px]"
+                        }`}
+                      >
+                        <Handshake size={20} />
+                        <span>Seguimiento de flujo</span>
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        href="/etiquetas"
+                        className={`flex items-center gap-3 p-2 rounded-md text-white transition-all ${
+                          isActive("/etiquetas")
+                            ? "bg-white/30 hover:bg-white/50 shadow-md translate-y-[-1px]"
+                            : "hover:bg-white/10 hover:shadow-md hover:translate-y-[-1px]"
+                        }`}
+                      >
+                        <Coins size={20} />
+                        <span>Clasificación de gastos</span>
+                      </Link>
+                    </li>
+
+                    <li>
+                      <Link
+                        href="/sucursales"
+                        className={`flex items-center gap-3 p-2 rounded-md text-white transition-all ${
+                          isActive("/sucursales")
+                            ? "bg-white/30 hover:bg-white/50 shadow-md translate-y-[-1px]"
+                            : "hover:bg-white/10 hover:shadow-md hover:translate-y-[-1px]"
+                        }`}
+                      >
+                        <MapPin size={20} />
+                        <span>Sucursales UNICI</span>
                       </Link>
                     </li>
                   </ul>

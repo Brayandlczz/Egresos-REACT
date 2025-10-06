@@ -83,7 +83,6 @@ export async function generarReporteFacturasPorEtiquetaPDF(
     textY += 6;
     doc.text("Tel. 961615657", textX, textY);
 
-    // Fecha generado a la derecha
     const fechaActual = new Date().toLocaleDateString("es-MX", {
       year: "numeric",
       month: "long",
@@ -108,7 +107,6 @@ export async function generarReporteFacturasPorEtiquetaPDF(
       { align: "right" }
     );
 
-    // Línea separadora debajo de ambos textos, con un pequeño margen extra
     doc.line(margin, logoY + logoHeight + 8, pageWidth - margin, logoY + logoHeight + 8);
 
     doc.setFontSize(14);

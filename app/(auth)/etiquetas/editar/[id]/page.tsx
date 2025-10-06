@@ -22,7 +22,6 @@ const EditarEtiqueta: React.FC = () => {
     const fetchData = async () => {
       setLoading(true);
 
-      // Cargar etiqueta
       const { data: etiqueta, error: etiquetaError } = await supabase
         .from("etiquetas")
         .select("nombre_etiqueta, plantel_id")
@@ -39,7 +38,6 @@ const EditarEtiqueta: React.FC = () => {
       setNombreEtiqueta(etiqueta.nombre_etiqueta);
       setPlantelId(etiqueta.plantel_id);
 
-      // Cargar planteles
       const { data: plantelesData, error: plantelesError } = await supabase
         .from("plantel")
         .select("id, nombre_plantel")

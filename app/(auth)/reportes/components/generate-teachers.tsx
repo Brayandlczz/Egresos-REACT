@@ -161,7 +161,6 @@ export async function generarReporteDocentes(docenteId: string, plantelId: strin
       (doc as any).lastAutoTable.finalY + 10
     );
 
-    // ✅ Vista previa en nueva pestaña
     const pdfBlob = doc.output("blob");
     const url = URL.createObjectURL(pdfBlob);
     window.open(url, "_blank");

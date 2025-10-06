@@ -275,7 +275,7 @@ const DocentesList = () => {
               </tr>
             ) : (
               docentesPaginados.map(docente => (
-                <tr key={docente.relacion_id} className="border-t">
+                <tr key={docente.relacion_id} className="border-t hover:bg-gray-50">
                   <td className="p-3 text-center">
                     <input
                       type="checkbox"

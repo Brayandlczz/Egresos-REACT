@@ -22,7 +22,6 @@ const EditarDepartamento: React.FC = () => {
     const fetchData = async () => {
       setLoading(true);
 
-      // Obtener datos del departamento
       const { data: departamento, error: departamentoError } = await supabase
         .from("departamentos")
         .select("nombre_departamento, plantel_id")
@@ -39,7 +38,6 @@ const EditarDepartamento: React.FC = () => {
       setNombreDepartamento(departamento.nombre_departamento);
       setPlantelId(departamento.plantel_id);
 
-      // Obtener planteles
       const { data: plantelesData, error: plantelesError } = await supabase
         .from("plantel")
         .select("id, nombre_plantel")

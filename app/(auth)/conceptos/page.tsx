@@ -90,7 +90,7 @@ const ConceptosPagoList = () => {
 
     fetchConceptos();
     fetchPlanteles();
-  }, [supabase]);
+  }, []);
 
   useEffect(() => {
     setPaginaActual(1);
@@ -207,7 +207,7 @@ const ConceptosPagoList = () => {
       </div>
 
       <div className="overflow-x-auto rounded shadow bg-white">
-        <table className="min-w-full">
+        <table className="min-w-full table-auto text-sm">
           <thead className="bg-gray-900 text-white">
             <tr>
               <th className="p-3 text-left"></th>
@@ -225,7 +225,7 @@ const ConceptosPagoList = () => {
               </tr>
             ) : (
               resultadosPaginados.map(concepto => (
-                <tr key={concepto.id} className="border-t">
+                <tr key={concepto.id} className="border-t hover:bg-gray-50">
                   <td className="p-3 text-center">
                     <input
                       type="checkbox"

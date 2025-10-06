@@ -55,7 +55,7 @@ const PlantelList = () => {
     };
 
     fetchPlanteles();
-  }, [supabase]);
+  }, []);
 
   useEffect(() => {
     setPaginaActual(1);
@@ -173,7 +173,7 @@ const PlantelList = () => {
       </div>
 
       <div className="overflow-x-auto rounded shadow bg-white">
-        <table className="min-w-full table-auto">
+        <table className="min-w-full table-auto text-sm">
           <thead className="bg-gray-900 text-white">
             <tr>
               <th className="p-3 text-left w-12"></th>
@@ -190,7 +190,7 @@ const PlantelList = () => {
               </tr>
             ) : (
               resultadosPaginados.map(plantel => (
-                <tr key={plantel.id} className="border-t">
+                <tr key={plantel.id} className="border-t hover:bg-gray-50">
                   <td className="p-3 text-left">
                     <input
                       type="checkbox"

@@ -247,7 +247,7 @@ const AsignaturaList: React.FC = () => {
               </tr>
             ) : (
               resultadosPaginados.map((a) => (
-                <tr key={a.id} className="border-t">
+                <tr key={a.id} className="border-t hover:bg-gray-50">
                   <td className="p-3 text-center">
                     <input
                       type="checkbox"

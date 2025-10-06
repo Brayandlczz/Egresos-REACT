@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { generarHistoricoDocentePDF } from './generateHystoric/page';
+import { generarHistoricoDocentePDF } from './generateHystoric/generarHistoricoDocentePDF.client.ts';
 
 interface HistoricoItem {
   docente_relation_id: string;

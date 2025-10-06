@@ -33,7 +33,6 @@ const EtiquetasList = () => {
   const [filtroPlantel, setFiltroPlantel] = useState('Todos');
   const [search, setSearch] = useState('');
 
-  // Paginación
   const [paginaActual, setPaginaActual] = useState(1);
   const etiquetasPorPagina = 10;
 
@@ -219,7 +218,7 @@ const EtiquetasList = () => {
               </tr>
             ) : (
               etiquetasPaginadas.map(etiqueta => (
-                <tr key={etiqueta.id} className="border-t">
+                <tr key={etiqueta.id} className="border-t hover:bg-gray-50">
                   <td className="p-3 text-center">
                     <input
                       type="checkbox"
