@@ -1,7 +1,18 @@
 'use client';
 
 import { useEffect, useRef } from "react";
-import { Document, Packer, Paragraph, TextRun, AlignmentType } from "docx";
+import {
+  Document,
+  Packer,
+  Paragraph,
+  TextRun,
+  AlignmentType,
+  Table,
+  TableRow,
+  TableCell,
+  WidthType,
+  BorderStyle,
+} from "docx";
 import { saveAs } from "file-saver";
 
 type PSBGPFFormValues = {
@@ -71,7 +82,7 @@ function centenasALetras(n: number): string {
   if (n < 100) return decenasALetras(n);
   if (n === 100) return "CIEN";
   const c = Math.floor(n / 100), r = n % 100;
-  const N = ["", "CIENTO", "DOSCIENTOS", "TRESCIENTOS", "CUATROCIENTOS", "QUINIENTOS", "SEISCIENTOS", "SETECIENTOS", "OCHOCIENTOS", "NOVECIENTOS"];
+  const N = ["", "CIENTO", "DOSCIENTOS", "TRESCIENTOS", "CUATROCIENTOS", "QUINIENTOS", "SEISCIENTOS", "SETECIENTOS", "OCHOCIENTOS"];
   return `${N[c]}${r ? " " + decenasALetras(r) : ""}`;
 }
 function convertirEnteros(n: number): string {
@@ -188,6 +199,25 @@ export default function ContratoPSBGPF({
       );
     }
 
+    const celdaFirma = (nombre: string, rol: string) =>
+      new TableCell({
+        children: [
+          new Paragraph({
+            alignment: AlignmentType.CENTER,
+            spacing: { before: 400, after: 100 },
+            children: [new TextRun("_______________________________")],
+          }),
+          new Paragraph({
+            alignment: AlignmentType.CENTER,
+            children: [new TextRun({ text: nombre, bold: true })],
+          }),
+          new Paragraph({
+            alignment: AlignmentType.CENTER,
+            children: [new TextRun({ text: rol, italics: true })],
+          }),
+        ],
+      });
+
     const doc = new Document({
       styles: {
         default: {
@@ -239,6 +269,10 @@ export default function ContratoPSBGPF({
             new Paragraph({
               spacing: { after: 400 },
               children: [new TextRun(`6.- Que le es indispensable para cumplir con su objeto social, contratar el servicio de ${values.objetoCorto || "Banquete de Graduación"}${values.objetoLargo ? `, ${values.objetoLargo}` : ""}.`)],
+            }),
+            new Paragraph({
+              spacing: { after: 400 },
+              children: [new TextRun("7.- Manifiesta tener solvencia económica, que no existe coacción física, verbal, ni psicológica para comprometerse, y además que no tiene ningún impedimento legal para formalizar el presente contrato.")]
             }),
 
             new Paragraph({ spacing: { after: 200 }, children: [new TextRun("B). - DEL PRESTADOR DE SERVICIO.")] }),
@@ -344,15 +378,43 @@ export default function ContratoPSBGPF({
               children: [new TextRun(`Para constancia de lo estipulado, se firma el presente contrato formándose dos originales, una para cada contratante, ante los testigos C. ${values.testigo1 || "_________________________"} y ${values.testigo2 || "_________________________"}, ambos mayores de edad, mexicanos por nacimiento, vecinos de esta ciudad; declarando ambos conocer personalmente a las partes contratantes, firmándose los dos originales por todas las personas que en el mismo aparecen.`)],
             }),
 
-            new Paragraph({ spacing: { after: 200 }, children: [new TextRun("CONTRATANTE")] }),
-            new Paragraph({ spacing: { after: 200 }, children: [new TextRun("Dra. María Xóchilt Ortega Grillasca")] }),
+            new Paragraph({
+              spacing: { before: 400, after: 200 },
+              alignment: AlignmentType.CENTER,
+              children: [new TextRun({ text: "FIRMAS", bold: true })],
+            }),
 
-            new Paragraph({ spacing: { after: 200 }, children: [new TextRun("PRESTADOR DE SERVICIO")] }),
-            new Paragraph({ spacing: { after: 400 }, children: [new TextRun(`C. ${values.proveedorNombre}`)] }),
-
-            new Paragraph({ spacing: { after: 200 }, children: [new TextRun("T E S T I G O S")] }),
-            new Paragraph({ spacing: { after: 200 }, children: [new TextRun(values.testigo1 || "_________________________")] }),
-            new Paragraph({ spacing: { after: 200 }, children: [new TextRun(values.testigo2 || "_________________________")] }),
+            new Table({
+              width: { size: 100, type: WidthType.PERCENTAGE },
+              borders: {
+                top: { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
+                bottom: { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
+                left: { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
+                right: { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
+                insideHorizontal: { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
+                insideVertical: { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
+              },
+              rows: [
+                new TableRow({
+                  children: [
+                    celdaFirma("Dra. María Xóchilt Ortega Grillasca", "CONTRATANTE"),
+                    celdaFirma(`C. ${values.proveedorNombre || "_________________________"}`, "PRESTADOR DE SERVICIO"),
+                  ],
+                }),
+                new TableRow({
+                  children: [
+                    new TableCell({ children: [new Paragraph({ children: [new TextRun("")] })] }),
+                    new TableCell({ children: [new Paragraph({ children: [new TextRun("")] })] }),
+                  ],
+                }),
+                new TableRow({
+                  children: [
+                    celdaFirma(values.testigo1 || "_________________________", "TESTIGO 1"),
+                    celdaFirma(values.testigo2 || "_________________________", "TESTIGO 2"),
+                  ],
+                }),
+              ],
+            }),
           ],
         },
       ],

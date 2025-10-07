@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import Image from "next/image"
@@ -13,19 +13,31 @@ export default function LoginPage() {
   const [loginStatus, setLoginStatus] = useState<"idle" | "success" | "error">("idle")
   const [showSupportModal, setShowSupportModal] = useState(false)
 
+  const emailInputRef = useRef<HTMLInputElement>(null)
+  const passInputRef = useRef<HTMLInputElement>(null)
+
   const router = useRouter()
   const supabase = createClientComponentClient()
 
+  const normalizeEmail = (s: string) =>
+    s.normalize("NFKC").replace(/[\u200B-\u200D\uFEFF]/g, "").trim().toLowerCase()
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (isLoading) return 
+    if (isLoading) return
 
     setIsLoading(true)
     setError(null)
     setLoginStatus("idle")
 
+    const normalizedEmail = normalizeEmail(email)
+    if (normalizedEmail !== email) setEmail(normalizedEmail)
+
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password })
+      const { error } = await supabase.auth.signInWithPassword({
+        email: normalizedEmail,
+        password,
+      })
       if (error) throw error
 
       setLoginStatus("success")
@@ -33,13 +45,17 @@ export default function LoginPage() {
         router.push("/dashboard")
         router.refresh()
       }, 800)
-    } catch (error: any) {
-      let msg = error.message || "Error al iniciar sesión"
-      if (msg === "Invalid login credentials") {
-        msg = "Correo o contraseña incorrectos"
-      }
+    } catch (err: any) {
+      const msg =
+        err?.message === "Invalid login credentials"
+          ? "Correo o contraseña incorrectos"
+          : err?.message || "Error al iniciar sesión"
+
       setError(msg)
       setLoginStatus("error")
+
+      setPassword("")
+      setTimeout(() => passInputRef.current?.focus(), 0)
     } finally {
       setIsLoading(false)
     }
@@ -54,7 +70,7 @@ export default function LoginPage() {
 
   const buttonText =
     isLoading
-      ? "Iniciando sesión..."
+      ? "Validando…"
       : loginStatus === "success"
       ? "Login exitoso...¡Bienvenido!"
       : loginStatus === "error"
@@ -71,44 +87,52 @@ export default function LoginPage() {
         <h3 className="text-center text-2xl font-semibold mb-3">Bienvenido(a)</h3>
 
         {error && (
-          <div className="alert alert-danger text-sm mb-4 bg-red-100 text-red-700 border border-red-300 rounded-md px-3 py-2 text-center">
+          <div
+            className="text-sm mb-4 bg-red-100 text-red-700 border border-red-300 rounded-md px-3 py-2 text-center"
+            role="alert"
+          >
             {error}
           </div>
         )}
 
-        <form onSubmit={handleLogin}>
-          <div className="mb-3">
+        <form onSubmit={handleLogin} className="space-y-3" aria-live="polite">
+          <div>
             <label htmlFor="email" className="block text-sm text-center font-medium mb-2">
               Correo electrónico
             </label>
             <input
+              ref={emailInputRef}
               type="email"
               id="email"
               autoComplete="email"
+              inputMode="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="form-control w-full text-center rounded-full border border-gray-300 px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              disabled={isLoading}
+              className="w-full text-center rounded-full border border-gray-300 px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60"
             />
           </div>
 
-          <div className="mb-3">
+          <div>
             <label htmlFor="password" className="block text-sm text-center font-medium mb-2">
               Contraseña
             </label>
             <input
+              ref={passInputRef}
               type="password"
               id="password"
               autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="form-control w-full text-center rounded-full border border-gray-300 px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              disabled={isLoading}
+              className="w-full text-center rounded-full border border-gray-300 px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60"
             />
           </div>
 
-          <div className="mb-3 flex items-center">
-            <input type="checkbox" id="remember" className="mr-2 accent-blue-600" />
+          <div className="mb-1 flex items-center justify-center gap-2">
+            <input type="checkbox" id="remember" className="accent-blue-600" disabled={isLoading} />
             <label htmlFor="remember" className="text-sm text-gray-700">
               Recordar sesión
             </label>
@@ -117,8 +141,31 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className={`btn w-full rounded-full font-medium py-2 shadow-sm text-white transition disabled:opacity-50 ${buttonClass}`}
+            className={`w-full rounded-full font-medium py-2 shadow-sm text-white transition disabled:opacity-60 flex items-center justify-center gap-2 ${buttonClass}`}
+            aria-busy={isLoading}
           >
+            {isLoading && (
+              <svg
+                className="animate-spin h-4 w-4"
+                viewBox="0 0 24 24"
+                fill="none"
+                aria-hidden="true"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8v4A4 4 0 008 12H4z"
+                />
+              </svg>
+            )}
             {buttonText}
           </button>
         </form>
@@ -141,9 +188,7 @@ export default function LoginPage() {
           <div className="bg-white rounded-lg p-6 max-w-xs text-center shadow-lg">
             <h4 className="text-lg font-light mb-3">Soporte Técnico</h4>
             <p className="mb-4">Puedes contactar al administrador del sistema a través del correo:</p>
-            <a
-              className="text-blue-600 font-medium hover:underline mb-6 block"
-            >
+            <a className="text-blue-600 font-medium hover:underline mb-6 block">
               sistemas@unici.edu.mx
             </a>
             <button

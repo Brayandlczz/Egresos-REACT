@@ -1,7 +1,17 @@
 'use client';
 
 import { useEffect, useRef } from "react";
-import { Document, Packer, Paragraph, TextRun, AlignmentType } from "docx";
+import {
+  Document,
+  Packer,
+  Paragraph,
+  TextRun,
+  AlignmentType,
+  Table,
+  TableRow,
+  TableCell,
+  WidthType,
+} from "docx";
 import { saveAs } from "file-saver";
 import type { CompraventaPFFormValues } from '@/app/(auth)/contratos/compraventa-pf/tipos';
 
@@ -20,10 +30,7 @@ function numeroALetrasMX(n: number): string {
   const sufijo = ` ${String(centavos).padStart(2, "0")}/100 M.N.`;
   return `${letrasEnteros} PESOS${sufijo}`;
 }
-const U = [
-  "", "UN", "DOS", "TRES", "CUATRO", "CINCO", "SEIS", "SIETE", "OCHO", "NUEVE",
-  "DIEZ", "ONCE", "DOCE", "TRECE", "CATORCE", "QUINCE", "DIECISÉIS", "DIECISIETE", "DIECIOCHO", "DIECINUEVE", "VEINTE",
-];
+const U = ["", "UN", "DOS", "TRES", "CUATRO", "CINCO", "SEIS", "SIETE", "OCHO", "NUEVE", "DIEZ", "ONCE", "DOCE", "TRECE", "CATORCE", "QUINCE", "DIECISÉIS", "DIECISIETE", "DIECIOCHO", "DIECINUEVE", "VEINTE"];
 function decenasALetras(n: number): string {
   if (n <= 20) return U[n];
   const d = Math.floor(n / 10), u = n % 10;
@@ -62,6 +69,28 @@ export default function ContratoCompraventaPF({
   autoExportOnValuesChange = false,
   onExportDone,
 }: Props) {
+  const firmaCell = (rol: string, nombre: string) =>
+    new TableCell({
+      width: { size: 50, type: WidthType.PERCENTAGE },
+      margins: { top: 200, bottom: 200, left: 100, right: 100 },
+      children: [
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          spacing: { before: 200, after: 100 },
+          children: [new TextRun("_______________________________")],
+        }),
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          children: [new TextRun({ text: rol, bold: true })],
+        }),
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          spacing: { before: 100 },
+          children: [new TextRun(nombre)],
+        }),
+      ],
+    });
+
   const generarDocx = async () => {
     const fecha = fechaLegibleDesdeISO(values.fechaActualISO);
 
@@ -136,7 +165,7 @@ export default function ContratoCompraventaPF({
             }),
             new Paragraph({
               spacing: { after: 400 },
-              children: [new TextRun(`6.- Que le es indispensable para cumplir con su objeto social, comprar ${values.descripcionCompra || "(descripción de la compra)"}.`)],
+              children: [new TextRun(`6.- Que le es indispensable para cumplir con su objeto social, comprar ${values.descripcionCompra || "(descripción de la compra)"} .`)],
             }),
 
             new Paragraph({ spacing: { after: 200 }, children: [new TextRun("B). - DE EL VENDEDOR.")] }),
@@ -174,7 +203,7 @@ export default function ContratoCompraventaPF({
 
             new Paragraph({
               spacing: { after: 200 },
-              children: [new TextRun(`UNO. OBJETO DEL CONTRATO. - EL VENDEDOR manifiesta que cuenta con ${values.articulosComprar || "(artículos a comprar)"}. Por lo que es su libre voluntad vender los productos mencionados a LA COMPRADORA.`)],
+              children: [new TextRun(`UNO. OBJETO DEL CONTRATO. - EL VENDEDOR manifiesta que cuenta con ${values.articulosComprar || "(artículos a comprar)"} . Por lo que es su libre voluntad vender los productos mencionados a LA COMPRADORA.`)],
             }),
 
             new Paragraph({
@@ -283,15 +312,23 @@ export default function ContratoCompraventaPF({
               children: [new TextRun(`Para constancia de lo estipulado, se firma el presente contrato formándose dos originales, una para cada contratante, ante los testigos C. ${values.testigo1 || "_________________________"} y ${values.testigo2 || "_________________________"}, ambos mayores de edad, mexicanos por nacimiento, vecinos de esta ciudad; declarando ambos conocer personalmente a las partes contratantes, firmándose los dos originales por todas las personas que en el mismo aparecen.`)],
             }),
 
-            new Paragraph({ spacing: { after: 200 }, children: [new TextRun("LA COMPRADORA")] }),
-            new Paragraph({ spacing: { after: 200 }, children: [new TextRun("Dra. María Xóchilt Ortega Grillasca")] }),
-
-            new Paragraph({ spacing: { after: 200 }, children: [new TextRun("EL VENDEDOR")] }),
-            new Paragraph({ spacing: { after: 400 }, children: [new TextRun(`C. ${values.proveedorNombre}`)] }),
-
-            new Paragraph({ spacing: { after: 200 }, children: [new TextRun("T E S T I G O S")] }),
-            new Paragraph({ spacing: { after: 200 }, children: [new TextRun(values.testigo1 || "_________________________")] }),
-            new Paragraph({ spacing: { after: 200 }, children: [new TextRun(values.testigo2 || "_________________________")] }),
+            new Table({
+              width: { size: 100, type: WidthType.PERCENTAGE },
+              rows: [
+                new TableRow({
+                  children: [
+                    firmaCell("LA COMPRADORA", "Dra. María Xóchilt Ortega Grillasca"),
+                    firmaCell("EL VENDEDOR", `C. ${values.proveedorNombre || "_________________________"}`),
+                  ],
+                }),
+                new TableRow({
+                  children: [
+                    firmaCell("TESTIGO 1", values.testigo1 || "_________________________"),
+                    firmaCell("TESTIGO 2", values.testigo2 || "_________________________"),
+                  ],
+                }),
+              ],
+            }),
           ],
         },
       ],
@@ -321,6 +358,7 @@ export default function ContratoCompraventaPF({
     return (
       <div className="p-6 max-w-3xl mx-auto space-y-4">
         <button onClick={generarDocx} className="bg-blue-600 text-white px-4 py-2 rounded">
+          Descargar DOCX
         </button>
       </div>
     );

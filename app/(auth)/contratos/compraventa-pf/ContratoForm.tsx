@@ -1,13 +1,10 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import type { CompraventaPFFormValues } from '@/app/(auth)/contratos/compraventa-pf/tipos';
 
-function fechaActualLegibleEs(d = new Date()) {
-  const opts: Intl.DateTimeFormatOptions = { day: '2-digit', month: 'long', year: 'numeric' };
-  return d.toLocaleDateString('es-MX', opts);
-}
 function mxn(n: number) {
   if (isNaN(n)) return '$0.00';
   return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(n);
@@ -47,7 +44,19 @@ function convertirEnteros(n: number): string {
   return partes.join(' ').replace(/\s+/g, ' ').trim();
 }
 
-type Proveedor = { id: string; nombre_proveedor: string; bien_proveido: string; tipo_persona: string; plantel_id: string };
+function normalizeDateLocal(dateStr: string) {
+  if (!dateStr) return '';
+  return /^\d{4}-\d{2}-\d{2}$/.test(dateStr) ? `${dateStr}T00:00:00` : dateStr;
+}
+
+type Proveedor = {
+  id: string;
+  nombre_proveedor: string;
+  bien_proveido: string;
+  tipo_persona: string;
+  plantel_id: string;
+  rfc?: string;
+};
 type Sucursal = { id: string; nombre: string; plantel_id: string };
 type Municipio = { id: string; nombre: string; sucursal_id: string };
 
@@ -56,48 +65,57 @@ const baseLabel = 'block text-sm font-medium text-slate-700';
 const section = 'bg-white rounded-2xl border border-slate-200 shadow-sm p-5';
 const legend = 'text-base font-semibold text-slate-800';
 
+const initialFormState = {
+  fechaActualISO: '',
+
+  sucursalId: '',
+  sucursalNombre: '',
+  municipioId: '',
+  municipioNombre: '',
+
+  proveedorId: '',
+  proveedorNombre: '',
+  proveedorRFC: '',
+  proveedorDomicilio: '',
+  proveedorTipoBien: '' as '' | 'arrendamiento' | 'título de propiedad',
+  actividadPreponderante: '',
+
+  articulosComprar: '',
+  descripcionCompra: '',
+
+  correoProveedor: '',
+  plazoEntregaDias: '' as string,
+  entregaDomicilioSucursal: '',
+
+  pagoMedio: '' as '' | 'transferencia' | 'cuenta_bancaria_prestador' | 'efectivo' | 'cheque',
+  pagoEsquema: '' as '' | 'pago_unico' | 'anticipo_1',
+  anticipoPct: '',
+  importeAnticipo: '',
+  condicionSegundoPago: 'al día siguiente',
+
+  plazoGarantiaDias: '',
+  diasPlazoPena: '',
+  testigo1: '',
+  testigo2: '',
+};
+
 export default function CompraventaPFForm({
   onSubmit,
 }: {
   onSubmit?: (values: CompraventaPFFormValues) => void; 
 }) {
+  const router = useRouter();
   const supabase = useMemo(() => createClientComponentClient(), []);
 
   const [proveedores, setProveedores] = useState<Proveedor[]>([]);
   const [sucursales, setSucursales] = useState<Sucursal[]>([]);
   const [municipios, setMunicipios] = useState<Municipio[]>([]);
+  const [form, setForm] = useState({ ...initialFormState });
 
-  const [form, setForm] = useState({
-    sucursalId: '',
-    sucursalNombre: '',
-    municipioId: '',
-    municipioNombre: '',
-
-    proveedorId: '',
-    proveedorNombre: '',
-    proveedorRFC: '',
-    proveedorDomicilio: '',
-    proveedorTipoBien: '' as '' | 'arrendamiento' | 'título de propiedad',
-    actividadPreponderante: '',
-
-    articulosComprar: '',
-    descripcionCompra: '',
-
-    correoProveedor: '',
-    plazoEntregaDias: '' as string,
-    entregaDomicilioSucursal: '',
-
-    pagoMedio: '' as '' | 'transferencia' | 'cuenta_bancaria_prestador' | 'efectivo' | 'cheque',
-    pagoEsquema: 'pago_unico' as 'pago_unico' | 'anticipo_1',
-    anticipoPct: '',
-    importeAnticipo: '',
-    condicionSegundoPago: 'al día siguiente',
-
-    plazoGarantiaDias: '',
-    diasPlazoPena: '',
-    testigo1: '',
-    testigo2: '',
-  });
+  const resetForm = () => {
+    setForm({ ...initialFormState });
+    setMunicipios([]);
+  };
 
   useEffect(() => {
     (async () => {
@@ -113,7 +131,7 @@ export default function CompraventaPFForm({
     (async () => {
       let query = supabase
         .from('proveedores')
-        .select('id, nombre_proveedor, bien_proveido, tipo_persona, plantel_id')
+        .select('id, nombre_proveedor, bien_proveido, tipo_persona, plantel_id, rfc')
         .eq('tipo_persona', 'Física')
         .order('nombre_proveedor', { ascending: true });
 
@@ -158,6 +176,7 @@ export default function CompraventaPFForm({
       ...f,
       proveedorNombre: p?.nombre_proveedor ?? '',
       actividadPreponderante: p?.bien_proveido ?? '',
+      proveedorRFC: p?.rfc ?? '',
     }));
   }, [form.proveedorId, proveedores]);
 
@@ -174,7 +193,7 @@ export default function CompraventaPFForm({
     const suc = sucursales.find((s) => s.id === form.sucursalId);
 
     const payload: CompraventaPFFormValues = {
-      fechaActualISO: new Date().toISOString(),
+      fechaActualISO: normalizeDateLocal(form.fechaActualISO),
 
       proveedorId: form.proveedorId,
       proveedorNombre: form.proveedorNombre.trim(),
@@ -189,38 +208,62 @@ export default function CompraventaPFForm({
 
       actividadPreponderante: form.actividadPreponderante.trim(),
 
-      articulosComprar: form.articulosComprar.trim(),               
-      descripcionCompra: form.descripcionCompra.trim(),            
-      correoProveedor: form.correoProveedor.trim(),                  
-      plazoEntregaDias: Number(form.plazoEntregaDias || '0'),       
-      entregaDomicilioSucursal: form.entregaDomicilioSucursal.trim() || (suc?.nombre || ''), 
+      articulosComprar: form.articulosComprar.trim(),
+      descripcionCompra: form.descripcionCompra.trim(),
+      correoProveedor: form.correoProveedor.trim(),
+      plazoEntregaDias: Number(form.plazoEntregaDias || '0'),
+      entregaDomicilioSucursal: (form.entregaDomicilioSucursal || suc?.nombre || '').trim(),
 
-      pagoEsquema: form.pagoEsquema,
+      pagoEsquema: form.pagoEsquema as CompraventaPFFormValues['pagoEsquema'],
       pagoMedio: (form.pagoMedio || 'transferencia') as 'transferencia' | 'cuenta_bancaria_prestador' | 'efectivo' | 'cheque',
-      anticipoPct: form.pagoEsquema === 'anticipo_1' ? anticipoPctNum : undefined,           
+      anticipoPct: form.pagoEsquema === 'anticipo_1' ? anticipoPctNum : undefined,
       importeAnticipo: form.pagoEsquema === 'anticipo_1' && importeAnticipoNum > 0 ? importeAnticipoNum : undefined,
       condicionSegundoPago: form.pagoEsquema === 'anticipo_1' ? (form.condicionSegundoPago || 'al día siguiente') : undefined,
 
-      plazoGarantiaDias: Number(form.plazoGarantiaDias || '0'),      
-      diasPlazoPena: Number(form.diasPlazoPena || '0'),            
+      plazoGarantiaDias: Number(form.plazoGarantiaDias || '0'),
+      diasPlazoPena: Number(form.diasPlazoPena || '0'),
 
       testigo1: form.testigo1.trim(),
       testigo2: form.testigo2.trim(),
     };
 
     onSubmit?.(payload);
+    resetForm();
   };
 
   return (
     <form onSubmit={handleSubmit} className="mx-auto max-w-5xl p-6 space-y-6">
-      <header className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-slate-800">Contrato de Compraventa · Persona Física</h1>
-        <div className="text-sm text-slate-500 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl">
-          <strong>Fecha:</strong> {fechaActualLegibleEs()}
+      <header className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-2.5 py-2 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-200"
+            aria-label="Volver"
+            title="Volver"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12l7.5-7.5M3 12h18" />
+            </svg>
+          </button>
+          <h1 className="text-2xl font-semibold text-slate-800">Contrato de Compraventa · Persona Física</h1>
+        </div>
+
+        <div>
+          <label className={baseLabel}>
+            Fecha del contrato <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="date"
+            name="fechaActualISO"
+            value={form.fechaActualISO}
+            onChange={onChange}
+            className={baseInput}
+            required
+          />
         </div>
       </header>
 
-      {/* A) Sucursal & Municipio */}
       <section className={section}>
         <h2 className={legend}>A) Sucursal & Municipio</h2>
         <p className="text-sm text-slate-500 mb-4">Selecciona primero la sucursal; el municipio se llenará automáticamente.</p>
@@ -242,7 +285,6 @@ export default function CompraventaPFForm({
         </div>
       </section>
 
-      {/* B) Vendedor */}
       <section className={section}>
         <h2 className={legend}>B) Vendedor (Persona Física)</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -256,12 +298,26 @@ export default function CompraventaPFForm({
 
           <div>
             <label className={baseLabel}>Nombre del vendedor <span className="text-red-500">*</span></label>
-            <input name="proveedorNombre" value={form.proveedorNombre} readOnly className={`${baseInput} bg-slate-50 text-slate-600 cursor-not-allowed`} placeholder="Se completa al elegir proveedor" required />
+            <input
+              name="proveedorNombre"
+              value={form.proveedorNombre}
+              readOnly
+              className={`${baseInput} bg-slate-50 text-slate-600 cursor-not-allowed`}
+              placeholder="Se completa al elegir proveedor"
+              required
+            />
           </div>
 
           <div>
             <label className={baseLabel}>RFC del vendedor <span className="text-red-500">*</span></label>
-            <input name="proveedorRFC" value={form.proveedorRFC} onChange={onChange} className={baseInput} placeholder="p. ej. PESF850118GS7" required />
+            <input
+              name="proveedorRFC"
+              value={form.proveedorRFC}
+              readOnly
+              className={`${baseInput} bg-slate-50 text-slate-600 cursor-not-allowed`}
+              placeholder="Se completa al elegir proveedor"
+              required
+            />
           </div>
 
           <div className="md:col-span-2">
@@ -280,12 +336,18 @@ export default function CompraventaPFForm({
 
           <div className="md:col-span-2">
             <label className={baseLabel}>Actividad preponderante</label>
-            <textarea name="actividadPreponderante" value={form.actividadPreponderante} readOnly rows={2} className={`${baseInput} bg-slate-50 text-slate-600 cursor-not-allowed`} placeholder="Se completa al elegir proveedor (de 'bien_proveido')" />
+            <textarea
+              name="actividadPreponderante"
+              value={form.actividadPreponderante}
+              readOnly
+              rows={2}
+              className={`${baseInput} bg-slate-50 text-slate-600 cursor-not-allowed`}
+              placeholder="Se completa al elegir proveedor (de 'bien_proveido')"
+            />
           </div>
         </div>
       </section>
 
-      {/* C) Pedido y productos */}
       <section className={section}>
         <h2 className={legend}>C) Pedido y productos</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -300,7 +362,6 @@ export default function CompraventaPFForm({
         </div>
       </section>
 
-      {/* D) Entrega & contacto */}
       <section className={section}>
         <h2 className={legend}>D) Entrega & contacto</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -319,13 +380,19 @@ export default function CompraventaPFForm({
         </div>
       </section>
 
-      {/* E) Pagos */}
       <section className={section}>
         <h2 className={legend}>E) Pagos</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           <div>
-            <label className={baseLabel}>Esquema de pago</label>
-            <select name="pagoEsquema" value={form.pagoEsquema} onChange={onChange} className={baseInput}>
+            <label className={baseLabel}>Esquema de pago <span className="text-red-500">*</span></label>
+            <select
+              name="pagoEsquema"
+              value={form.pagoEsquema}
+              onChange={onChange}
+              className={baseInput}
+              required
+            >
+              <option value="" disabled hidden>Selecciona…</option>
               <option value="pago_unico">Pago único (total)</option>
               <option value="anticipo_1">Anticipo + 1 pago</option>
             </select>
@@ -365,7 +432,6 @@ export default function CompraventaPFForm({
         )}
       </section>
 
-      {/* F) Garantía, pena y testigos */}
       <section className={section}>
         <h2 className={legend}>F) Garantía, pena y testigos</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">

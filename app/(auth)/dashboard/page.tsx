@@ -10,7 +10,7 @@ export default function DashboardPage() {
       <img
         src="/logounici.webp"
         alt="Logo UNICI"
-        className="w-auto max-w-xs scale-75"
+        className="w-auto max-w-xs h-auto scale-75"
       />
 
       <h1 className="text-2xl font-bold text-blue-800 mb-2 text-center">

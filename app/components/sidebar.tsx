@@ -114,7 +114,7 @@ export function Sidebar() {
                         }`}
                       >
                         <PackageOpenIcon size={20} />
-                        <span>Listado & registro de proveedores</span>
+                        <span>Listado & registro</span>
                       </Link>
                     </li>
                     <li>
@@ -127,7 +127,7 @@ export function Sidebar() {
                         }`}
                       >
                         <LandPlot size={20} />
-                        <span>Áreas de consumo de bienes</span>
+                        <span>Áreas administrativas</span>
                       </Link>
                     </li>
                     <li>
@@ -140,7 +140,7 @@ export function Sidebar() {
                         }`}
                       >
                         <Handshake size={20} />
-                        <span>Contrato a proveedores</span>
+                        <span>Contrataciones</span>
                       </Link>
                     </li>
                     <li>
@@ -153,7 +153,7 @@ export function Sidebar() {
                         }`}
                       >
                         <Coins size={20} />
-                        <span>Clasificación de gastos</span>
+                        <span>Etiquetas de gastos</span>
                       </Link>
                     </li>
 
@@ -242,9 +242,9 @@ export function Sidebar() {
                     </li>
                     <li>
                       <Link
-                        href="/contratos"
+                        href="/"
                         className={`flex items-center gap-3 p-2 rounded-md text-white transition-all ${
-                          isActive("/contratos")
+                          isActive("/")
                             ? "bg-white/30 hover:bg-white/50 shadow-md translate-y-[-1px]"
                             : "hover:bg-white/10 hover:shadow-md hover:translate-y-[-1px]"
                         }`}
@@ -255,7 +255,7 @@ export function Sidebar() {
                     </li>
                     <li>
                       <Link
-                        href="/etiquetas"
+                        href="/"
                         className={`flex items-center gap-3 p-2 rounded-md text-white transition-all ${
                           isActive("/etiquetas")
                             ? "bg-white/30 hover:bg-white/50 shadow-md translate-y-[-1px]"
@@ -310,7 +310,7 @@ export function Sidebar() {
                       }`}
                     >
                       <CircleUserRoundIcon size={20} />
-                      <span>Registro de usuarios</span>
+                      <span>Usuarios</span>
                     </Link>
                   </li>
                 </ul>

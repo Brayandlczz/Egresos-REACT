@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 type PSBGPFFormValues = {
@@ -19,9 +20,9 @@ type PSBGPFFormValues = {
   actividadPreponderante: string;
 
   tipoPrestacion: 'prestación de servicios' | 'servicio técnico';
-  objetoCorto: string;    
-  objetoLargo: string;    
-  serviciosIncluidos?: string[]; 
+  objetoCorto: string;
+  objetoLargo: string;
+  serviciosIncluidos?: string[];
 
   importeNumero: number;
   importeLetra: string;
@@ -32,18 +33,14 @@ type PSBGPFFormValues = {
   fechaTercerPago?: string;
   pagoMedio: 'transferencia' | 'cuenta_bancaria_prestador' | 'efectivo' | 'cheque';
 
-  fechaEventoISO: string;  
+  fechaEventoISO: string;
   horaAccesoInicio: string;
-  horaAccesoFin: string;   
+  horaAccesoFin: string;
 
   testigo1: string;
   testigo2: string;
 };
 
-function fechaActualLegibleEs(d = new Date()) {
-  const opts: Intl.DateTimeFormatOptions = { day: '2-digit', month: 'long', year: 'numeric' };
-  return d.toLocaleDateString('es-MX', opts);
-}
 function mxn(n: number) {
   if (isNaN(n)) return '$0.00';
   return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(n);
@@ -86,7 +83,12 @@ function convertirEnteros(n: number): string {
   return partes.join(' ').replace(/\s+/g, ' ').trim();
 }
 
-type Proveedor = { id: string; nombre_proveedor: string; bien_proveido: string; tipo_persona: string; plantel_id: string; rfc?: string }; 
+function normalizeDateLocal(dateStr: string) {
+  if (!dateStr) return '';
+  return /^\d{4}-\d{2}-\d{2}$/.test(dateStr) ? `${dateStr}T00:00:00` : dateStr;
+}
+
+type Proveedor = { id: string; nombre_proveedor: string; bien_proveido: string; tipo_persona: string; plantel_id: string; rfc?: string };
 type Sucursal = { id: string; nombre: string; plantel_id: string };
 type Municipio = { id: string; nombre: string; sucursal_id: string };
 
@@ -95,51 +97,61 @@ const baseLabel = 'block text-sm font-medium text-slate-700';
 const section = 'bg-white rounded-2xl border border-slate-200 shadow-sm p-5';
 const legend = 'text-base font-semibold text-slate-800';
 
+const initialFormState = {
+  fechaActualISO: '',
+
+  sucursalId: '',
+  sucursalNombre: '',
+  municipioId: '',
+  municipioNombre: '',
+
+  proveedorId: '',
+  proveedorNombre: '',
+  proveedorRFC: '',
+  proveedorDomicilio: '',
+  proveedorTipoBien: '' as '' | 'arrendamiento' | 'título de propiedad',
+  actividadPreponderante: '',
+
+  tipoPrestacion: 'prestación de servicios' as 'prestación de servicios' | 'servicio técnico',
+  objetoCorto: '',
+  objetoLargo: '',
+  serviciosIncluidosMultiline: '',
+
+  importeNumero: '' as string,
+  pagoEsquema: '' as '' | 'pago_unico' | 'anticipo_1' | 'anticipo_2',
+  anticipoPct: '',
+  segundoPagoPct: '',
+  fechaSegundoPago: '',
+  fechaTercerPago: '',
+
+  pagoMedio: '' as '' | 'transferencia' | 'cuenta_bancaria_prestador' | 'efectivo' | 'cheque',
+
+  fechaEventoISO: '',
+  horaAccesoInicio: '',
+  horaAccesoFin: '',
+
+  testigo1: '',
+  testigo2: '',
+};
+
 export default function PSBGPFForm({
   onSubmit,
 }: {
   onSubmit?: (values: PSBGPFFormValues) => void;
 }) {
+  const router = useRouter();
   const supabase = useMemo(() => createClientComponentClient(), []);
 
   const [proveedores, setProveedores] = useState<Proveedor[]>([]);
   const [sucursales, setSucursales] = useState<Sucursal[]>([]);
   const [municipios, setMunicipios] = useState<Municipio[]>([]);
 
-  const [form, setForm] = useState({
-    sucursalId: '',
-    sucursalNombre: '',
-    municipioId: '',
-    municipioNombre: '',
+  const [form, setForm] = useState({ ...initialFormState });
 
-    proveedorId: '',
-    proveedorNombre: '',
-    proveedorRFC: '', 
-    proveedorDomicilio: '',
-    proveedorTipoBien: '' as '' | 'arrendamiento' | 'título de propiedad',
-    actividadPreponderante: '',
-
-    tipoPrestacion: 'prestación de servicios' as 'prestación de servicios' | 'servicio técnico',
-    objetoCorto: 'Banquete de Graduación',
-    objetoLargo: '',
-    serviciosIncluidosMultiline: '',
-
-    importeNumero: '' as string,
-    pagoEsquema: 'anticipo_1' as 'pago_unico' | 'anticipo_1' | 'anticipo_2',
-    anticipoPct: '50',
-    segundoPagoPct: '',
-    fechaSegundoPago: 'al día siguiente',
-    fechaTercerPago: '',
-
-    pagoMedio: '' as '' | 'transferencia' | 'cuenta_bancaria_prestador' | 'efectivo' | 'cheque',
-
-    fechaEventoISO: '',
-    horaAccesoInicio: '08:00',
-    horaAccesoFin: '23:00',
-
-    testigo1: '',
-    testigo2: '',
-  });
+  const resetForm = () => {
+    setForm({ ...initialFormState });
+    setMunicipios([]);
+  };
 
   useEffect(() => {
     (async () => {
@@ -155,8 +167,8 @@ export default function PSBGPFForm({
     (async () => {
       let query = supabase
         .from('proveedores')
-        .select('id, nombre_proveedor, bien_proveido, tipo_persona, plantel_id, rfc') 
-        .eq('tipo_persona', 'Física') 
+        .select('id, nombre_proveedor, bien_proveido, tipo_persona, plantel_id, rfc')
+        .eq('tipo_persona', 'Física')
         .order('nombre_proveedor', { ascending: true });
 
       const suc = sucursales.find((s) => s.id === form.sucursalId);
@@ -199,7 +211,7 @@ export default function PSBGPFForm({
       ...f,
       proveedorNombre: p?.nombre_proveedor ?? '',
       actividadPreponderante: p?.bien_proveido ?? '',
-      proveedorRFC: p?.rfc ?? '', 
+      proveedorRFC: p?.rfc ?? '',
     }));
   }, [form.proveedorId, proveedores]);
 
@@ -234,7 +246,7 @@ export default function PSBGPFForm({
         .filter(Boolean);
 
     const payload: PSBGPFFormValues = {
-      fechaActualISO: new Date().toISOString(),
+      fechaActualISO: normalizeDateLocal(form.fechaActualISO),
 
       sucursalId: form.sucursalId,
       sucursalNombre: form.sucursalNombre,
@@ -243,7 +255,7 @@ export default function PSBGPFForm({
 
       proveedorId: form.proveedorId,
       proveedorNombre: form.proveedorNombre.trim(),
-      proveedorRFC: form.proveedorRFC.trim(), 
+      proveedorRFC: form.proveedorRFC.trim(),
       proveedorDomicilio: form.proveedorDomicilio.trim(),
       proveedorTipoBien: (form.proveedorTipoBien || 'arrendamiento') as 'arrendamiento' | 'título de propiedad',
       actividadPreponderante: form.actividadPreponderante.trim(),
@@ -255,10 +267,10 @@ export default function PSBGPFForm({
 
       importeNumero: isNaN(importe) ? 0 : importe,
       importeLetra,
-      pagoEsquema: form.pagoEsquema,
+      pagoEsquema: form.pagoEsquema as PSBGPFFormValues['pagoEsquema'],
       anticipoPct: form.pagoEsquema === 'pago_unico' ? 100 : anticipoPctNum,
       segundoPagoPct: form.pagoEsquema === 'anticipo_2' ? segundoPagoPctNum : undefined,
-      fechaSegundoPago: form.pagoEsquema !== 'pago_unico' ? (form.fechaSegundoPago || 'al día siguiente') : undefined,
+      fechaSegundoPago: form.pagoEsquema && form.pagoEsquema !== 'pago_unico' ? (form.fechaSegundoPago || 'al día siguiente') : undefined,
       fechaTercerPago: form.pagoEsquema === 'anticipo_2' ? form.fechaTercerPago : undefined,
       pagoMedio: (form.pagoMedio || 'transferencia') as PSBGPFFormValues['pagoMedio'],
 
@@ -271,14 +283,39 @@ export default function PSBGPFForm({
     };
 
     onSubmit?.(payload);
+    resetForm();
   };
 
   return (
     <form onSubmit={handleSubmit} className="mx-auto max-w-5xl p-6 space-y-6">
-      <header className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-slate-800">Contrato PSB y G · Persona Física</h1>
-        <div className="text-sm text-slate-500 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl">
-          <strong>Fecha:</strong> {fechaActualLegibleEs()}
+      <header className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-2.5 py-2 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-200"
+            aria-label="Volver"
+            title="Volver"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12l7.5-7.5M3 12h18" />
+            </svg>
+          </button>
+          <h1 className="text-2xl font-semibold text-slate-800">Contrato PSB y G · Persona Física</h1>
+        </div>
+
+        <div>
+          <label className={baseLabel}>
+            Fecha del contrato <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="date"
+            name="fechaActualISO"
+            value={form.fechaActualISO}
+            onChange={onChange}
+            className={baseInput}
+            required
+          />
         </div>
       </header>
 
@@ -322,18 +359,14 @@ export default function PSBGPFForm({
 
           <div>
             <label className={baseLabel}>
-              RFC del proveedor{" "}
-              <span className="ml-1 inline-flex items-center rounded-lg bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700">
-                {form.proveedorRFC || "—"}
-              </span>
-              <span className="text-red-500">*</span>
+              RFC del proveedor <span className="text-red-500">*</span>
             </label>
             <input
               name="proveedorRFC"
               value={form.proveedorRFC}
               readOnly
               className={`${baseInput} bg-slate-50 text-slate-600 cursor-not-allowed`}
-              placeholder="Se completa al elegir proveedor"
+              placeholder="Se completará al elegir proveedor"
               required
             />
           </div>
@@ -417,8 +450,15 @@ export default function PSBGPFForm({
           </div>
 
           <div>
-            <label className={baseLabel}>Esquema de pago</label>
-            <select name="pagoEsquema" value={form.pagoEsquema} onChange={onChange} className={baseInput}>
+            <label className={baseLabel}>Esquema de pago <span className="text-red-500">*</span></label>
+            <select
+              name="pagoEsquema"
+              value={form.pagoEsquema}
+              onChange={onChange}
+              className={baseInput}
+              required
+            >
+              <option value="" disabled hidden>Selecciona…</option>
               <option value="pago_unico">Pago único</option>
               <option value="anticipo_1">Anticipo + 1 pago</option>
               <option value="anticipo_2">Anticipo + 2 pagos</option>
@@ -437,7 +477,7 @@ export default function PSBGPFForm({
           </div>
         </div>
 
-        {form.pagoEsquema !== 'pago_unico' && (
+        {form.pagoEsquema && form.pagoEsquema !== 'pago_unico' && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-4">
             <div>
               <label className={baseLabel}>% Anticipo</label>
@@ -595,7 +635,7 @@ export default function PSBGPFForm({
         <div className="px-4 py-3 text-sm space-y-1">
           <div>Total: <strong>{mxn(importe)}</strong> ({importeLetra})</div>
           {form.pagoEsquema === 'pago_unico' && <div>Pago único: <strong>{mxn(importe)}</strong></div>}
-          {form.pagoEsquema !== 'pago_unico' && (
+          {form.pagoEsquema && form.pagoEsquema !== 'pago_unico' && (
             <>
               <div>Anticipo ({anticipoPctNum}%): <strong>{mxn(anticipoMonto)}</strong></div>
               <div>2º pago: <strong>{mxn(segundoPagoMonto)}</strong> — {form.fechaSegundoPago || 'condición no indicada'}</div>

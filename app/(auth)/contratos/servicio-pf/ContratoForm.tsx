@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import type { PSTPFFormValues } from "@/app/(auth)/contratos/servicio-pf/tipos";
 
@@ -70,51 +71,59 @@ const baseLabel = 'block text-sm font-medium text-slate-700';
 const section = 'bg-white rounded-2xl border border-slate-200 shadow-sm p-5';
 const legend = 'text-base font-semibold text-slate-800';
 
+const initialFormState = {
+  fechaActualISO: '',
+
+  proveedorId: '',
+  proveedorNombre: '',
+  proveedorRFC: '',
+  proveedorDomicilio: '',
+  proveedorTipoBien: '' as '' | 'arrendamiento' | 'título de propiedad',
+
+  sucursalId: '',
+  municipioId: '',
+  municipioNombre: '',
+
+  tipoPrestacion: '' as '' | 'servicio técnico' | 'prestación de servicios',
+  objetoCorto: '',
+  objetoLargo: '',
+  actividadPreponderante: '',
+
+  importeNumero: '' as string,
+  pagoEsquema: 'pago_unico' as 'pago_unico' | 'anticipo_1' | 'anticipo_2',
+  anticipoPct: '',
+  segundoPagoPct: '',
+  fechaSegundoPago: '',
+  fechaTercerPago: '',
+
+  pagoMedio: '' as '' | 'transferencia' | 'cuenta_bancaria_prestador' | 'efectivo' | 'cheque',
+
+  plazoGarantiaDias: '',
+  plazoConclusionDias: '',
+  diasPlazoPena: '',
+
+  testigo1: '',
+  testigo2: '',
+};
+
 export default function PSTPFForm({
   onSubmit,
 }: {
   onSubmit?: (values: PSTPFFormValues) => void;
 }) {
+  const router = useRouter();
   const supabase = useMemo(() => createClientComponentClient(), []);
 
   const [proveedores, setProveedores] = useState<Proveedor[]>([]);
   const [sucursales, setSucursales] = useState<Sucursal[]>([]);
   const [municipios, setMunicipios] = useState<Municipio[]>([]);
 
-  const [form, setForm] = useState({
-    fechaActualISO: '',
+  const [form, setForm] = useState({ ...initialFormState });
 
-    proveedorId: '',
-    proveedorNombre: '',
-    proveedorRFC: '',
-    proveedorDomicilio: '',
-    proveedorTipoBien: '' as '' | 'arrendamiento' | 'título de propiedad',
-
-    sucursalId: '',
-    municipioId: '',
-    municipioNombre: '',
-
-    tipoPrestacion: '' as '' | 'servicio técnico' | 'prestación de servicios',
-    objetoCorto: '',
-    objetoLargo: '',
-    actividadPreponderante: '',
-
-    importeNumero: '' as string,
-    pagoEsquema: 'pago_unico' as 'pago_unico' | 'anticipo_1' | 'anticipo_2',
-    anticipoPct: '',
-    segundoPagoPct: '',
-    fechaSegundoPago: '',
-    fechaTercerPago: '',
-
-    pagoMedio: '' as '' | 'transferencia' | 'cuenta_bancaria_prestador' | 'efectivo' | 'cheque',
-
-    plazoGarantiaDias: '',
-    plazoConclusionDias: '',
-    diasPlazoPena: '',
-
-    testigo1: '',
-    testigo2: '',
-  });
+  const resetForm = () => {
+    setForm({ ...initialFormState });
+    setMunicipios([]);
+  };
 
   useEffect(() => {
     (async () => {
@@ -205,7 +214,6 @@ export default function PSTPFForm({
     const suc = sucursales.find((s) => s.id === form.sucursalId);
 
     const payload: PSTPFFormValues = {
-      // Normalizamos aquí para que el generador no reste un día
       fechaActualISO: normalizeDateLocal(form.fechaActualISO),
 
       proveedorId: form.proveedorId,
@@ -244,12 +252,27 @@ export default function PSTPFForm({
     };
 
     onSubmit?.(payload);
+    resetForm();
   };
 
   return (
     <form onSubmit={handleSubmit} className="mx-auto max-w-5xl p-6 space-y-6">
       <header className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
-        <h1 className="text-2xl font-semibold text-slate-800">Contrato de Servicio · Persona Física</h1>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-2.5 py-2 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-200"
+            aria-label="Volver"
+            title="Volver"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12l7.5-7.5M3 12h18" />
+            </svg>
+          </button>
+          <h1 className="text-2xl font-semibold text-slate-800">Contrato de Servicio · Persona Física</h1>
+        </div>
+
         <div>
           <label className={baseLabel}>
             Fecha del contrato <span className="text-red-500">*</span>
