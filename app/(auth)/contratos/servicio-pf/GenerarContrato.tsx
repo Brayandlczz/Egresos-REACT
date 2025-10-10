@@ -188,14 +188,16 @@ export default function ContratoPSTPF({
               children: [new TextRun({ text: "CONTRATO PST PF.", bold: true, size: 24 })],
             }),
 
-            new Paragraph({
-              spacing: { after: 400 },
-              children: [
-                new TextRun(
-                  `En la ciudad de Tuxtla Gutiérrez, Chiapas; a ${fecha}, comparecen por una parte la Universidad Internacional del Conocimiento e Investigación, S. C. a través de su representante legal Dra. María Xóchilt Ortega Grillasca, quien en lo sucesivo se denominará la “contratante”, y por la otra la persona física ${values.proveedorNombre}, quien en lo sucesivo se denominará el “prestador de servicio”; ambas partes manifiestan tener concertado un contrato de prestación de ${values.tipoPrestacion} ${values.objetoCorto ? `de ${values.objetoCorto}` : ""} que formalizan al tenor de las siguientes declaraciones y cláusulas:`
-                ),
-              ],
-            }),
+        new Paragraph({
+          spacing: { after: 400 },
+          children: [
+            new TextRun(
+              `En la ciudad de Tuxtla Gutiérrez, Chiapas; a ${fecha}, comparecen por una parte la Universidad Internacional del Conocimiento e Investigación, S. C. a través de su representante legal Dra. María Xóchilt Ortega Grillasca, quien en lo sucesivo se denominará la “contratante”, y por la otra la persona física ${values.proveedorNombre}, quien en lo sucesivo se denominará el “prestador de servicio”; ambas partes manifiestan tener concertado un contrato de prestación de ${values.tipoPrestacion} ${
+                values.objetoCorto ? `de ${values.objetoCorto}.` : ""
+              } Que formalizan al tenor de las siguientes declaraciones y cláusulas:`
+            ),
+          ],
+        }),
 
             hCenterBold("DECLARACIONES"),
 
@@ -236,24 +238,32 @@ export default function ContratoPSTPF({
                 ),
               ],
             }),
-            new Paragraph({
-              spacing: { after: 400 },
-              children: [
-                new TextRun(
-                  `6.- Que le es indispensable para cumplir con su objeto social, contratar el servicio ${values.objetoLargo}`
-                ),
-              ],
-            }),
 
-            incisoTitulo("B). - DEL PRESTADOR DE SERVICIO TÉCNICO."),
-            new Paragraph({
-              spacing: { after: 200 },
-              children: [
-                new TextRun(
-                  `1.- Manifiesta la persona física C. ${values.proveedorNombre}, ser una persona física mexicana, lo cual acredita con registro federal de contribuyente ${values.proveedorRFC}, expedida por Secretaría de Hacienda y Crédito Público.`
-                ),
-              ],
-            }),
+          new Paragraph({
+            spacing: { after: 400 },
+            children: [
+              new TextRun(
+                `6.- Que le es indispensable para cumplir con su objeto social, contratar el servicio ${values.objetoCorto}.`
+              ),
+            ],
+          }),
+          new Paragraph({
+            spacing: { after: 400 },
+            children: [
+              new TextRun(
+                "7.- Manifiesta tener solvencia económica, que no existe coacción física, verbal, ni psicológica para comprometerse, y además que no tiene ningún impedimento legal para formalizar el presente contrato."
+              ),
+            ],
+          }),
+          incisoTitulo("B). - DEL PRESTADOR DE SERVICIO TÉCNICO."),
+          new Paragraph({
+            spacing: { after: 200 },
+            children: [
+              new TextRun(
+                `1.- Manifiesta la persona física C. ${values.proveedorNombre}, ser una persona física mexicana, lo cual acredita con registro federal de contribuyente ${values.proveedorRFC}, expedida por Secretaría de Hacienda y Crédito Público.`
+              ),
+            ],
+          }),
             new Paragraph({
               spacing: { after: 200 },
               children: [
@@ -302,7 +312,7 @@ export default function ContratoPSTPF({
               spacing: { after: 200 },
               children: [
                 new TextRun({ text: "UNO. OBJETO DEL CONTRATO. - ", bold: true }),
-                new TextRun(`La contratante manifiesta que, debido a ${values.objetoCorto}.`),
+                new TextRun(`La contratante manifiesta que, debido a ${values.objetoLargo}.`),
               ],
             }),
 
@@ -431,7 +441,7 @@ export default function ContratoPSTPF({
               spacing: { after: 400 },
               children: [
                 new TextRun(
-                  `Para constancia de lo estipulado, se firma el presente contrato formándose dos originales, una para cada contratante, ante los testigos C. ${values.testigo1 || "_________________________"} y ${values.testigo2 || "_________________________"}, ambos mayores de edad, mexicanos por nacimiento, vecinos de esta ciudad; declarando ambos conocer personalmente a las partes contratantes, firmándose los dos originales por todas las personas que en el mismo aparecen.`
+                  `Para constancia de lo estipulado, se firma el presente contrato formándose dos originales, una para cada contratante, ante los testigos C. ${values.testigo1 || "_________________________"} y C. ${values.testigo2 || "_________________________"}, ambos mayores de edad, mexicanos por nacimiento, vecinos de esta ciudad; declarando ambos conocer personalmente a las partes contratantes, firmándose los dos originales por todas las personas que en el mismo aparecen.`
                 ),
               ],
             }),

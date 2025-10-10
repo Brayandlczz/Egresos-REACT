@@ -191,12 +191,6 @@ export default function ContratoPSBGPF({
           new Paragraph({ spacing: { after: 100 }, children: [new TextRun(`${i + 1}.- ${s}`)] })
         );
       });
-      serviciosIncluidosParrafos.push(
-        new Paragraph({
-          spacing: { after: 200 },
-          children: [new TextRun(`(Descripción del servicio. Todos los servicios deberán ser descritos).`)],
-        })
-      );
     }
 
     const celdaFirma = (nombre: string, rol: string) =>
@@ -209,11 +203,11 @@ export default function ContratoPSBGPF({
           }),
           new Paragraph({
             alignment: AlignmentType.CENTER,
-            children: [new TextRun({ text: nombre, bold: true })],
+            children: [new TextRun({ text: rol })],
           }),
           new Paragraph({
             alignment: AlignmentType.CENTER,
-            children: [new TextRun({ text: rol, italics: true })],
+            children: [new TextRun({ text: nombre })],
           }),
         ],
       });
@@ -222,7 +216,7 @@ export default function ContratoPSBGPF({
       styles: {
         default: {
           document: {
-            run: { font: "Arial", size: 24 }, 
+            run: { font: "Arial", size: 24 },
             paragraph: { alignment: AlignmentType.JUSTIFIED, spacing: { line: 276 } },
           },
         },
@@ -241,7 +235,7 @@ export default function ContratoPSBGPF({
               spacing: { after: 400 },
               children: [
                 new TextRun(
-                  `En la ciudad de Tuxtla Gutiérrez, Chiapas; a ${fechaContrato}, comparecen por una parte, la Universidad Internacional del Conocimiento e Investigación, S. C. a través de su representante legal la Dra. María Xóchilt Ortega Grillasca, quien en lo sucesivo se denominará “LA CONTRATANTE”, y por la otra la persona física ${values.proveedorNombre} (proveedor), quien en lo sucesivo se denominará “EL PRESTADOR DE SERVICIO”; ambas partes manifiestan tener concertado un contrato de prestación de servicios de ${values.objetoCorto || "Banquete de Graduación"}, que formalizan al tenor de las siguientes declaraciones y cláusulas:`
+                  `En la ciudad de Tuxtla Gutiérrez, Chiapas; a ${fechaContrato}, comparecen por una parte, la Universidad Internacional del Conocimiento e Investigación, S. C. a través de su representante legal la Dra. María Xóchilt Ortega Grillasca, quien en lo sucesivo se denominará “LA CONTRATANTE”, y por la otra la persona física C. ${values.proveedorNombre}, quien en lo sucesivo se denominará “EL PRESTADOR DE SERVICIO”; ambas partes manifiestan tener concertado un contrato de prestación de servicios de ${values.objetoCorto || "Banquete de Graduación"}. Que formalizan al tenor de las siguientes declaraciones y cláusulas:`
                 ),
               ],
             }),
@@ -278,7 +272,7 @@ export default function ContratoPSBGPF({
             new Paragraph({ spacing: { after: 200 }, children: [new TextRun("B). - DEL PRESTADOR DE SERVICIO.")] }),
             new Paragraph({
               spacing: { after: 200 },
-              children: [new TextRun(`1.- Manifiesta ${values.proveedorNombre}, ser una persona física mexicana, lo cual acredita con registro federal de contribuyente ${values.proveedorRFC}, expedida por Secretaría de Hacienda y Crédito Público.`)],
+              children: [new TextRun(`1.- Manifiesta C. ${values.proveedorNombre}, ser una persona física mexicana, lo cual acredita con registro federal de contribuyente ${values.proveedorRFC}, expedida por Secretaría de Hacienda y Crédito Público.`)],
             }),
             new Paragraph({
               spacing: { after: 200 },
@@ -397,8 +391,8 @@ export default function ContratoPSBGPF({
               rows: [
                 new TableRow({
                   children: [
-                    celdaFirma("Dra. María Xóchilt Ortega Grillasca", "CONTRATANTE"),
-                    celdaFirma(`C. ${values.proveedorNombre || "_________________________"}`, "PRESTADOR DE SERVICIO"),
+                    celdaFirma("Dra. María Xóchilt Ortega Grillasca", "Contratante"),
+                    celdaFirma(`C. ${values.proveedorNombre || "_________________________"}`, "Prestador de servicio"),
                   ],
                 }),
                 new TableRow({
@@ -409,8 +403,8 @@ export default function ContratoPSBGPF({
                 }),
                 new TableRow({
                   children: [
-                    celdaFirma(values.testigo1 || "_________________________", "TESTIGO 1"),
-                    celdaFirma(values.testigo2 || "_________________________", "TESTIGO 2"),
+                    celdaFirma(values.testigo1 || "_________________________", ""),
+                    celdaFirma(values.testigo2 || "_________________________", ""),
                   ],
                 }),
               ],
