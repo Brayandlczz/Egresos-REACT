@@ -4,6 +4,10 @@ import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 
+/**
+ * Genera un XLSX con las facturas de un docente filtradas por plantel.
+ * Normaliza relaciones que Supabase puede devolver como arrays.
+ */
 export async function generarReporteDocentesExcel(docenteId: string, plantelId: string) {
   const supabase = createClientComponentClient();
 
@@ -31,16 +35,13 @@ export async function generarReporteDocentesExcel(docenteId: string, plantelId: 
 
     if (error) throw error;
 
-    const filteredData = data.filter((row) => {
-      const rel = Array.isArray(row.docente_relation)
-        ? row.docente_relation[0] || {}
-        : row.docente_relation || {};
+    const allRows: any[] = data ?? [];
 
-      const plantel = Array.isArray(rel.plantel)
-        ? rel.plantel[0] || {}
-        : rel.plantel || {};
-
-      return plantel.id === plantelId;
+    // Filtrar por plantel: normalizamos docente_relation y plantel
+    const filteredData = allRows.filter((row: any) => {
+      const rel = Array.isArray(row.docente_relation) ? row.docente_relation[0] ?? {} : row.docente_relation ?? {};
+      const plantel = Array.isArray(rel.plantel) ? rel.plantel[0] ?? {} : rel.plantel ?? {};
+      return String(plantel.id) === String(plantelId);
     });
 
     if (filteredData.length === 0) {
@@ -48,36 +49,36 @@ export async function generarReporteDocentesExcel(docenteId: string, plantelId: 
       return;
     }
 
-    const rows = filteredData.map((row) => {
-      const rel = Array.isArray(row.docente_relation)
-        ? row.docente_relation[0] || {}
-        : row.docente_relation || {};
-      const plantel = Array.isArray(rel.plantel)
-        ? rel.plantel[0] || {}
-        : rel.plantel || {};
+    const rows = filteredData.map((row: any) => {
+      const rel = Array.isArray(row.docente_relation) ? row.docente_relation[0] ?? {} : row.docente_relation ?? {};
+      const plantel = Array.isArray(rel.plantel) ? rel.plantel[0] ?? {} : rel.plantel ?? {};
+      const asignatura = Array.isArray(rel.asignatura) ? rel.asignatura[0] ?? {} : rel.asignatura ?? {};
+      const periodo = Array.isArray(rel.periodo_pago) ? rel.periodo_pago[0] ?? {} : rel.periodo_pago ?? {};
+
+      const docente = Array.isArray(row.docente) ? row.docente[0] ?? {} : row.docente ?? {};
 
       return {
-        Folio: row.folio || "N/A",
-        Plantel: plantel.nombre_plantel || "N/A",
-        Docente: row.docente?.nombre_docente || "N/A",
-        Asignatura: rel.asignatura?.nombre_asignatura || "N/A",
-        "Periodo de Pago": rel.periodo_pago?.concatenado || "N/A",
-        "Fecha de Pago": row.fecha_pago || "N/A",
-        "Forma de Pago": row.forma_pago || "N/A",
-        Importe: `$${Number(row.importe).toFixed(2)}`,
+        Folio: row.folio ?? "N/A",
+        Plantel: plantel.nombre_plantel ?? "N/A",
+        Docente: docente.nombre_docente ?? "N/A",
+        Asignatura: asignatura.nombre_asignatura ?? "N/A",
+        "Periodo de Pago": periodo.concatenado ?? "N/A",
+        "Fecha de Pago": row.fecha_pago ?? "N/A",
+        "Forma de Pago": row.forma_pago ?? "N/A",
+        Importe: `$${Number(row.importe ?? 0).toFixed(2)}`,
       };
     });
 
     const worksheet = XLSX.utils.json_to_sheet(rows);
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Reporte");
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Reporte Docente");
 
     const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
-
     const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
-    saveAs(blob, "Reporte de pagos por docente.xlsx");
+
+    saveAs(blob, `reporte_docente_${docenteId}_plantel_${plantelId}.xlsx`);
   } catch (error) {
     console.error(error);
-    alert("Error al generar el archivo Excel.");
+    alert("Error al generar el archivo Excel. Revisa la consola.");
   }
 }

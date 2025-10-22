@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import React, { useMemo, useState } from "react";
 
@@ -13,10 +13,6 @@ type Ticket = {
   createdAt: string;
   respondedAt?: string | null;
   category?: string;
-};
-
-type Props = {
-  tickets?: Ticket[];
 };
 
 const demoTickets: Ticket[] = [
@@ -72,14 +68,17 @@ const demoTickets: Ticket[] = [
   },
 ];
 
-const statusConfig = {
+const statusConfig: Record<TicketStatus, { label: string; color: string }> = {
   closed: { label: "Cerrado", color: "bg-emerald-100 text-emerald-700 border-emerald-200" },
   waiting: { label: "En espera", color: "bg-amber-100 text-amber-700 border-amber-200" },
   open: { label: "Abierto", color: "bg-blue-100 text-blue-700 border-blue-200" },
   in_progress: { label: "En progreso", color: "bg-purple-100 text-purple-700 border-purple-200" },
 };
 
-export default function TicketOverview({ tickets = demoTickets }: Props) {
+export default function TicketOverview(): JSX.Element {
+  // ahora la página NO recibe props del router; usa demoTickets como estado inicial
+  const [tickets, setTickets] = useState<Ticket[]>(demoTickets);
+
   const [showFilters, setShowFilters] = useState(false);
   const [filterArea, setFilterArea] = useState<string | "">("");
   const [filterAssignee, setFilterAssignee] = useState<string | "">("");

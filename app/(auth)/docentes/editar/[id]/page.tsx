@@ -86,18 +86,20 @@ const EditarDocente: React.FC = () => {
         .eq('docente_id', docenteId);
 
       if (relaciones && relaciones.length > 0) {
-        setPlantelId(relaciones[0].plantel_id);
-        setPlantelNombre(relaciones[0].plantel?.nombre_plantel || 'Seleccione un plantel');
-        setSelecciones(relaciones.map(r => ({
+        // plantel/oferta/asignatura/periodo vienen como arrays (por la forma en que supabase retorna relaciones),
+        // por eso usamos [0] para tomar el primer elemento si existe.
+        setPlantelId(relaciones[0].plantel_id ?? '');
+        setPlantelNombre(relaciones[0].plantel?.[0]?.nombre_plantel || 'Seleccione un plantel');
+        setSelecciones(relaciones.map((r: any) => ({
           id: r.id,
           plantel_id: r.plantel_id,
-          plantelNombre: r.plantel?.nombre_plantel,
+          plantelNombre: r.plantel?.[0]?.nombre_plantel || '',
           oferta_educativa_id: r.oferta_educativa_id,
-          ofertaNombre: r.oferta?.nombre_oferta,
+          ofertaNombre: r.oferta?.[0]?.nombre_oferta || '',
           asignatura_id: r.asignatura_id,
-          asignaturaNombre: r.asignatura?.nombre_asignatura,
+          asignaturaNombre: r.asignatura?.[0]?.nombre_asignatura || '',
           periodo_pago_id: r.periodo_pago_id,
-          periodoNombre: r.periodo?.concatenado,
+          periodoNombre: r.periodo?.[0]?.concatenado || '',
           importe_total_pago: r.importe_total_pago,
         })));
       }
@@ -105,6 +107,7 @@ const EditarDocente: React.FC = () => {
 
     cargarDatos();
   }, [docenteId]);
+
 
   const agregarSeleccion = () => {
     if (!ofertaId || !asignaturaId || !periodoPago) {

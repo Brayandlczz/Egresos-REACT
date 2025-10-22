@@ -45,9 +45,10 @@ export async function generarReporteFacturasPorEtiquetaPDF(
       return;
     }
 
-    const facturasPorEtiqueta: Record<string, typeof data> = {};
-    data.forEach((factura) => {
-      const etiquetaNombre = factura.etiqueta?.nombre_etiqueta ?? "Sin Etiqueta";
+    // Agrupamos por nombre de etiqueta (nota: etiqueta viene como array => usamos [0])
+    const facturasPorEtiqueta: Record<string, any[]> = {};
+    data.forEach((factura: any) => {
+      const etiquetaNombre = factura.etiqueta?.[0]?.nombre_etiqueta ?? "Sin Etiqueta";
       if (!facturasPorEtiqueta[etiquetaNombre]) facturasPorEtiqueta[etiquetaNombre] = [];
       facturasPorEtiqueta[etiquetaNombre].push(factura);
     });
@@ -99,7 +100,7 @@ export async function generarReporteFacturasPorEtiquetaPDF(
     );
     textY += 6;
     doc.setFont("helvetica", "bold");
-    const nombreEtiqueta = data[0]?.etiqueta?.nombre_etiqueta ?? "Sin Etiqueta";
+    const nombreEtiqueta = data[0]?.etiqueta?.[0]?.nombre_etiqueta ?? "Sin Etiqueta";
     doc.text(
       `Reporte filtrado por: Etiqueta "${nombreEtiqueta}"`,
       pageWidth - margin,
@@ -122,19 +123,21 @@ export async function generarReporteFacturasPorEtiquetaPDF(
     for (const [etiquetaNombre, facturas] of Object.entries(facturasPorEtiqueta)) {
       doc.setFontSize(12);
       doc.setFont("helvetica", "bold");
+      doc.text(etiquetaNombre, margin, startY);
+      startY += 8;
 
       autoTable(doc, {
         startY,
         head: [
           ["Fecha", "Folio Fiscal", "Proveedor", "Número Proveedor", "Gasto", "Observación"],
         ],
-        body: facturas.map((f) => [
-          new Date(f.fecha).toLocaleDateString("es-MX"),
-          f.folio_fiscal,
-          f.proveedor?.nombre_proveedor || "N/A",
-          f.proveedor?.numero_proveedor || "N/A",
-          `$${Number(f.gasto).toFixed(2)}`,
-          f.observacion || "",
+        body: facturas.map((f: any) => [
+          f.fecha ? new Date(f.fecha).toLocaleDateString("es-MX") : "-",
+          f.folio_fiscal ?? "-",
+          f.proveedor?.nombre_proveedor ?? "N/A",
+          f.proveedor?.numero_proveedor ?? "N/A",
+          `$${Number(f.gasto ?? 0).toFixed(2)}`,
+          f.observacion ?? "",
         ]),
         styles: { fontSize: 9, cellPadding: 2, halign: "center" },
         headStyles: {
@@ -147,12 +150,19 @@ export async function generarReporteFacturasPorEtiquetaPDF(
           4: { halign: "center" },
         },
         margin: { left: margin, right: margin },
-        didDrawPage: (dataArg) => {
-          startY = dataArg.cursor.y + 10;
+        didDrawPage: (dataArg: any) => {
+          // dataArg.cursor puede ser null según la definición de types de jspdf-autotable.
+          // Protegemos el acceso antes de usarlo.
+          if (dataArg && dataArg.cursor && typeof dataArg.cursor.y === "number") {
+            startY = dataArg.cursor.y + 10;
+          } else {
+            // Fallback: si no hay cursor, avanzamos una cantidad razonable
+            startY = startY + 10;
+          }
         },
       });
 
-      const totalEtiqueta = facturas.reduce((acc, f) => acc + Number(f.gasto), 0);
+      const totalEtiqueta = facturas.reduce((acc: number, f: any) => acc + Number(f.gasto ?? 0), 0);
       doc.setFont("helvetica", "bold");
       doc.text(
         `Total gasto para "${etiquetaNombre}": $${totalEtiqueta.toFixed(2)}`,

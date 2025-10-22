@@ -6,7 +6,9 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 const EdicionFactura: React.FC = () => {
   const supabase = createClientComponentClient();
-  const { id } = useParams();
+  const params = useParams();
+  // Extraemos id de forma segura y tipada
+  const id = Array.isArray(params?.id) ? params?.id[0] : (params?.id as string | undefined);
   const router = useRouter();
 
   const [folio, setFolio] = useState('');
@@ -37,7 +39,7 @@ const EdicionFactura: React.FC = () => {
       setPlanteles(data || []);
     };
     cargarIniciales();
-  }, []);
+  }, [supabase]);
 
   useEffect(() => {
     const cargarFactura = async () => {
@@ -64,7 +66,7 @@ const EdicionFactura: React.FC = () => {
     };
 
     cargarFactura();
-  }, [id]);
+  }, [id, supabase]);
 
   useEffect(() => {
     if (!plantelId) return setDocentes([]);
@@ -73,17 +75,17 @@ const EdicionFactura: React.FC = () => {
       .select(`id, docente_id, docente:docente_id (nombre_docente)`)
       .eq('plantel_id', plantelId)
       .then(({ data }) => setDocentes(data || []));
-  }, [plantelId]);
+  }, [plantelId, supabase]);
 
   useEffect(() => {
-    if (!plantelId || !docenteId) return;
+    if (!plantelId || !docenteId) return setRelaciones([]);
     supabase
       .from('docente_relations')
       .select(`id, asignatura_id, asignatura:asignatura_id (nombre_asignatura), oferta_educativa_id, oferta_educativa:oferta_educativa_id (nombre_oferta), periodo_pago_id, periodo_pago:periodo_pago_id (concatenado)`)
       .eq('plantel_id', plantelId)
       .eq('docente_id', docenteId)
       .then(({ data }) => setRelaciones(data || []));
-  }, [plantelId, docenteId]);
+  }, [plantelId, docenteId, supabase]);
 
   useEffect(() => {
     if (!plantelId) return setConceptos([]);
@@ -92,7 +94,7 @@ const EdicionFactura: React.FC = () => {
       .select('*')
       .eq('plantel_id', plantelId)
       .then(({ data }) => setConceptos(data || []));
-  }, [plantelId]);
+  }, [plantelId, supabase]);
 
   useEffect(() => {
     if (!plantelId) return setBancos([]);
@@ -101,7 +103,7 @@ const EdicionFactura: React.FC = () => {
       .select('*')
       .eq('plantel_id', plantelId)
       .then(({ data }) => setBancos(data || []));
-  }, [plantelId]);
+  }, [plantelId, supabase]);
 
   useEffect(() => {
     if (formaPago !== 'TRANSFERENCIA') {
@@ -125,7 +127,7 @@ const EdicionFactura: React.FC = () => {
         forma_pago: formaPago,
         plantel_id: plantelId,
         docente_id: docenteId,
-        cuenta_banco_id: bancoId || null,  
+        cuenta_banco_id: bancoId || null,
         concepto_pago_id: conceptoId,
         docente_relation_id: relacionId,
       })

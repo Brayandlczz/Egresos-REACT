@@ -6,6 +6,11 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { logoBase64 } from "@/app/(auth)/reportes/components/logobase64";
 
+/**
+ * Genera un reporte PDF con totales por proveedor (filtrado opcional por plantel).
+ * Normaliza la respuesta de Supabase para que las relaciones (que a veces vienen como arrays)
+ * se conviertan en objetos manejables.
+ */
 export async function generarReporteProveedoresPDF(plantelId?: string) {
   const supabase = createClientComponentClient();
 
@@ -24,6 +29,7 @@ export async function generarReporteProveedoresPDF(plantelId?: string) {
         )
       `
       )
+      // si plantelId está presente, filtramos por plantel_id; si no, no filtramos
       .eq(plantelId ? "plantel_id" : "id", plantelId ?? "");
 
     if (error) throw error;
@@ -33,6 +39,7 @@ export async function generarReporteProveedoresPDF(plantelId?: string) {
       return;
     }
 
+    // Agrupar totales por proveedor, normalizando proveedor y su plantel si vienen como arrays
     const totalesPorProveedor: Record<
       string,
       {
@@ -44,21 +51,34 @@ export async function generarReporteProveedoresPDF(plantelId?: string) {
       }
     > = {};
 
-    data.forEach((row) => {
-      const p = row.proveedor;
+    data.forEach((row: any) => {
+      let p = row.proveedor;
+
+      // Normalizar: si `proveedor` viene como array, tomar el primer elemento
+      if (Array.isArray(p)) {
+        p = p[0];
+      }
+
       if (!p) return;
 
-      const key = p.id;
+      // clave segura: usa id si existe, sino número de proveedor, sino nombre
+      const key = p.id ?? p.numero_proveedor ?? p.nombre_proveedor ?? JSON.stringify(p);
+      if (!key) return;
+
+      // plantel dentro del proveedor también puede venir como array -> normalizamos
+      const plantelObj = Array.isArray(p.plantel) ? p.plantel[0] ?? {} : p.plantel ?? {};
+
       if (!totalesPorProveedor[key]) {
         totalesPorProveedor[key] = {
-          plantel: p.plantel?.nombre_plantel ?? "N/A",
-          numero_proveedor: p.numero_proveedor,
-          nombre_proveedor: p.nombre_proveedor,
-          tipo_persona: p.tipo_persona,
+          plantel: plantelObj?.nombre_plantel ?? "N/A",
+          numero_proveedor: p.numero_proveedor ?? "N/A",
+          nombre_proveedor: p.nombre_proveedor ?? "N/A",
+          tipo_persona: p.tipo_persona ?? "N/A",
           total_gastado: 0,
         };
       }
-      totalesPorProveedor[key].total_gastado += Number(row.gasto);
+
+      totalesPorProveedor[key].total_gastado += Number(row.gasto ?? 0);
     });
 
     const filas = Object.values(totalesPorProveedor);
@@ -84,11 +104,7 @@ export async function generarReporteProveedoresPDF(plantelId?: string) {
 
     doc.setFontSize(10);
     doc.setFont("helvetica", "bold");
-    doc.text(
-      "Universidad Internacional del Conocimiento e Investigación SC.",
-      textX,
-      textY
-    );
+    doc.text("Universidad Internacional del Conocimiento e Investigación SC.", textX, textY);
     doc.setFont("helvetica", "normal");
     textY += 6;
     doc.text("RFC: UIC121124DH1", textX, textY);
@@ -105,42 +121,21 @@ export async function generarReporteProveedoresPDF(plantelId?: string) {
     });
     textY = logoY + 13;
     doc.setFont("helvetica", "bold");
-    doc.text(
-      `Reporte generado el día: ${fechaActual}`,
-      pageWidth - margin,
-      textY,
-      { align: "right" }
-    );
+    doc.text(`Reporte generado el día: ${fechaActual}`, pageWidth - margin, textY, { align: "right" });
     textY += 6;
-    doc.text(
-      `Reporte filtrado por: ${
-        plantelId ? "Plantel" : "Todos los planteles"
-      }`,
-      pageWidth - margin,
-      textY,
-      { align: "right" }
-    );
-    
+    doc.text(`Reporte filtrado por: ${plantelId ? "Plantel" : "Todos los planteles"}`, pageWidth - margin, textY, {
+      align: "right",
+    });
+
     doc.line(margin, logoY + logoHeight + 5, pageWidth - margin, logoY + logoHeight + 5);
 
     doc.setFontSize(14);
-    doc.text(
-      "REPORTE DE PAGO A PROVEEDORES POR PLANTEL",
-      pageWidth / 2,
-      logoY + logoHeight + 15,
-      { align: "center" }
-    );
+    doc.text("REPORTE DE PAGO A PROVEEDORES POR PLANTEL", pageWidth / 2, logoY + logoHeight + 15, { align: "center" });
 
     autoTable(doc, {
       startY: logoY + logoHeight + 20,
       head: [
-        [
-          "Plantel",
-          "Número de proveedor",
-          "Nombre del Proveedor",
-          "Tipo de Persona",
-          "Total Pagado",
-        ],
+        ["Plantel", "Número de proveedor", "Nombre del Proveedor", "Tipo de Persona", "Total Pagado"],
       ],
       body: filas.map((f) => [
         f.plantel,
@@ -161,13 +156,13 @@ export async function generarReporteProveedoresPDF(plantelId?: string) {
       },
     });
 
+    // finalY: fallback por si lastAutoTable no está presente
+    const lastAutoTable: any = (doc as any).lastAutoTable;
+    const finalY = lastAutoTable && typeof lastAutoTable.finalY === "number" ? lastAutoTable.finalY : logoY + logoHeight + 20 + 10;
+
     const totalGlobal = filas.reduce((acc, f) => acc + f.total_gastado, 0);
     doc.setFont("helvetica", "bold");
-    doc.text(
-      `Total global pagado: $${totalGlobal.toFixed(2)}`,
-      margin + 4,
-      (doc as any).lastAutoTable.finalY + 10
-    );
+    doc.text(`Total global pagado: $${totalGlobal.toFixed(2)}`, margin + 4, finalY + 10);
 
     const pdfBlob = doc.output("blob");
     const url = URL.createObjectURL(pdfBlob);
@@ -179,12 +174,10 @@ export async function generarReporteProveedoresPDF(plantelId?: string) {
 }
 
 interface BotonReporteProveedoresPDFProps {
-  plantelId?: string; 
+  plantelId?: string;
 }
 
-export const BotonReporteProveedoresPDF: React.FC<
-  BotonReporteProveedoresPDFProps
-> = ({ plantelId }) => {
+export const BotonReporteProveedoresPDF: React.FC<BotonReporteProveedoresPDFProps> = ({ plantelId }) => {
   const [loading, setLoading] = useState(false);
 
   const handleClick = async () => {

@@ -33,16 +33,13 @@ export async function generarReporteDocentes(docenteId: string, plantelId: strin
 
     if (error) throw error;
 
-    const filteredData = data.filter((row) => {
-      const rel = Array.isArray(row.docente_relation)
-        ? row.docente_relation[0] || {}
-        : row.docente_relation || {};
+    const allRows: any[] = data ?? [];
 
-      const plantel = Array.isArray(rel.plantel)
-        ? rel.plantel[0] || {}
-        : rel.plantel || {};
-
-      return plantel.id === plantelId;
+    // Filtrar por plantel id: normalizamos docente_relation y plantel (pueden venir como arrays)
+    const filteredData = allRows.filter((row: any) => {
+      const rel = Array.isArray(row.docente_relation) ? row.docente_relation[0] ?? {} : row.docente_relation ?? {};
+      const plantel = Array.isArray(rel.plantel) ? rel.plantel[0] ?? {} : rel.plantel ?? {};
+      return String(plantel.id) === String(plantelId);
     });
 
     if (filteredData.length === 0) {
@@ -117,24 +114,30 @@ export async function generarReporteDocentes(docenteId: string, plantelId: strin
           "Importe",
         ],
       ],
-      body: filteredData.map((row) => {
-        const rel = Array.isArray(row.docente_relation)
-          ? row.docente_relation[0] || {}
-          : row.docente_relation || {};
+      body: filteredData.map((row: any) => {
+        // Normalizar relación y sub-relaciones (pueden venir como arrays)
+        const rel = Array.isArray(row.docente_relation) ? row.docente_relation[0] ?? {} : row.docente_relation ?? {};
+        const plantel = Array.isArray(rel.plantel) ? rel.plantel[0] ?? {} : rel.plantel ?? {};
+        const asignatura = Array.isArray(rel.asignatura) ? rel.asignatura[0] ?? {} : rel.asignatura ?? {};
+        const periodo = Array.isArray(rel.periodo_pago) ? rel.periodo_pago[0] ?? {} : rel.periodo_pago ?? {};
 
-        const plantel = Array.isArray(rel.plantel)
-          ? rel.plantel[0] || {}
-          : rel.plantel || {};
+        // Normalizar docente (puede venir como array)
+        const docente = Array.isArray(row.docente) ? row.docente[0] ?? {} : row.docente ?? {};
+
+        const plantelNombre = plantel.nombre_plantel ?? "N/A";
+        const docenteNombre = docente.nombre_docente ?? "N/A";
+        const asignaturaNombre = asignatura.nombre_asignatura ?? "N/A";
+        const periodoConcatenado = periodo.concatenado ?? "N/A";
 
         return [
           row.folio || "N/A",
-          plantel.nombre_plantel || "N/A",
-          row.docente?.nombre_docente || "N/A",
-          rel.asignatura?.nombre_asignatura || "N/A",
-          rel.periodo_pago?.concatenado || "N/A",
+          plantelNombre,
+          docenteNombre,
+          asignaturaNombre,
+          periodoConcatenado,
           row.fecha_pago || "N/A",
           row.forma_pago || "N/A",
-          `$${Number(row.importe).toFixed(2)}`,
+          `$${Number(row.importe ?? 0).toFixed(2)}`,
         ];
       }),
       styles: {
@@ -153,18 +156,22 @@ export async function generarReporteDocentes(docenteId: string, plantelId: strin
       },
     });
 
-    const totalImporte = filteredData.reduce((acc, row) => acc + Number(row.importe), 0);
+    const totalImporte = filteredData.reduce((acc: number, row: any) => acc + Number(row.importe ?? 0), 0);
     doc.setFont("helvetica", "bold");
+
+    // fallback seguro para lastAutoTable.finalY
+    const lastAutoTable: any = (doc as any).lastAutoTable;
+    const finalY = lastAutoTable && typeof lastAutoTable.finalY === "number" ? lastAutoTable.finalY : logoY + logoHeight + 20 + 10;
+
     doc.text(
       `Total pagado: $${totalImporte.toFixed(2)}`,
       margin + 4,
-      (doc as any).lastAutoTable.finalY + 10
+      finalY + 10
     );
 
     const pdfBlob = doc.output("blob");
     const url = URL.createObjectURL(pdfBlob);
     window.open(url, "_blank");
-
   } catch (error) {
     console.error(error);
     alert("Error al obtener facturas. Revisa la consola.");

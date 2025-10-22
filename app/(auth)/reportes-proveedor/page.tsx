@@ -76,10 +76,113 @@ const ReportFilters: React.FC = () => {
     try {
       await accion();
       if (limpiarFiltros) limpiarFiltros();
-    } catch {
+    } catch (err) {
+      console.error(err);
       alert("Ocurrió un error, revisa la consola.");
     }
   }
+
+  // ------------------------------------------------------------
+  // Función añadida: generarReportePlantelesExcel
+  // Hace una consulta similar al PDF y genera un CSV que se descarga.
+  // ------------------------------------------------------------
+  async function generarReportePlantelesExcel(plantelId: string) {
+    if (!plantelId) {
+      alert("Selecciona un plantel válido para el Excel.");
+      return;
+    }
+
+    try {
+      // Consulta: trae facturas para el plantel con relaciones (normalizamos arrays)
+      const { data, error } = await supabase
+        .from("factura")
+        .select(`
+          folio,
+          fecha_pago,
+          importe,
+          forma_pago,
+          docente(nombre_docente),
+          docente_relation:docente_relation_id (
+            plantel(nombre_plantel),
+            asignatura(nombre_asignatura),
+            periodo_pago(concatenado)
+          )
+        `)
+        .eq("plantel_id", plantelId);
+
+      if (error) throw error;
+
+      if (!data || data.length === 0) {
+        alert("No hay facturas para el plantel seleccionado.");
+        return;
+      }
+
+      // Normalizamos filas (como en el PDF) para garantizar campos claros
+      const normalized = (data || []).map((row: any) => {
+        const rel = Array.isArray(row.docente_relation) ? row.docente_relation[0] ?? {} : row.docente_relation ?? {};
+        const plantelObj = rel.plantel ? (Array.isArray(rel.plantel) ? rel.plantel[0] ?? {} : rel.plantel) : {};
+        const asignaturaObj = rel.asignatura ? (Array.isArray(rel.asignatura) ? rel.asignatura[0] ?? {} : rel.asignatura) : {};
+        const periodoObj = rel.periodo_pago ? (Array.isArray(rel.periodo_pago) ? rel.periodo_pago[0] ?? {} : rel.periodo_pago) : {};
+
+        return {
+          folio: row.folio ?? "N/A",
+          fecha_pago: row.fecha_pago ?? "",
+          importe: Number(row.importe ?? 0),
+          forma_pago: row.forma_pago ?? "N/A",
+          docente_nombre: row.docente?.nombre_docente ?? "N/A",
+          plantel_nombre: plantelObj?.nombre_plantel ?? "N/A",
+          asignatura_nombre: asignaturaObj?.nombre_asignatura ?? "N/A",
+          periodo_concatenado: periodoObj?.concatenado ?? "N/A",
+        };
+      });
+
+      // Construir CSV
+      const headers = [
+        "Folio",
+        "Fecha pago",
+        "Importe",
+        "Forma pago",
+        "Plantel",
+        "Docente",
+        "Asignatura",
+        "Periodo",
+      ];
+      const rows = normalized.map((r) => [
+        csvSafe(r.folio),
+        csvSafe(r.fecha_pago ? new Date(r.fecha_pago).toLocaleDateString("es-MX") : ""),
+        csvSafe(r.importe.toFixed(2)),
+        csvSafe(r.forma_pago),
+        csvSafe(r.plantel_nombre),
+        csvSafe(r.docente_nombre),
+        csvSafe(r.asignatura_nombre),
+        csvSafe(r.periodo_concatenado),
+      ]);
+
+      const csvContent = [headers, ...rows].map((r) => r.join(",")).join("\n");
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const filename = `reporte_plantel_${plantelId}_${new Date().toISOString().slice(0, 10)}.csv`;
+      a.setAttribute("download", filename);
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+
+      function csvSafe(value: any) {
+        if (value === null || value === undefined) return "";
+        const s = String(value);
+        // Escapar comillas y envolver en comillas si contiene comas o saltos
+        if (/[",\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+        return s;
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error generando Excel (CSV). Revisa la consola.");
+    }
+  }
+  // ------------------------------------------------------------
 
   return (
     <div className="p-6 bg-white-100 max-h-full">
@@ -107,7 +210,7 @@ const ReportFilters: React.FC = () => {
                     !!filtroPlantelReportePlantel,
                     "Selecciona un plantel para generar el PDF.",
                     () => generarReporteProveedoresPDF(filtroPlantelReportePlantel),
-                    () => setFiltroPlantelReportePlantel("") 
+                    () => setFiltroPlantelReportePlantel("")
                   )
                 }
               />
@@ -118,7 +221,7 @@ const ReportFilters: React.FC = () => {
                     !!filtroPlantelReportePlantel,
                     "Selecciona un plantel para generar el Excel.",
                     () => generarReportePlantelesExcel(filtroPlantelReportePlantel),
-                    () => setFiltroPlantelReportePlantel("") 
+                    () => setFiltroPlantelReportePlantel("")
                   )
                 }
               />
@@ -230,14 +333,10 @@ const CardReporte: React.FC<{
   botones?: React.ReactNode;
 }> = ({ titulo, color, filtros, botones }) => (
   <div className="bg-white rounded shadow p-4 flex flex-col">
-    <h2 className={`text-xl font-bold mb-4 ${colores[color]} text-white p-2 rounded text-center`}>
-      {titulo}
-    </h2>
+    <h2 className={`text-xl font-bold mb-4 ${colores[color]} text-white p-2 rounded text-center`}>{titulo}</h2>
     <div className="mb-4 flex-grow">{filtros}</div>
     {botones && (
-      <div className="mt-auto flex flex-row justify-center gap-2 flex-nowrap">
-        {botones}
-      </div>
+      <div className="mt-auto flex flex-row justify-center gap-2 flex-nowrap">{botones}</div>
     )}
   </div>
 );
@@ -253,9 +352,7 @@ const Select: React.FC<{
     <label className="block mb-1 font-semibold">{label}</label>
     <select
       disabled={disabled}
-      className={`w-full border border-gray-300 rounded px-2 py-1 ${
-        disabled ? "bg-gray-100 cursor-not-allowed" : ""
-      }`}
+      className={`w-full border border-gray-300 rounded px-2 py-1 ${disabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
       value={value}
       onChange={(e) => onChange(e.target.value)}
     >
@@ -269,24 +366,14 @@ const Select: React.FC<{
   </div>
 );
 
-const BotonReporte: React.FC<{ tipo: "pdf" | "excel"; onClick: () => void }> = ({
-  tipo,
-  onClick,
-}) => {
+const BotonReporte: React.FC<{ tipo: "pdf" | "excel"; onClick: () => void }> = ({ tipo, onClick }) => {
   const isPDF = tipo === "pdf";
   return (
     <button
       onClick={onClick}
-      className={`${
-        isPDF ? "bg-red-600 hover:bg-red-700" : "bg-green-600 hover:bg-green-700"
-      } text-white px-3 py-2.5 rounded flex items-center gap-2`}
+      className={`${isPDF ? "bg-red-600 hover:bg-red-700" : "bg-green-600 hover:bg-green-700"} text-white px-3 py-2.5 rounded flex items-center gap-2`}
     >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        className="h-4 w-4"
-        fill={isPDF ? "red" : "green"}
-        viewBox="0 0 24 24"
-      >
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill={isPDF ? "red" : "green"} viewBox="0 0 24 24">
         <path d="M6 2h9l5 5v15a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zM14 3.5V9h5.5L14 3.5z" />
         <text x="7" y="18" fontWeight="bold" fontSize="7" fill="white">
           {isPDF ? "PDF" : "XLS"}

@@ -3,7 +3,7 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import { logoBase64 } from "@/app/(auth)/reportes/components/logobase64"; 
+import { logoBase64 } from "@/app/(auth)/reportes/components/logobase64";
 
 export async function generarReporteFacturasPorProveedorPDF(proveedorId: string) {
   if (!proveedorId) {
@@ -41,7 +41,9 @@ export async function generarReporteFacturasPorProveedorPDF(proveedorId: string)
       return;
     }
 
-    const proveedor = data[0].proveedor;
+    // Normalizamos proveedor: puede venir como array -> tomar primer elemento
+    let proveedorRaw = data[0].proveedor;
+    const proveedor = Array.isArray(proveedorRaw) ? proveedorRaw[0] ?? {} : proveedorRaw ?? {};
 
     const doc = new jsPDF({ orientation: "landscape" });
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -55,7 +57,7 @@ export async function generarReporteFacturasPorProveedorPDF(proveedorId: string)
 
     const textX = logoX + logoWidth + 10;
     const centerY = logoY + logoHeight / 2;
-    const textBlockHeight = 4 * 6; 
+    const textBlockHeight = 4 * 6;
     let textY = centerY - textBlockHeight / 3.2 + 3.2;
 
     doc.setFontSize(10);
@@ -83,8 +85,13 @@ export async function generarReporteFacturasPorProveedorPDF(proveedorId: string)
     doc.text(`Reporte generado el día: ${fechaActual}`, pageWidth - margin, fechaY, {
       align: "right",
     });
+
+    // Protegemos proveedor.nombre_proveedor y numero_proveedor por si vienen undefined
+    const nombreProveedor = proveedor?.nombre_proveedor ?? "Proveedor desconocido";
+    const numeroProveedor = proveedor?.numero_proveedor ?? "N/A";
+
     doc.text(
-      `Proveedor: ${proveedor.nombre_proveedor} (No. ${proveedor.numero_proveedor})`,
+      `Proveedor: ${nombreProveedor} (No. ${numeroProveedor})`,
       pageWidth - margin,
       fechaY + 6,
       { align: "right" }
@@ -103,39 +110,39 @@ export async function generarReporteFacturasPorProveedorPDF(proveedorId: string)
     autoTable(doc, {
       startY: logoY + logoHeight + 20,
       head: [
-        [
-          "Fecha",
-          "Folio Fiscal",
-          "Plantel",
-          "Gasto correspondiente",
-          "Observación",
-        ],
+        ["Fecha", "Folio Fiscal", "Plantel", "Gasto correspondiente", "Observación"],
       ],
-      body: data.map((f) => [
-        new Date(f.fecha).toLocaleDateString("es-MX"),
-        f.folio_fiscal,
-        f.planta?.nombre_plantel ?? "N/A",
-        `$${Number(f.gasto).toFixed(2)}`,
+      body: data.map((f: any) => [
+        f.fecha ? new Date(f.fecha).toLocaleDateString("es-MX") : "N/A",
+        f.folio_fiscal ?? "N/A",
+        // planta (plantel) también puede venir como array — protegemos acceso
+        Array.isArray(f.planta) ? (f.planta[0]?.nombre_plantel ?? "N/A") : (f.planta?.nombre_plantel ?? "N/A"),
+        `$${Number(f.gasto ?? 0).toFixed(2)}`,
         f.observacion || "",
       ]),
       styles: { fontSize: 9, cellPadding: 2, halign: "center" },
       headStyles: {
-        fillColor: [255, 165, 0], 
+        fillColor: [255, 165, 0],
         textColor: 0,
         halign: "center",
         fontStyle: "bold",
       },
       columnStyles: {
-        3: { halign: "center" }, 
+        3: { halign: "center" },
       },
     });
 
-    const totalGasto = data.reduce((acc, f) => acc + Number(f.gasto), 0);
+    const totalGasto = data.reduce((acc: number, f: any) => acc + Number(f.gasto ?? 0), 0);
     doc.setFont("helvetica", "bold");
+
+    // fallback seguro para finalY del autoTable
+    const lastAutoTable: any = (doc as any).lastAutoTable;
+    const finalY = lastAutoTable && typeof lastAutoTable.finalY === "number" ? lastAutoTable.finalY : logoY + logoHeight + 20 + 10;
+
     doc.text(
       `Total gastado: $${totalGasto.toFixed(2)}`,
       margin + 4,
-      (doc as any).lastAutoTable.finalY + 10
+      finalY + 10
     );
 
     const pdfBlob = doc.output("blob");

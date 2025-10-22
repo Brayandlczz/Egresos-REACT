@@ -18,10 +18,15 @@ interface HistoricoItem {
 }
 
 export async function generarHistoricoDocentePDF(docenteId: string, nombreDocente: string) {
+  if (!docenteId) {
+    alert('ID de docente inválido.');
+    return;
+  }
+
   const supabase = createClientComponentClient();
 
-  const { data, error } = await supabase
-    .rpc<HistoricoItem[]>('sp_historico_pagos_por_docente', { p_docente_id: docenteId });
+  // Llamada sin genéricos: casteamos después. Evita dependencias con la firma de tipos de la SDK.
+  const { data, error } = await supabase.rpc('sp_historico_pagos_por_docente', { p_docente_id: docenteId });
 
   if (error) {
     alert('Error al obtener el histórico de pagos.');
@@ -29,7 +34,10 @@ export async function generarHistoricoDocentePDF(docenteId: string, nombreDocent
     return;
   }
 
-  if (!data || data.length === 0) {
+  // Cast defensivo: la SDK devuelve `any` y nosotros afirmamos el tipo esperado
+  const rows = (data ?? []) as HistoricoItem[];
+
+  if (!rows || rows.length === 0) {
     alert('No hay datos disponibles para este docente.');
     return;
   }
@@ -75,18 +83,18 @@ export async function generarHistoricoDocentePDF(docenteId: string, nombreDocent
       'Total a pagar', 'Monto Cubierto', 'Saldo Restante',
       'Primer Pago', 'Último Pago', 'Estatus del pago'
     ]],
-    body: data.map((item: HistoricoItem) => {
+    body: rows.map((item: HistoricoItem) => {
       const estado =
         item.total_pagado > item.importe_total_pago ? 'Excedido' :
         item.total_pagado === item.importe_total_pago ? 'Pagado' : 'Pendiente';
 
       return [
         item.nombre_asignatura,
-        new Date(item.fecha_inicio).toLocaleDateString(),
-        new Date(item.fecha_fin).toLocaleDateString(),
-        `$${item.importe_total_pago.toFixed(2)}`,
-        `$${item.total_pagado.toFixed(2)}`,
-        `$${item.saldo_restante.toFixed(2)}`,
+        item.fecha_inicio ? new Date(item.fecha_inicio).toLocaleDateString() : '-',
+        item.fecha_fin ? new Date(item.fecha_fin).toLocaleDateString() : '-',
+        `$${(item.importe_total_pago ?? 0).toFixed(2)}`,
+        `$${(item.total_pagado ?? 0).toFixed(2)}`,
+        `$${(item.saldo_restante ?? 0).toFixed(2)}`,
         item.primer_pago ? new Date(item.primer_pago).toLocaleDateString() : '-',
         item.ultimo_pago ? new Date(item.ultimo_pago).toLocaleDateString() : '-',
         estado,

@@ -98,20 +98,25 @@ export async function generarReportePlanteles(plantelId: string) {
         "Forma de Pago",
         "Importe",
       ]],
-      body: data.map((row) => {
-        const rel = Array.isArray(row.docente_relation)
-          ? row.docente_relation[0] || {}
-          : row.docente_relation || {};
+      body: (data || []).map((row: any) => {
+        // Normalizamos docente_relation y sus sub-objetos (pueden venir como arrays)
+        const rel = Array.isArray(row.docente_relation) ? row.docente_relation[0] ?? {} : row.docente_relation ?? {};
+        const plantelNombre = rel.plantel?.[0]?.nombre_plantel ?? rel.plantel?.nombre_plantel ?? "N/A";
+        const asignaturaNombre = rel.asignatura?.[0]?.nombre_asignatura ?? rel.asignatura?.nombre_asignatura ?? "N/A";
+        const periodoConcat = rel.periodo_pago?.[0]?.concatenado ?? rel.periodo_pago?.concatenado ?? "N/A";
+
+        // row.docente también puede venir como array en algunas consultas
+        const docenteNombre = Array.isArray(row.docente) ? row.docente[0]?.nombre_docente ?? "N/A" : row.docente?.nombre_docente ?? "N/A";
 
         return [
           row.folio || "N/A",
-          rel.plantel?.nombre_plantel || "N/A",
-          row.docente?.nombre_docente || "N/A",
-          rel.asignatura?.nombre_asignatura || "N/A",
-          rel.periodo_pago?.concatenado || "N/A",
+          plantelNombre,
+          docenteNombre,
+          asignaturaNombre,
+          periodoConcat,
           row.fecha_pago || "N/A",
           row.forma_pago || "N/A",
-          `$${Number(row.importe).toFixed(2)}`,
+          `$${Number(row.importe ?? 0).toFixed(2)}`,
         ];
       }),
       styles: {
@@ -128,14 +133,22 @@ export async function generarReportePlanteles(plantelId: string) {
       columnStyles: {
         7: { halign: "right" },
       },
+      didDrawPage: (d: any) => {
+        // vacío por compatibilidad; el cursor puede no estar disponible en algunas versiones
+      },
     });
 
-    const totalImporte = data.reduce((acc, row) => acc + Number(row.importe), 0);
+    const totalImporte = (data || []).reduce((acc: number, row: any) => acc + Number(row.importe ?? 0), 0);
     doc.setFont("helvetica", "bold");
+
+    // fallback seguro para finalY del autoTable
+    const lastAutoTable: any = (doc as any).lastAutoTable;
+    const finalY = lastAutoTable && typeof lastAutoTable.finalY === "number" ? lastAutoTable.finalY : logoY + logoHeight + 20 + 10;
+
     doc.text(
       `Total pagado: $${totalImporte.toFixed(2)}`,
       margin + 4,
-      (doc as any).lastAutoTable.finalY + 10
+      finalY + 10
     );
 
     const pdfBlob = doc.output("blob");
