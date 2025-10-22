@@ -15,7 +15,13 @@ export async function POST(request: Request) {
     let encodedUrl: string;
     try { encodedUrl = encodeURI(url); } catch { encodedUrl = url; }
 
-    const fetchFn: typeof fetch = (globalThis as any).fetch ?? (await import("node-fetch")).default as any;
+    // ---------- Cambio: usar fetch nativo (globalThis.fetch) ----------
+    const maybeFetch = (globalThis as any).fetch;
+    if (!maybeFetch) {
+      return NextResponse.json({ error: "Environment does not provide fetch" } as RespErr, { status: 500 });
+    }
+    const fetchFn: typeof fetch = maybeFetch;
+    // ------------------------------------------------------------------
 
     const baseHeaders = {
       "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
