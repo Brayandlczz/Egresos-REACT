@@ -15,7 +15,7 @@ export async function POST(request: Request) {
     let encodedUrl: string;
     try { encodedUrl = encodeURI(url); } catch { encodedUrl = url; }
 
-    const fetchFn: typeof fetch = (globalThis as any).fetch ?? (await import("node-fetch")).default;
+    const fetchFn: typeof fetch = (globalThis as any).fetch ?? (await import("node-fetch")).default as any;
 
     const baseHeaders = {
       "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
