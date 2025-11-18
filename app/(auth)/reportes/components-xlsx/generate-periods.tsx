@@ -34,7 +34,6 @@ export async function generarReportePagosExcel(periodoId: string) {
       return;
     }
 
-    // Filtramos por periodo (docente_relation puede venir como array)
     const dataFiltrada = data.filter((factura: any) => {
       if (!factura.docente_relation) return false;
       const rel = Array.isArray(factura.docente_relation)
@@ -53,7 +52,6 @@ export async function generarReportePagosExcel(periodoId: string) {
         ? row.docente_relation[0]
         : row.docente_relation || {};
 
-      // plantel/asignatura/periodo pueden venir como arrays -> protegemos con [0]
       const plantelNombre =
         rel.plantel?.[0]?.nombre_plantel ?? rel.plantel?.nombre_plantel ?? "N/A";
       const asignaturaNombre =

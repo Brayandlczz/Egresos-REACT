@@ -99,13 +99,11 @@ export async function generarReportePlanteles(plantelId: string) {
         "Importe",
       ]],
       body: (data || []).map((row: any) => {
-        // Normalizamos docente_relation y sus sub-objetos (pueden venir como arrays)
         const rel = Array.isArray(row.docente_relation) ? row.docente_relation[0] ?? {} : row.docente_relation ?? {};
         const plantelNombre = rel.plantel?.[0]?.nombre_plantel ?? rel.plantel?.nombre_plantel ?? "N/A";
         const asignaturaNombre = rel.asignatura?.[0]?.nombre_asignatura ?? rel.asignatura?.nombre_asignatura ?? "N/A";
         const periodoConcat = rel.periodo_pago?.[0]?.concatenado ?? rel.periodo_pago?.concatenado ?? "N/A";
 
-        // row.docente también puede venir como array en algunas consultas
         const docenteNombre = Array.isArray(row.docente) ? row.docente[0]?.nombre_docente ?? "N/A" : row.docente?.nombre_docente ?? "N/A";
 
         return [
@@ -134,14 +132,12 @@ export async function generarReportePlanteles(plantelId: string) {
         7: { halign: "right" },
       },
       didDrawPage: (d: any) => {
-        // vacío por compatibilidad; el cursor puede no estar disponible en algunas versiones
       },
     });
 
     const totalImporte = (data || []).reduce((acc: number, row: any) => acc + Number(row.importe ?? 0), 0);
     doc.setFont("helvetica", "bold");
 
-    // fallback seguro para finalY del autoTable
     const lastAutoTable: any = (doc as any).lastAutoTable;
     const finalY = lastAutoTable && typeof lastAutoTable.finalY === "number" ? lastAutoTable.finalY : logoY + logoHeight + 20 + 10;
 

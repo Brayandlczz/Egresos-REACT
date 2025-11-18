@@ -37,7 +37,6 @@ export async function generarReporteDocentesExcel(docenteId: string, plantelId: 
 
     const allRows: any[] = data ?? [];
 
-    // Filtrar por plantel: normalizamos docente_relation y plantel
     const filteredData = allRows.filter((row: any) => {
       const rel = Array.isArray(row.docente_relation) ? row.docente_relation[0] ?? {} : row.docente_relation ?? {};
       const plantel = Array.isArray(rel.plantel) ? rel.plantel[0] ?? {} : rel.plantel ?? {};

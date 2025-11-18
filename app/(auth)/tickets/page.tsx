@@ -76,7 +76,6 @@ const statusConfig: Record<TicketStatus, { label: string; color: string }> = {
 };
 
 export default function TicketOverview(): JSX.Element {
-  // ahora la página NO recibe props del router; usa demoTickets como estado inicial
   const [tickets, setTickets] = useState<Ticket[]>(demoTickets);
 
   const [showFilters, setShowFilters] = useState(false);

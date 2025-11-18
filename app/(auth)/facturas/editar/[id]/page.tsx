@@ -7,7 +7,6 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 const EdicionFactura: React.FC = () => {
   const supabase = createClientComponentClient();
   const params = useParams();
-  // Extraemos id de forma segura y tipada
   const id = Array.isArray(params?.id) ? params?.id[0] : (params?.id as string | undefined);
   const router = useRouter();
 

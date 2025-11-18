@@ -82,10 +82,6 @@ const ReportFilters: React.FC = () => {
     }
   }
 
-  // ------------------------------------------------------------
-  // Función añadida: generarReportePlantelesExcel
-  // Hace una consulta similar al PDF y genera un CSV que se descarga.
-  // ------------------------------------------------------------
   async function generarReportePlantelesExcel(plantelId: string) {
     if (!plantelId) {
       alert("Selecciona un plantel válido para el Excel.");
@@ -93,7 +89,6 @@ const ReportFilters: React.FC = () => {
     }
 
     try {
-      // Consulta: trae facturas para el plantel con relaciones (normalizamos arrays)
       const { data, error } = await supabase
         .from("factura")
         .select(`
@@ -117,7 +112,6 @@ const ReportFilters: React.FC = () => {
         return;
       }
 
-      // Normalizamos filas (como en el PDF) para garantizar campos claros
       const normalized = (data || []).map((row: any) => {
         const rel = Array.isArray(row.docente_relation) ? row.docente_relation[0] ?? {} : row.docente_relation ?? {};
         const plantelObj = rel.plantel ? (Array.isArray(rel.plantel) ? rel.plantel[0] ?? {} : rel.plantel) : {};
@@ -136,7 +130,6 @@ const ReportFilters: React.FC = () => {
         };
       });
 
-      // Construir CSV
       const headers = [
         "Folio",
         "Fecha pago",
@@ -173,7 +166,6 @@ const ReportFilters: React.FC = () => {
       function csvSafe(value: any) {
         if (value === null || value === undefined) return "";
         const s = String(value);
-        // Escapar comillas y envolver en comillas si contiene comas o saltos
         if (/[",\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
         return s;
       }
@@ -182,7 +174,6 @@ const ReportFilters: React.FC = () => {
       alert("Error generando Excel (CSV). Revisa la consola.");
     }
   }
-  // ------------------------------------------------------------
 
   return (
     <div className="p-6 bg-white-100 max-h-full">

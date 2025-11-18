@@ -216,7 +216,7 @@ export function Sidebar() {
                   <ul className="space-y-2 pl-2 pt-2">
                     <li>
                       <Link
-                        href="/proveedores"
+                        href="/tickets"
                         className={`flex items-center gap-3 p-2 rounded-md text-white transition-all ${
                           isActive("/proveedores")
                             ? "bg-white/30 hover:bg-white/50 shadow-md translate-y-[-1px]"
@@ -229,7 +229,7 @@ export function Sidebar() {
                     </li>
                     <li>
                       <Link
-                        href="/areas"
+                        href="/pendientes"
                         className={`flex items-center gap-3 p-2 rounded-md text-white transition-all ${
                           isActive("/areas")
                             ? "bg-white/30 hover:bg-white/50 shadow-md translate-y-[-1px]"

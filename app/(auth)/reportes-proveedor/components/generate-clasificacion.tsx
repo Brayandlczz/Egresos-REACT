@@ -45,7 +45,6 @@ export async function generarReporteFacturasPorEtiquetaPDF(
       return;
     }
 
-    // Agrupamos por nombre de etiqueta (nota: etiqueta viene como array => usamos [0])
     const facturasPorEtiqueta: Record<string, any[]> = {};
     data.forEach((factura: any) => {
       const etiquetaNombre = factura.etiqueta?.[0]?.nombre_etiqueta ?? "Sin Etiqueta";
@@ -151,12 +150,9 @@ export async function generarReporteFacturasPorEtiquetaPDF(
         },
         margin: { left: margin, right: margin },
         didDrawPage: (dataArg: any) => {
-          // dataArg.cursor puede ser null según la definición de types de jspdf-autotable.
-          // Protegemos el acceso antes de usarlo.
           if (dataArg && dataArg.cursor && typeof dataArg.cursor.y === "number") {
             startY = dataArg.cursor.y + 10;
           } else {
-            // Fallback: si no hay cursor, avanzamos una cantidad razonable
             startY = startY + 10;
           }
         },

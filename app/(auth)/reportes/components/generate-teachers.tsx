@@ -35,7 +35,6 @@ export async function generarReporteDocentes(docenteId: string, plantelId: strin
 
     const allRows: any[] = data ?? [];
 
-    // Filtrar por plantel id: normalizamos docente_relation y plantel (pueden venir como arrays)
     const filteredData = allRows.filter((row: any) => {
       const rel = Array.isArray(row.docente_relation) ? row.docente_relation[0] ?? {} : row.docente_relation ?? {};
       const plantel = Array.isArray(rel.plantel) ? rel.plantel[0] ?? {} : rel.plantel ?? {};
@@ -115,13 +114,11 @@ export async function generarReporteDocentes(docenteId: string, plantelId: strin
         ],
       ],
       body: filteredData.map((row: any) => {
-        // Normalizar relación y sub-relaciones (pueden venir como arrays)
         const rel = Array.isArray(row.docente_relation) ? row.docente_relation[0] ?? {} : row.docente_relation ?? {};
         const plantel = Array.isArray(rel.plantel) ? rel.plantel[0] ?? {} : rel.plantel ?? {};
         const asignatura = Array.isArray(rel.asignatura) ? rel.asignatura[0] ?? {} : rel.asignatura ?? {};
         const periodo = Array.isArray(rel.periodo_pago) ? rel.periodo_pago[0] ?? {} : rel.periodo_pago ?? {};
 
-        // Normalizar docente (puede venir como array)
         const docente = Array.isArray(row.docente) ? row.docente[0] ?? {} : row.docente ?? {};
 
         const plantelNombre = plantel.nombre_plantel ?? "N/A";
@@ -159,7 +156,6 @@ export async function generarReporteDocentes(docenteId: string, plantelId: strin
     const totalImporte = filteredData.reduce((acc: number, row: any) => acc + Number(row.importe ?? 0), 0);
     doc.setFont("helvetica", "bold");
 
-    // fallback seguro para lastAutoTable.finalY
     const lastAutoTable: any = (doc as any).lastAutoTable;
     const finalY = lastAutoTable && typeof lastAutoTable.finalY === "number" ? lastAutoTable.finalY : logoY + logoHeight + 20 + 10;
 

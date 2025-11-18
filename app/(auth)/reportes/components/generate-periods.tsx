@@ -112,7 +112,6 @@ export async function generarReportePagosPDF(periodoId: string) {
       ],
       body: dataFiltrada.map((row: any) => {
         const rel = Array.isArray(row.docente_relation) ? row.docente_relation[0] : row.docente_relation || {};
-        // plantel/asignatura/periodo pueden venir como array => indexamos [0] si hace falta
         const plantelNombre =
           rel.plantel?.[0]?.nombre_plantel ?? rel.plantel?.nombre_plantel ?? "N/A";
         const asignaturaNombre =
@@ -120,7 +119,6 @@ export async function generarReportePagosPDF(periodoId: string) {
         const periodoConcat =
           rel.periodo_pago?.[0]?.concatenado ?? rel.periodo_pago?.concatenado ?? "N/A";
 
-        // docente también puede venir como array en algunas consultas (defensa extra)
         const docenteNombre =
           Array.isArray(row.docente) ? row.docente[0]?.nombre_docente ?? "N/A" : row.docente?.nombre_docente ?? "N/A";
 
@@ -150,14 +148,12 @@ export async function generarReportePagosPDF(periodoId: string) {
         7: { halign: "right" },
       },
       didDrawPage: (d: any) => {
-        // nada especial aquí; se mantiene para compatibilidad si se necesita
       },
     });
 
     const totalImporte = dataFiltrada.reduce((acc: number, row: any) => acc + Number(row.importe ?? 0), 0);
     doc.setFont("helvetica", "bold");
 
-    // fallback seguro para obtener finalY de la tabla generada
     const lastAutoTable: any = (doc as any).lastAutoTable;
     const finalY = lastAutoTable && typeof lastAutoTable.finalY === "number" ? lastAutoTable.finalY : logoY + logoHeight + 20 + 10;
 

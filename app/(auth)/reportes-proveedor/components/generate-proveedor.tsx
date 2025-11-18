@@ -41,7 +41,6 @@ export async function generarReporteFacturasPorProveedorPDF(proveedorId: string)
       return;
     }
 
-    // Normalizamos proveedor: puede venir como array -> tomar primer elemento
     let proveedorRaw = data[0].proveedor;
     const proveedor = Array.isArray(proveedorRaw) ? proveedorRaw[0] ?? {} : proveedorRaw ?? {};
 
@@ -86,7 +85,6 @@ export async function generarReporteFacturasPorProveedorPDF(proveedorId: string)
       align: "right",
     });
 
-    // Protegemos proveedor.nombre_proveedor y numero_proveedor por si vienen undefined
     const nombreProveedor = proveedor?.nombre_proveedor ?? "Proveedor desconocido";
     const numeroProveedor = proveedor?.numero_proveedor ?? "N/A";
 
@@ -115,7 +113,6 @@ export async function generarReporteFacturasPorProveedorPDF(proveedorId: string)
       body: data.map((f: any) => [
         f.fecha ? new Date(f.fecha).toLocaleDateString("es-MX") : "N/A",
         f.folio_fiscal ?? "N/A",
-        // planta (plantel) también puede venir como array — protegemos acceso
         Array.isArray(f.planta) ? (f.planta[0]?.nombre_plantel ?? "N/A") : (f.planta?.nombre_plantel ?? "N/A"),
         `$${Number(f.gasto ?? 0).toFixed(2)}`,
         f.observacion || "",
@@ -135,7 +132,6 @@ export async function generarReporteFacturasPorProveedorPDF(proveedorId: string)
     const totalGasto = data.reduce((acc: number, f: any) => acc + Number(f.gasto ?? 0), 0);
     doc.setFont("helvetica", "bold");
 
-    // fallback seguro para finalY del autoTable
     const lastAutoTable: any = (doc as any).lastAutoTable;
     const finalY = lastAutoTable && typeof lastAutoTable.finalY === "number" ? lastAutoTable.finalY : logoY + logoHeight + 20 + 10;
 

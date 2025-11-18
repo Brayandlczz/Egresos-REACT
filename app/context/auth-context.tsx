@@ -35,10 +35,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(currentUser)
 
         if (currentUser) {
-          // Forzamos `any` para evitar inferencias problemáticas
           const res: any = await supabase
             .from('usuarios')
-            // rol viene via relación rol_id -> rol; la relación puede llegar como array
             .select('rol:rol_id (rol), nombre')
             .eq('id', currentUser.id)
             .single()
@@ -51,7 +49,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             setRol(null)
             setNombre(null)
           } else {
-            // Normalizamos: data.rol puede ser [{ rol: '...' }] o { rol: '...' }
             const rolValue =
               Array.isArray(data?.rol) ? data?.rol?.[0]?.rol ?? null : data?.rol?.rol ?? null
             setRol(rolValue)
@@ -75,7 +72,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(currentUser)
 
       if (currentUser) {
-        // Usamos una IIFE async con try/catch (evita .then().catch() y problemas de typings)
         ;(async () => {
           try {
             const res: any = await supabase
@@ -110,11 +106,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     })
 
     return () => {
-      // cleanup: protección si cambia la API interna
       try {
         listener?.subscription?.unsubscribe?.()
       } catch (e) {
-        // no-op
       }
     }
   }, [supabase])

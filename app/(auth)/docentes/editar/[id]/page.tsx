@@ -86,8 +86,6 @@ const EditarDocente: React.FC = () => {
         .eq('docente_id', docenteId);
 
       if (relaciones && relaciones.length > 0) {
-        // plantel/oferta/asignatura/periodo vienen como arrays (por la forma en que supabase retorna relaciones),
-        // por eso usamos [0] para tomar el primer elemento si existe.
         setPlantelId(relaciones[0].plantel_id ?? '');
         setPlantelNombre(relaciones[0].plantel?.[0]?.nombre_plantel || 'Seleccione un plantel');
         setSelecciones(relaciones.map((r: any) => ({

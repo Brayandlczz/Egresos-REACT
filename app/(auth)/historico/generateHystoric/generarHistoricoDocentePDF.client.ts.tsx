@@ -25,7 +25,6 @@ export async function generarHistoricoDocentePDF(docenteId: string, nombreDocent
 
   const supabase = createClientComponentClient();
 
-  // Llamada sin genéricos: casteamos después. Evita dependencias con la firma de tipos de la SDK.
   const { data, error } = await supabase.rpc('sp_historico_pagos_por_docente', { p_docente_id: docenteId });
 
   if (error) {
@@ -34,7 +33,6 @@ export async function generarHistoricoDocentePDF(docenteId: string, nombreDocent
     return;
   }
 
-  // Cast defensivo: la SDK devuelve `any` y nosotros afirmamos el tipo esperado
   const rows = (data ?? []) as HistoricoItem[];
 
   if (!rows || rows.length === 0) {

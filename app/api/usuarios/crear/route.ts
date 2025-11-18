@@ -10,7 +10,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Faltan datos obligatorios" }, { status: 400 });
     }
 
-    // --- Validar variables de entorno en tiempo de ejecución ---
     const supabaseUrl = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_KEY;
 
@@ -24,9 +23,7 @@ export async function POST(request: Request) {
         { status: 500 }
       );
     }
-    // ----------------------------------------------------------
 
-    // Crear el cliente **aquí** (dentro del handler) — evita que Next lo ejecute en build time
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
     const { data, error } = await supabaseAdmin.auth.admin.createUser({

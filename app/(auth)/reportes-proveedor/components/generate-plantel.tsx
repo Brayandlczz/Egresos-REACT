@@ -29,7 +29,6 @@ export async function generarReporteProveedoresPDF(plantelId?: string) {
         )
       `
       )
-      // si plantelId está presente, filtramos por plantel_id; si no, no filtramos
       .eq(plantelId ? "plantel_id" : "id", plantelId ?? "");
 
     if (error) throw error;
@@ -39,7 +38,6 @@ export async function generarReporteProveedoresPDF(plantelId?: string) {
       return;
     }
 
-    // Agrupar totales por proveedor, normalizando proveedor y su plantel si vienen como arrays
     const totalesPorProveedor: Record<
       string,
       {
@@ -54,18 +52,15 @@ export async function generarReporteProveedoresPDF(plantelId?: string) {
     data.forEach((row: any) => {
       let p = row.proveedor;
 
-      // Normalizar: si `proveedor` viene como array, tomar el primer elemento
       if (Array.isArray(p)) {
         p = p[0];
       }
 
       if (!p) return;
 
-      // clave segura: usa id si existe, sino número de proveedor, sino nombre
       const key = p.id ?? p.numero_proveedor ?? p.nombre_proveedor ?? JSON.stringify(p);
       if (!key) return;
 
-      // plantel dentro del proveedor también puede venir como array -> normalizamos
       const plantelObj = Array.isArray(p.plantel) ? p.plantel[0] ?? {} : p.plantel ?? {};
 
       if (!totalesPorProveedor[key]) {
@@ -156,7 +151,6 @@ export async function generarReporteProveedoresPDF(plantelId?: string) {
       },
     });
 
-    // finalY: fallback por si lastAutoTable no está presente
     const lastAutoTable: any = (doc as any).lastAutoTable;
     const finalY = lastAutoTable && typeof lastAutoTable.finalY === "number" ? lastAutoTable.finalY : logoY + logoHeight + 20 + 10;
 

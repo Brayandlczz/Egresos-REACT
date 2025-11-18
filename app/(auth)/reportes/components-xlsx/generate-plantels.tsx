@@ -39,7 +39,6 @@ export async function generarReportePlantelesExcel(plantelId: string) {
         ? row.docente_relation[0] || {}
         : row.docente_relation || {};
 
-      // plantel/asignatura/periodo pueden venir como array -> normalizamos con [0]
       const plantelNombre =
         rel.plantel?.[0]?.nombre_plantel ?? rel.plantel?.nombre_plantel ?? "N/A";
       const asignaturaNombre =
