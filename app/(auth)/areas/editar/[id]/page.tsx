@@ -87,12 +87,12 @@ const EditarDepartamento: React.FC = () => {
 
     setSuccessMessage("¡Departamento actualizado con éxito!");
     setTimeout(() => {
-      router.push("/departamentos");
+      router.push("/areas");
     }, 2000);
   };
 
   const handleCancelar = () => {
-    router.push("/departamentos");
+    router.push("/areas");
   };
 
   return (

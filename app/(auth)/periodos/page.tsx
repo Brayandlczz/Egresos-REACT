@@ -15,6 +15,8 @@ import {
 } from '@/components/ui/select';
 import { useAuth } from '@/app/context/auth-context'; 
 
+import Swal from "sweetalert2";
+
 interface PeriodoPago {
   id: string;
   inicio_periodo: string;
@@ -108,37 +110,111 @@ const PeriodoPagoList: React.FC = () => {
   const handleAgregar = () => router.push('/periodos/registro');
   const handleEditar = (id: string) => router.push(`/periodos/editar/${id}`);
 
-  const handleEliminar = async (id: string) => {
-    if (rol !== 'Administrador') return;
+const handleEliminar = async (id: string) => {
+  if (rol !== 'Administrador') {
+    Swal.fire({
+      icon: "warning",
+      title: "Acceso restringido",
+      text: "Solo los administradores pueden eliminar registros.",
+    });
+    return;
+  }
 
-    const confirmado = window.confirm('¡Espera! La acción es irreversible y podrá afectar otros registros en el sistema. ¿Deseas continuar?');
-    if (!confirmado) return;
+  const confirm = await Swal.fire({
+    title: "¿Deseas eliminar este periodo de pago?",
+    text: "Esta acción es irreversible y puede afectar otros registros del sistema.",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#d33",
+    cancelButtonColor: "#3085d6",
+    confirmButtonText: "Sí, eliminar",
+    cancelButtonText: "Cancelar",
+  });
 
-    const { error } = await supabase.from('periodo_pago').delete().eq('id', id);
-    if (error) {
-      console.error('Error eliminando el periodo:', error.message);
-      return;
-    }
-    setPeriodos(prev => prev.filter(p => p.id !== id));
-  };
+  if (!confirm.isConfirmed) return;
 
-  const handleEliminarSeleccionados = async () => {
-    if (rol !== 'Administrador') return;
+  const { error } = await supabase.from('periodo_pago').delete().eq('id', id);
 
-    const idsAEliminar = periodos.filter(p => p.seleccionado).map(p => p.id);
-    if (idsAEliminar.length === 0) return;
+  if (error) {
+    Swal.fire({
+      icon: "error",
+      title: "Error",
+      text: "No se pudo eliminar el periodo de pago.",
+    });
+    return;
+  }
 
-    const confirmado = window.confirm('¡Espera! La acción es irreversible y podrá afectar otros registros en el sistema. ¿Deseas continuar?');
-    if (!confirmado) return;
+  setPeriodos(prev => prev.filter(p => p.id !== id));
 
-    const { error } = await supabase.from('periodo_pago').delete().in('id', idsAEliminar);
-    if (error) {
-      console.error('Error eliminando seleccionados:', error.message);
-      return;
-    }
+  Swal.fire({
+    icon: "success",
+    title: "Eliminado",
+    text: "El periodo se eliminó correctamente.",
+    timer: 1500,
+    showConfirmButton: false,
+  });
+};
 
-    setPeriodos(prev => prev.filter(p => !p.seleccionado));
-  };
+
+const handleEliminarSeleccionados = async () => {
+  if (rol !== 'Administrador') {
+    Swal.fire({
+      icon: "warning",
+      title: "Acceso restringido",
+      text: "Solo los administradores pueden eliminar registros.",
+    });
+    return;
+  }
+
+  const idsAEliminar = periodos.filter(p => p.seleccionado).map(p => p.id);
+
+  if (idsAEliminar.length === 0) {
+    Swal.fire({
+      icon: "info",
+      title: "Sin selección",
+      text: "No hay periodos seleccionados para eliminar.",
+    });
+    return;
+  }
+
+  const confirm = await Swal.fire({
+    title: "¿Eliminar periodos seleccionados?",
+    text: "Esta acción es irreversible y eliminará múltiples registros.",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#d33",
+    cancelButtonColor: "#3085d6",
+    confirmButtonText: "Sí, eliminar",
+    cancelButtonText: "Cancelar",
+  });
+
+  if (!confirm.isConfirmed) return;
+
+  const { error } = await supabase
+    .from('periodo_pago')
+    .delete()
+    .in('id', idsAEliminar);
+
+  if (error) {
+    Swal.fire({
+      icon: "error",
+      title: "Error",
+      text: "No se pudieron eliminar los periodos seleccionados.",
+    });
+    return;
+  }
+
+  setPeriodos(prev => prev.filter(p => !p.seleccionado));
+
+  Swal.fire({
+    icon: "success",
+    title: "Registros eliminados",
+    text: "Los periodos seleccionados se eliminaron correctamente.",
+    timer: 1500,
+    showConfirmButton: false,
+  });
+};
+
 
   const handleSeleccionar = (id: string) => {
     setPeriodos(prev =>

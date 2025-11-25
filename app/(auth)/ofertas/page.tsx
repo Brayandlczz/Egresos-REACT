@@ -14,6 +14,7 @@ import {
   SelectItem,
 } from '@/components/ui/select';
 
+import Swal from "sweetalert2";   // 🔥 SWEETALERT2 IMPORTADO
 import { useAuth } from '@/app/context/auth-context'; 
 
 interface OfertaEducativa {
@@ -89,41 +90,110 @@ const OfertaEducativaList: React.FC = () => {
   const handleAgregar = () => router.push('/ofertas/registro');
   const handleEditar = (id: string) => router.push(`/ofertas/editar/${id}`);
 
+  // 🔥🔥🔥 SWEETALERT - ELIMINAR INDIVIDUAL
   const handleEliminar = async (id: string) => {
-    if (rol !== 'Administrador') return; 
+    if (rol !== 'Administrador') {
+      Swal.fire({
+        icon: "warning",
+        title: "Acceso restringido",
+        text: "Solo los administradores pueden eliminar registros.",
+      });
+      return;
+    }
 
-    const confirmado = window.confirm(
-      '¡Espera! La acción es irreversible y podrá afectar otros registros en el sistema. ¿Deseas continuar?'
-    );
-    if (!confirmado) return;
+    const confirm = await Swal.fire({
+      title: "¿Deseas eliminar esta oferta educativa?",
+      text: "Esta acción es irreversible y puede afectar otros registros.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar"
+    });
+
+    if (!confirm.isConfirmed) return;
 
     const { error } = await supabase.from('oferta_educativa').delete().eq('id', id);
+
     if (error) {
-      console.error('Error eliminando la oferta educativa:', error.message);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "No se pudo eliminar la oferta educativa.",
+      });
       return;
     }
 
     setOfertas(prev => prev.filter(o => o.id !== id));
+
+    Swal.fire({
+      icon: "success",
+      title: "Eliminado",
+      text: "La oferta educativa se eliminó correctamente.",
+      timer: 1500,
+      showConfirmButton: false
+    });
   };
 
+  // 🔥🔥🔥 SWEETALERT - ELIMINAR MULTIPLES
   const handleEliminarSeleccionados = async () => {
-    if (rol !== 'Administrador') return; 
+    if (rol !== 'Administrador') {
+      Swal.fire({
+        icon: "warning",
+        title: "Acceso restringido",
+        text: "Solo los administradores pueden eliminar registros.",
+      });
+      return;
+    }
 
     const idsAEliminar = ofertas.filter(o => o.seleccionado).map(o => o.id);
-    if (idsAEliminar.length === 0) return;
 
-    const confirmado = window.confirm(
-      '¡Espera! La acción es irreversible y podrá afectar otros registros en el sistema. ¿Deseas continuar?'
-    );
-    if (!confirmado) return;
+    if (idsAEliminar.length === 0) {
+      Swal.fire({
+        icon: "info",
+        title: "Sin selección",
+        text: "No hay registros seleccionados para eliminar.",
+      });
+      return;
+    }
 
-    const { error } = await supabase.from('oferta_educativa').delete().in('id', idsAEliminar);
+    const confirm = await Swal.fire({
+      title: "¿Eliminar registros seleccionados?",
+      text: "Esta acción eliminará múltiples registros de forma permanente.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar"
+    });
+
+    if (!confirm.isConfirmed) return;
+
+    const { error } = await supabase
+      .from('oferta_educativa')
+      .delete()
+      .in('id', idsAEliminar);
+
     if (error) {
-      console.error('Error eliminando ofertas educativas seleccionadas:', error.message);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "No se pudieron eliminar los registros.",
+      });
       return;
     }
 
     setOfertas(prev => prev.filter(o => !o.seleccionado));
+
+    Swal.fire({
+      icon: "success",
+      title: "Registros eliminados",
+      text: "Las ofertas educativas se eliminaron correctamente.",
+      timer: 1500,
+      showConfirmButton: false
+    });
   };
 
   const handleSeleccionar = (id: string) => {
@@ -185,8 +255,7 @@ const OfertaEducativaList: React.FC = () => {
 
         <Button
           className={`bg-red-600 text-white flex items-center gap-2 whitespace-nowrap
-            ${rol !== 'Administrador' ? 'opacity-50 pointer-events-auto' : ''}
-          `}
+            ${rol !== 'Administrador' ? 'opacity-50 pointer-events-none' : ''}`}
           onClick={handleEliminarSeleccionados}
           title={
             rol !== 'Administrador'
@@ -243,9 +312,8 @@ const OfertaEducativaList: React.FC = () => {
                     <Button
                       variant="outline"
                       size="icon"
-                      className={`text-red-600 cursor-pointer
-                        ${rol !== 'Administrador' ? 'opacity-50 pointer-events-auto' : ''}
-                      `}
+                      className={`text-red-600 cursor-pointer 
+                        ${rol !== 'Administrador' ? 'opacity-50 pointer-events-none' : ''}`}
                       onClick={() => rol === 'Administrador' && handleEliminar(oferta.id)}
                       title={
                         rol !== 'Administrador'

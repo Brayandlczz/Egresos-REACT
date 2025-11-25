@@ -16,6 +16,8 @@ import {
 
 import { useAuth } from '@/app/context/auth-context';
 
+import Swal from "sweetalert2";
+
 interface CuentaBancaria {
   id: number;
   banco: string;
@@ -91,45 +93,112 @@ const CuentasBancariasList: React.FC = () => {
   const handleAgregar = () => router.push('/cuentas/registro');
   const handleEditar = (id: number) => router.push(`/cuentas/editar/${id}`);
 
-  const handleEliminar = async (id: number) => {
-    if (rol !== 'Administrador') return; 
+const handleEliminar = async (id: number) => {
+  if (rol !== 'Administrador') {
+    Swal.fire({
+      icon: "warning",
+      title: "Acceso restringido",
+      text: "Solo los administradores pueden eliminar registros.",
+    });
+    return;
+  }
 
-    const confirmar = window.confirm(
-      '¡Espera! La acción es irreversible y podrá afectar otros registros en el sistema. ¿Deseas continuar?'
-    );
+  const confirm = await Swal.fire({
+    title: "¿Deseas eliminar esta cuenta bancaria?",
+    text: "Esta acción es irreversible y puede afectar otros registros.",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#d33",
+    cancelButtonColor: "#3085d6",
+    confirmButtonText: "Sí, eliminar",
+    cancelButtonText: "Cancelar"
+  });
 
-    if (!confirmar) return;
+  if (!confirm.isConfirmed) return;
 
-    const { error } = await supabase.from('cuenta_banco').delete().eq('id', id);
-    if (error) {
-      console.error('Error al eliminar la cuenta:', error.message);
-      return;
-    }
+  const { error } = await supabase.from('cuenta_banco').delete().eq('id', id);
 
-    setCuentas(prev => prev.filter(c => c.id !== id));
-  };
+  if (error) {
+    Swal.fire({
+      icon: "error",
+      title: "Error",
+      text: "No se pudo eliminar la cuenta bancaria.",
+    });
+    return;
+  }
 
-  const handleEliminarSeleccionados = async () => {
-    if (rol !== 'Administrador') return; 
+  setCuentas(prev => prev.filter(c => c.id !== id));
 
-    const idsAEliminar = cuentas.filter(c => c.seleccionado).map(c => c.id);
+  Swal.fire({
+    icon: "success",
+    title: "Eliminado",
+    text: "La cuenta bancaria se eliminó correctamente.",
+    timer: 1500,
+    showConfirmButton: false
+  });
+};
 
-    if (idsAEliminar.length === 0) return;
 
-    const confirmar = window.confirm(
-      '¡Espera! La acción es irreversible y podrá afectar otros registros en el sistema. ¿Deseas continuar?'
-    );
+const handleEliminarSeleccionados = async () => {
+  if (rol !== 'Administrador') {
+    Swal.fire({
+      icon: "warning",
+      title: "Acceso restringido",
+      text: "Solo los administradores pueden eliminar registros.",
+    });
+    return;
+  }
 
-    if (!confirmar) return;
+  const idsAEliminar = cuentas
+    .filter(c => c.seleccionado)
+    .map(c => c.id);
 
-    const { error } = await supabase.from('cuenta_banco').delete().in('id', idsAEliminar);
-    if (error) {
-      console.error('Error al eliminar cuentas seleccionadas:', error.message);
-      return;
-    }
+  if (idsAEliminar.length === 0) {
+    Swal.fire({
+      icon: "info",
+      title: "Sin selección",
+      text: "No hay registros seleccionados para eliminar.",
+    });
+    return;
+  }
 
-    setCuentas(prev => prev.filter(c => !c.seleccionado));
-  };
+  const confirm = await Swal.fire({
+    title: "¿Eliminar cuentas seleccionadas?",
+    text: "Esta acción eliminará múltiples registros de forma permanente.",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#d33",
+    cancelButtonColor: "#3085d6",
+    confirmButtonText: "Sí, eliminar",
+    cancelButtonText: "Cancelar"
+  });
+
+  if (!confirm.isConfirmed) return;
+
+  const { error } = await supabase
+    .from('cuenta_banco')
+    .delete()
+    .in('id', idsAEliminar);
+
+  if (error) {
+    Swal.fire({
+      icon: "error",
+      title: "Error",
+      text: "No se pudieron eliminar las cuentas seleccionadas.",
+    });
+    return;
+  }
+
+  setCuentas(prev => prev.filter(c => !c.seleccionado));
+
+  Swal.fire({
+    icon: "success",
+    title: "Registros eliminados",
+    text: "Las cuentas bancarias se eliminaron correctamente.",
+    timer: 1500,
+    showConfirmButton: false
+  });
+};
 
   const handleSeleccionar = (id: number) => {
     setCuentas(prev =>

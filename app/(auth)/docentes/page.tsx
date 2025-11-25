@@ -15,6 +15,8 @@ import {
 } from '@/components/ui/select';
 import { useAuth } from '@/app/context/auth-context';
 
+import Swal from "sweetalert2";
+
 interface Docente {
   relacion_id: string;
   id: number;
@@ -124,58 +126,102 @@ const DocentesList = () => {
     );
   };
 
-  const handleEliminarSeleccionados = async () => {
-    if (rol !== 'Administrador') return;
+const handleEliminarSeleccionados = async () => {
+  if (rol !== 'Administrador') return;
 
-    const confirmado = window.confirm('¿Estás seguro de eliminar los docentes seleccionados? Esta acción no se puede deshacer.');
-    if (!confirmado) return;
+  const { isConfirmed } = await Swal.fire({
+    title: '¿Eliminar docentes seleccionados?',
+    text: 'Esta acción no se puede deshacer.',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Sí, eliminar',
+    cancelButtonText: 'Cancelar',
+    confirmButtonColor: '#d33',
+    cancelButtonColor: "#3085d6",
+  });
 
-    const idsAEliminar = docentes
-      .filter(d => d.seleccionado)
-      .map(d => d.relacion_id);
+  if (!isConfirmed) return;
 
-    if (idsAEliminar.length === 0) {
-      alert('No hay docentes seleccionados para eliminar.');
-      return;
-    }
+  const idsAEliminar = docentes
+    .filter(d => d.seleccionado)
+    .map(d => d.relacion_id);
 
-    const { error } = await supabase
-      .from('docente_relations')
-      .delete()
-      .in('id', idsAEliminar);
+  if (idsAEliminar.length === 0) {
+    Swal.fire({
+      icon: 'info',
+      title: 'Sin selección',
+      text: 'No hay docentes seleccionados para eliminar.'
+    });
+    return;
+  }
 
-    if (error) {
-      alert('Error al eliminar docentes: ' + error.message);
-      return;
-    }
+  const { error } = await supabase
+    .from('docente_relations')
+    .delete()
+    .in('id', idsAEliminar);
 
-    setDocentes(prev =>
-      prev.filter(d => !idsAEliminar.includes(d.relacion_id))
-    );
-  };
+  if (error) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Error al eliminar',
+      text: error.message
+    });
+    return;
+  }
+
+  setDocentes(prev =>
+    prev.filter(d => !idsAEliminar.includes(d.relacion_id))
+  );
+
+  Swal.fire({
+    icon: 'success',
+    title: 'Eliminado',
+    text: 'Los docentes seleccionados fueron eliminados correctamente.'
+  });
+};
 
   const handleEditar = (id: number) => {
     router.push(`/docentes/editar/${id}`);
   };
 
-  const handleEliminar = async (relacion_id: string) => {
-    if (rol !== 'Administrador') return;
+const handleEliminar = async (relacion_id: string) => {
+  if (rol !== 'Administrador') return;
 
-    const confirmado = window.confirm('¿Estás seguro de eliminar este docente? Esta acción no se puede deshacer.');
-    if (!confirmado) return;
+  const { isConfirmed } = await Swal.fire({
+    title: '¿Eliminar docente?',
+    text: 'Esta acción no se puede deshacer.',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Sí, eliminar',
+    cancelButtonText: 'Cancelar',
+    confirmButtonColor: '#d33',
+    cancelButtonColor: "#3085d6",
+  });
 
-    const { error } = await supabase
-      .from('docente_relations')
-      .delete()
-      .eq('id', relacion_id);
+  if (!isConfirmed) return;
 
-    if (error) {
-      alert('Error al eliminar docente: ' + error.message);
-      return;
-    }
+  const { error } = await supabase
+    .from('docente_relations')
+    .delete()
+    .eq('id', relacion_id);
 
-    setDocentes(prev => prev.filter(d => d.relacion_id !== relacion_id));
-  };
+  if (error) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Error al eliminar',
+      text: error.message
+    });
+    return;
+  }
+
+  setDocentes(prev => prev.filter(d => d.relacion_id !== relacion_id));
+
+  Swal.fire({
+    icon: 'success',
+    title: 'Eliminado',
+    text: 'El docente fue eliminado correctamente.'
+  });
+};
 
   const resultados = docentes.filter(d => {
     const coincideBusqueda = d.nombre_docente.toLowerCase().includes(search.toLowerCase());
